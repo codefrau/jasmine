@@ -1,0 +1,83 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Goldfish = _MakeObject(MakeObject, None, "Goldfish", StoringScene=0)
+Goldfish.SetTexture("Goldfish.bmp", ObjectOnly, RightNow)
+Goldfish.SetColor(White,ObjectOnly,rightnow)
+Goldfish.SetShininess(0.0,ObjectOnly,rightnow)
+Goldfish.SetHighLightColor(Black,ObjectOnly,rightnow)
+Goldfish.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Goldfish.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Goldfish.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Goldfish.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Goldfish.BecomeFirstClass(RightNow)
+Goldfish._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Goldfish,"Goldfish.vfb")
+Goldfish.RightFin = _MakeObject(MakeObject, Goldfish, "Goldfish.RightFin", StoringScene=0)
+Goldfish.RightFin.SetTexture("Goldfish.bmp", ObjectOnly, RightNow)
+Goldfish.RightFin.SetColor(White,ObjectOnly,rightnow)
+Goldfish.RightFin.SetShininess(0.0,ObjectOnly,rightnow)
+Goldfish.RightFin.SetHighLightColor(Black,ObjectOnly,rightnow)
+Goldfish.RightFin.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Goldfish.RightFin.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Goldfish.RightFin.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Goldfish.RightFin.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Goldfish.RightFin.BecomePart(RightNow)
+Goldfish.RightFin._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.25, 0.0, 0.468800008297, 1.0)))
+LoadGeometry(Goldfish.RightFin,"Goldfish.RightFin.vfb")
+Goldfish.Tail = _MakeObject(MakeObject, Goldfish, "Goldfish.Tail", StoringScene=0)
+Goldfish.Tail.SetTexture("Goldfish.bmp", ObjectOnly, RightNow)
+Goldfish.Tail.SetColor(White,ObjectOnly,rightnow)
+Goldfish.Tail.SetShininess(0.0,ObjectOnly,rightnow)
+Goldfish.Tail.SetHighLightColor(Black,ObjectOnly,rightnow)
+Goldfish.Tail.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Goldfish.Tail.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Goldfish.Tail.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Goldfish.Tail.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Goldfish.Tail.BecomePart(RightNow)
+Goldfish.Tail._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, -1.3125, 1.0)))
+LoadGeometry(Goldfish.Tail,"Goldfish.Tail.vfb")
+Goldfish.LeftFin = _MakeObject(MakeObject, Goldfish, "Goldfish.LeftFin", StoringScene=0)
+Goldfish.LeftFin.SetTexture("Goldfish.bmp", ObjectOnly, RightNow)
+Goldfish.LeftFin.SetColor(White,ObjectOnly,rightnow)
+Goldfish.LeftFin.SetShininess(0.0,ObjectOnly,rightnow)
+Goldfish.LeftFin.SetHighLightColor(Black,ObjectOnly,rightnow)
+Goldfish.LeftFin.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Goldfish.LeftFin.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Goldfish.LeftFin.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Goldfish.LeftFin.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Goldfish.LeftFin.BecomePart(RightNow)
+Goldfish.LeftFin._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.25, 0.0, 0.468800008297, 1.0)))
+LoadGeometry(Goldfish.LeftFin,"Goldfish.LeftFin.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

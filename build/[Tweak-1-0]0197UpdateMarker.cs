@@ -1,0 +1,1 @@
+'From Squeak3.6 of ''6 October 2003'' [latest update: #5429] on 4 October 2004 at 8:18:08 pm'!"Change Set:		UpdateMarkerDate:			4 October 2004Author:			Andreas RaabThis is an update marker for making a new build."!

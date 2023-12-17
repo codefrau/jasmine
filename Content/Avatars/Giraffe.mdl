@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Giraffe = _MakeObject(MakeObject, None, "Giraffe", StoringScene=0)
+Giraffe.SetTexture("Giraffe.bmp", ObjectOnly, RightNow)
+Giraffe.SetColor(White,ObjectOnly,rightnow)
+Giraffe.SetShininess(0.0,ObjectOnly,rightnow)
+Giraffe.SetHighLightColor(Black,ObjectOnly,rightnow)
+Giraffe.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Giraffe.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Giraffe.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Giraffe.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Giraffe.BecomeFirstClass(RightNow)
+Giraffe._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Giraffe,"Giraffe.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

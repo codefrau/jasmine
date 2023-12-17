@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Shark = _MakeObject(MakeObject, None, "Shark", StoringScene=0)
+Shark.SetTexture("Shark.bmp", ObjectOnly, RightNow)
+Shark.SetColor(White,ObjectOnly,rightnow)
+Shark.SetShininess(0.0,ObjectOnly,rightnow)
+Shark.SetHighLightColor(Black,ObjectOnly,rightnow)
+Shark.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Shark.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Shark.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Shark.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Shark.BecomeFirstClass(RightNow)
+Shark._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.155702501535, 0.528100013733, 1.0)))
+LoadGeometry(Shark,"Shark.Head.vfb")
+Shark.Jaw = _MakeObject(MakeObject, Shark, "Shark.Jaw", StoringScene=0)
+Shark.Jaw.SetTexture("Shark.bmp", ObjectOnly, RightNow)
+Shark.Jaw.SetColor(White,ObjectOnly,rightnow)
+Shark.Jaw.SetShininess(0.0,ObjectOnly,rightnow)
+Shark.Jaw.SetHighLightColor(Black,ObjectOnly,rightnow)
+Shark.Jaw.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Shark.Jaw.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Shark.Jaw.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Shark.Jaw.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Shark.Jaw.BecomePart(RightNow)
+Shark.Jaw._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Shark.Jaw,"Shark.Head.Jaw.vfb")
+Shark.Torso = _MakeObject(MakeObject, Shark, "Shark.Torso", StoringScene=0)
+Shark.Torso.SetTexture("Shark.bmp", ObjectOnly, RightNow)
+Shark.Torso.SetColor(White,ObjectOnly,rightnow)
+Shark.Torso.SetShininess(0.0,ObjectOnly,rightnow)
+Shark.Torso.SetHighLightColor(Black,ObjectOnly,rightnow)
+Shark.Torso.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Shark.Torso.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Shark.Torso.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Shark.Torso.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Shark.Torso.BecomePart(RightNow)
+Shark.Torso._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Shark.Torso,"Shark.Head.Torso.vfb")
+Shark.Torso.Tail = _MakeObject(MakeObject, Shark.Torso, "Shark.Torso.Tail", StoringScene=0)
+Shark.Torso.Tail.SetTexture("Shark.bmp", ObjectOnly, RightNow)
+Shark.Torso.Tail.SetColor(White,ObjectOnly,rightnow)
+Shark.Torso.Tail.SetShininess(0.0,ObjectOnly,rightnow)
+Shark.Torso.Tail.SetHighLightColor(Black,ObjectOnly,rightnow)
+Shark.Torso.Tail.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Shark.Torso.Tail.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Shark.Torso.Tail.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Shark.Torso.Tail.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Shark.Torso.Tail.BecomePart(RightNow)
+Shark.Torso.Tail._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, -0.732299983501, 1.0)))
+LoadGeometry(Shark.Torso.Tail,"Shark.Head.Torso.Tail.vfb")
+Shark.Torso.Tail.TailFin = _MakeObject(MakeObject, Shark.Torso.Tail, "Shark.Torso.Tail.TailFin", StoringScene=0)
+Shark.Torso.Tail.TailFin.SetTexture("Shark.bmp", ObjectOnly, RightNow)
+Shark.Torso.Tail.TailFin.SetColor(White,ObjectOnly,rightnow)
+Shark.Torso.Tail.TailFin.SetShininess(0.0,ObjectOnly,rightnow)
+Shark.Torso.Tail.TailFin.SetHighLightColor(Black,ObjectOnly,rightnow)
+Shark.Torso.Tail.TailFin.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Shark.Torso.Tail.TailFin.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Shark.Torso.Tail.TailFin.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Shark.Torso.Tail.TailFin.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Shark.Torso.Tail.TailFin.BecomePart(RightNow)
+Shark.Torso.Tail.TailFin._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, -0.34580001235, 1.0)))
+LoadGeometry(Shark.Torso.Tail.TailFin,"Shark.Head.Torso.Tail.TailFin.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

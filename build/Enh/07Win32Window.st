@@ -1,0 +1,1 @@
+!Win32Window methodsFor: 'api calls' stamp: 'ar 6/22/2003 20:46'!apiGetParent: aWindow	<apicall: Win32Window 'GetParent' (Win32Window) module: 'user32.dll'>	^self externalCallFailed! !!Win32Window methodsFor: 'accessing' stamp: 'ar 6/22/2003 20:47'!getParent	| wnd |	wnd := self apiGetParent: self.	^wnd handle = 0 ifTrue:[nil] ifFalse:[wnd]! !

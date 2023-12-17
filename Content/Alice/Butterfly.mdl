@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Butterfly = _MakeObject(MakeObject, None, "Butterfly", StoringScene=0)
+Butterfly.SetTexture("Butterfly.bmp", ObjectOnly, RightNow)
+Butterfly.SetColor(White,ObjectOnly,rightnow)
+Butterfly.SetShininess(0.0,ObjectOnly,rightnow)
+Butterfly.SetHighLightColor(Black,ObjectOnly,rightnow)
+Butterfly.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Butterfly.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Butterfly.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Butterfly.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Butterfly.BecomeFirstClass(RightNow)
+Butterfly._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Butterfly,"Butterfly.vfb")
+Butterfly.RightWing = _MakeObject(MakeObject, Butterfly, "Butterfly.RightWing", StoringScene=0)
+Butterfly.RightWing.SetTexture("Butterfly.bmp", ObjectOnly, RightNow)
+Butterfly.RightWing.SetColor(White,ObjectOnly,rightnow)
+Butterfly.RightWing.SetShininess(0.0,ObjectOnly,rightnow)
+Butterfly.RightWing.SetHighLightColor(Black,ObjectOnly,rightnow)
+Butterfly.RightWing.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Butterfly.RightWing.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Butterfly.RightWing.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Butterfly.RightWing.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Butterfly.RightWing.BecomePart(RightNow)
+Butterfly.RightWing._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.00200000009499, -0.00700000021607, 0.0, 1.0)))
+LoadGeometry(Butterfly.RightWing,"Butterfly.RightWing.vfb")
+Butterfly.LeftWing = _MakeObject(MakeObject, Butterfly, "Butterfly.LeftWing", StoringScene=0)
+Butterfly.LeftWing.SetTexture("Butterfly.bmp", ObjectOnly, RightNow)
+Butterfly.LeftWing.SetColor(White,ObjectOnly,rightnow)
+Butterfly.LeftWing.SetShininess(0.0,ObjectOnly,rightnow)
+Butterfly.LeftWing.SetHighLightColor(Black,ObjectOnly,rightnow)
+Butterfly.LeftWing.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Butterfly.LeftWing.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Butterfly.LeftWing.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Butterfly.LeftWing.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Butterfly.LeftWing.BecomePart(RightNow)
+Butterfly.LeftWing._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00200000009499, -0.00700000021607, 0.0, 1.0)))
+LoadGeometry(Butterfly.LeftWing,"Butterfly.LeftWing.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass
