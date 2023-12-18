@@ -2,12 +2,18 @@ canvas {
     position: fixed;
     cursor: default;
 }
+
 canvas.pixelated {
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: pixelated;
     -ms-interpolation-mode: nearest-neighbor;
 }
+
+canvas#sqCursor {
+    z-index: 1;
+}
+
 div#sqSpinner {
     position: fixed;
     margin: auto; top: 0; left: 0; bottom: 0; right: 0;
@@ -18,7 +24,9 @@ div#sqSpinner {
     box-shadow: 0 0 5px 5px #F90;
     display: none;
     transform: rotate(30deg);
+    z-index: 2;
 }
+
 div#sqSpinner > div {
     position: absolute;
     top: 45px;

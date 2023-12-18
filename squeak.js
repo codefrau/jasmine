@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-16",               // Maybe replace at build time?
+        vmDate: "2023-12-17",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -9872,6 +9872,7 @@
                         case Squeak.FFITypeVoid: // void* is passed as buffer
                             if (stObj.words) return stObj.words.buffer;
                             if (stObj.bytes) return stObj.bytes.buffer;
+                            if (stObj.isNil) return new ArrayBuffer(0); // null pointer
                             throw Error("FFI: expected words or bytes, got " + stObj);
                         default:
                             throw Error("FFI: unimplemented atomic array arg type: " + atomicType);
@@ -55230,7 +55231,7 @@
             eventQueue: null, // only used if image uses event primitives
             clipboardString: '',
             clipboardStringChanged: false,
-            cursorCanvas: options.cursor !== false && document.createElement("canvas"),
+            cursorCanvas: options.cursor !== false && document.getElementById("sqCursor") || document.createElement("canvas"),
             cursorOffsetX: 0,
             cursorOffsetY: 0,
             droppedFiles: [],

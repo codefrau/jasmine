@@ -1,7 +1,7 @@
-var DEBUG = false;
-
 function B3DEnginePlugin() {
     "use strict";
+
+    var DEBUG = 0; // 0 = off, 1 = some, 2 = lots
 
     return {
         getModuleName: function() { return 'Squeak3D'; },
@@ -15,48 +15,57 @@ function B3DEnginePlugin() {
         },
 
         b3dInitializeRasterizerState: function(argCount) {
+            // reset everything for new frame
             if (argCount !== 0) return false;
-            DEBUG && console.log("Squeak3D: b3dInitializeRasterizerState");
+            DEBUG > 1 && console.log("Squeak3D: b3dInitializeRasterizerState");
             return true;
+        },
+
+        b3dTransformPrimitiveNormal: function(argCount) {
+            if (argCount !== 1) return false;
+            DEBUG > 0 && console.log("Squeak3D: b3dTransformPrimitiveNormal");
+            var vtx = this.stackFloat32Array(2, 4);
+            var matrix = this.stackFloat32Array(1, 16);
+            var rescale = this.interpreterProxy.stackValue(0);
+            debugger
+            if (!from || !matrix) return false;
+            var doRescale;
+            if (rescale.isNil) doRescale = this.analyzeMatrix3x3Length(matrix);
+            else doRescale = rescale.isTrue;
+            this.transformDirection(matrix, vtx, vtx, doRescale);
+            this.interpreterProxy.pop(argCount);
+        },
+
+        b3dTransformPrimitivePosition: function(argCount) {
+            if (argCount !== 1) return false;
+            DEBUG > 0 && console.log("Squeak3D: b3dTransformPrimitivePosition");
+            var vtx = this.stackFloat32Array(1, 4);
+            var matrix = this.stackFloat32Array(0, 16);
+            debugger
+            if (!from || !matrix) return false;
+            this.transformPoint(matrix, vtx, vtx);
+            this.interpreterProxy.pop(argCount);
         },
 
         b3dTransformPoint: function(argCount) {
             if (argCount !== 1) return false;
-            DEBUG && console.log("Squeak3D: b3dTransformPoint");
-            var v3Oop = this.interpreterProxy.stackObjectValue(0);
-            if (this.interpreterProxy.failed()) return false;
-            if (!v3Oop.isWords || v3Oop.words.length !== 3) return false;
-            var matrix = this.stackMatrix(1);
-            if (!matrix) return false;
-            var vertex = v3Oop.wordsAsFloat32Array();
-            var x = vertex[0];
-            var y = vertex[1];
-            var z = vertex[2];
-            var rx = x * matrix[0] + y * matrix[1] + z * matrix[2] + matrix[3];
-            var ry = x * matrix[4] + y * matrix[5] + z * matrix[6] + matrix[7];
-            var rz = x * matrix[8] + y * matrix[9] + z * matrix[10] + matrix[11];
-            var rw = x * matrix[12] + y * matrix[13] + z * matrix[14] + matrix[15];
-            v3Oop = this.interpreterProxy.clone(v3Oop);
-            if (!v3Oop) return false;
-            vertex = v3Oop.wordsAsFloat32Array();
-            if (rw === 1) {
-                vertex[0] = rx;
-                vertex[1] = ry;
-                vertex[2] = rz;
-            } else {
-                if (rw !== 0) rw = 1 / rw;
-                vertex[0] = rx * rw;
-                vertex[1] = ry * rw;
-                vertex[2] = rz * rw;
-            }
+            DEBUG > 1 && console.log("Squeak3D: b3dTransformPoint");
+            var matrix = this.stackFloat32Array(1, 16);
+            var from = this.stackFloat32Array(0, 3);
+            if (!matrix || !from) return false;
+            var fromOop = this.interpreterProxy.stackObjectValue(0);
+            var toOop = this.interpreterProxy.clone(fromOop);
+            if (!toOop) return false;
+            var to = toOop.wordsAsFloat32Array();
+            this.transformPoint(matrix, from, to);
             this.interpreterProxy.pop(2);
-            this.interpreterProxy.push(v3Oop);
+            this.interpreterProxy.push(toOop);
             return true;
-       },
+        },
 
         b3dOrthoNormInverseMatrix: function(argCount) {
             if (argCount !== 0) return false;
-            DEBUG && console.log("Squeak3D: b3dOrthoNormInverseMatrix");
+            DEBUG > 1 && console.log("Squeak3D: b3dOrthoNormInverseMatrix");
             var srcOop = this.interpreterProxy.stackObjectValue(0);
             if (this.interpreterProxy.failed()) return false;
             if (!srcOop.isWords || srcOop.words.length !== 16) return false;
@@ -85,7 +94,7 @@ function B3DEnginePlugin() {
 
         b3dTransposeMatrix: function(argCount) {
             if (argCount !== 0) return false;
-            DEBUG && console.log("Squeak3D: b3dTransposeMatrix");
+            DEBUG > 1 && console.log("Squeak3D: b3dTransposeMatrix");
             var srcOop = this.interpreterProxy.stackObjectValue(0);
             if (this.interpreterProxy.failed()) return false;
             if (!srcOop.isWords || srcOop.words.length !== 16) return false;
@@ -104,37 +113,28 @@ function B3DEnginePlugin() {
 
         b3dTransformDirection: function(argCount) {
             if (argCount !== 1) return false;
-            DEBUG && console.log("Squeak3D: b3dTransformDirection");
-            var v3Oop = this.interpreterProxy.stackObjectValue(0);
-            if (this.interpreterProxy.failed()) return false;
-            if (!v3Oop.words || v3Oop.words.length !== 3) return false;
-            var matrix = this.stackMatrix(1);
-            if (!matrix) return false;
-            var vertex = v3Oop.wordsAsFloat32Array();
-            var x = vertex[0];
-            var y = vertex[1];
-            var z = vertex[2];
-            var rx = x * matrix[0] + y * matrix[1] + z * matrix[2];
-            var ry = x * matrix[4] + y * matrix[5] + z * matrix[6];
-            var rz = x * matrix[8] + y * matrix[9] + z * matrix[10];
-            v3Oop = this.interpreterProxy.clone(v3Oop);
-            if (!v3Oop) return false;
-            vertex = v3Oop.wordsAsFloat32Array();
-            vertex[0] = rx;
-            vertex[1] = ry;
-            vertex[2] = rz;
+            DEBUG > 0 && console.log("Squeak3D: b3dTransformDirection");
+            var matrix = this.stackFloat32Array(1, 16);
+            var from = this.stackFloat32Array(0, 3);
+            debugger
+            if (!matrix || !vertex) return false;
+            var fromOop = this.interpreterProxy.stackObjectValue(0);
+            var toOop = this.interpreterProxy.clone(fromOop);
+            if (!toOop) return false;
+            var to = toOop.wordsAsFloat32Array();
+            this.transformDirection(matrix, from, to);
             this.interpreterProxy.pop(2);
-            this.interpreterProxy.push(v3Oop);
+            this.interpreterProxy.push(toOop);
             return true;
         },
 
         b3dTransformMatrixWithInto: function(argCount) {
             if (argCount !== 3) return false;
-            var m3 = this.stackMatrix(0);
-            var m2 = this.stackMatrix(1);
-            var m1 = this.stackMatrix(2);
+            var m3 = this.stackFloat32Array(0, 16);
+            var m2 = this.stackFloat32Array(1, 16);
+            var m1 = this.stackFloat32Array(2, 16);
             if (!m1 || !m2 || !m3) return false;
-            DEBUG && console.log("Squeak3D: b3dTransformMatrixWithInto");
+            DEBUG > 1 && console.log("Squeak3D: b3dTransformMatrixWithInto");
             for (var row = 0; row < 16; row += 4) {
                 var c0 = m1[row+0] * m2[0] + m1[row+1] * m2[4] + m1[row+2] * m2[8] + m1[row+3] * m2[12];
                 var c1 = m1[row+0] * m2[1] + m1[row+1] * m2[5] + m1[row+2] * m2[9] + m1[row+3] * m2[13];
@@ -149,11 +149,67 @@ function B3DEnginePlugin() {
             return true;
         },
 
-        stackMatrix: function(stackIndex) {
-            var m = this.interpreterProxy.stackObjectValue(stackIndex);
-            if (!m.words || m.words.length !== 16) return null;
-            return m.wordsAsFloat32Array();
+        stackFloat32Array: function(stackIndex, length) {
+            var a = this.interpreterProxy.stackObjectValue(stackIndex);
+            if (!a.words || a.words.length !== length) return null;
+            return a.wordsAsFloat32Array();
         },
+
+        transformDirection: function(matrix, from, to, rescale) {
+            var x = from[0];
+            var y = from[1];
+            var z = from[2];
+            var rx = x * matrix[0] + y * matrix[1] + z * matrix[2];
+            var ry = x * matrix[4] + y * matrix[5] + z * matrix[6];
+            var rz = x * matrix[8] + y * matrix[9] + z * matrix[10];
+            if (rescale) {
+                var dot = rx * rx + ry * ry + rz * rz;
+                if (dot < 1.0e-20 ) {
+                    rx = 0;
+                    ry = 0;
+                    rz = 0;
+                } else if (dot !== 1) {
+                    dot = 1 / Math.sqrt(dot);
+                    rx *= dot;
+                    ry *= dot;
+                    rz *= dot;
+                }
+            }
+            to[0] = rx;
+            to[1] = ry;
+            to[2] = rz;
+        },
+
+        transformPoint: function(matrix, from, to) {
+            var x = from[0];
+            var y = from[1];
+            var z = from[2];
+            var rx = x * matrix[0] + y * matrix[1] + z * matrix[2] + matrix[3];
+            var ry = x * matrix[4] + y * matrix[5] + z * matrix[6] + matrix[7];
+            var rz = x * matrix[8] + y * matrix[9] + z * matrix[10] + matrix[11];
+            var rw = x * matrix[12] + y * matrix[13] + z * matrix[14] + matrix[15];
+            if (rw === 1) {
+                to[0] = rx;
+                to[1] = ry;
+                to[2] = rz;
+            } else {
+                if (rw !== 0) rw = 1 / rw;
+                to[0] = rx * rw;
+                to[1] = ry * rw;
+                to[2] = rz * rw;
+            }
+        },
+
+        analyzeMatrix3x3Length: function(m) {
+            var det = m[0] * m[5] * m[10] -
+                m[2] * m[5] * m[8] +
+                m[4] * m[9] * m[2] -
+                m[6] * m[9] * m[0] +
+                m[8] * m[1] * m[6] -
+                m[10] * m[1] * m[4];
+            return det < 0.99 || det > 1.01;
+        },
+
     };
 }
 
