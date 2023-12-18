@@ -1018,6 +1018,12 @@ function OpenGL() {
             DEBUG > 1 && console.log("glTranslatef", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
         },
 
+        glRotatef: function(angle, x, y, z) {
+            if (gl.listMode && this.addToList("glRotatef", [angle, x, y, z])) return;
+            rotatef(gl.matrix, angle, x, y, z);
+            DEBUG > 1 && console.log("glRotatef", GL_Symbols[gl.matrixMode], angle, x, y, z, "=>", Array.from(gl.matrix));
+        },
+
         glScaled: function(x, y, z) {
             if (gl.listMode && this.addToList("glScaled", [x, y, z])) return;
             var m = gl.matrix;
@@ -1394,6 +1400,35 @@ function translateMatrix(m, x, y, z) {
     m[13] += x * m[1] + y * m[5] + z * m[9];
     m[14] += x * m[2] + y * m[6] + z * m[10];
     m[15] += x * m[3] + y * m[7] + z * m[11];
+}
+
+function rotatef(m, angle, x, y, z) {
+    let c = Math.cos(angle * Math.PI / 180);
+    let s = Math.sin(-angle * Math.PI / 180);
+    let v = new Float32Array([x, y, z]);
+    let axis = v.map(e => e / (Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])));
+    let temp = axis.map(e => (1 - c) * e);
+
+    let r = new Float32Array([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    ])
+
+    r[0] = c + temp[0] * axis[0];
+    r[1] = 0 + temp[0] * axis[1] + s * axis[2];
+    r[2] = 0 + temp[0] * axis[2] - s * axis[1];
+
+    r[4] = 0 + temp[1] * axis[0] - s * axis[2];
+    r[5] = c + temp[1] * axis[1];
+    r[6] = 0 + temp[1] * axis[2] + s * axis[0];
+
+    r[8] = 0 + temp[2] * axis[0] + s * axis[1];
+    r[9] = 0 + temp[2] * axis[1] - s * axis[0];
+    r[10] = c + temp[2] * axis[2];
+
+    return multMatrix(m, r);
 }
 
 function initGLConstants() {
