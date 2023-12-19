@@ -217,23 +217,34 @@ function OpenGL() {
         glCallList: function(list) {
             if (gl.listMode && this.addToList("glCallList", [list])) return;
             DEBUG > 1 && console.log("glCallList", list, "START");
-            var list = gl.lists[list];
-            if (!list) {
-                DEBUG > 0 && console.warn("OpenGL: display list not found " + list);
-                return;
-            }
-            for (var i = 0; i < list.commands.length; i++) {
-                var cmd = list.commands[i];
-                this[cmd.name].apply(this, cmd.args);
-            }
+            this.executeList(list);
             DEBUG > 1 && console.log("glCallList", list.id, "DONE");
         },
 
         glCallLists: function(n, type, lists) {
             if (gl.listMode && this.addToList("glCallLists", [n, type, lists])) return;
             DEBUG > 1 && console.log("glCallLists", n, GL_Symbols[type], lists);
+            var array;
+            switch (type) {
+                case GL.BYTE:
+                    array = new Int8Array(lists);
+                    break;
+                case GL.UNSIGNED_BYTE:
+                    array = new Uint8Array(lists);
+                    break;
+                case GL.INT:
+                    array = new Int32Array(lists);
+                    break;
+                case GL.UNSIGNED_INT:
+                    array = new Uint32Array(lists);
+                    break;
+                default:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glCallLists type", GL_Symbols[type]);
+                    return;
+            }
             for (var i = 0; i < n; i++) {
-                this.glCallList(lists[gl.listBase + i]);
+                var list = array[gl.listBase + i];
+                this.executeList(list);
             }
         },
 
@@ -1358,6 +1369,18 @@ function OpenGL() {
             DEBUG > 1 && console.log(locations);
             return locations;
         },
+
+        executeList: function(listId) {
+            var list = gl.lists[listId];
+            if (!list) {
+                DEBUG > 0 && console.warn("OpenGL: display list not found " + listId);
+                return;
+            }
+            for (var i = 0; i < list.commands.length; i++) {
+                var cmd = list.commands[i];
+                this[cmd.name].apply(this, cmd.args);
+            }
+        },
     };
 }
 
@@ -1578,8 +1601,8 @@ function initGLConstants() {
         SPECULAR:                    0x1202,
         POSITION:                    0x1203,
         SPOT_CUTOFF:                 0x1206,
-        GL_COMPILE:                  0x1300,
-        GL_COMPILE_AND_EXECUTE:      0x1301,
+        COMPILE:                     0x1300,
+        COMPILE_AND_EXECUTE:         0x1301,
         BYTE:                        0x1400,
         UNSIGNED_BYTE:               0x1401,
         SHORT:                       0x1402,
