@@ -1020,7 +1020,7 @@ function OpenGL() {
 
         glRotatef: function(angle, x, y, z) {
             if (gl.listMode && this.addToList("glRotatef", [angle, x, y, z])) return;
-            rotatef(gl.matrix, angle, x, y, z);
+            rotateMatrix(gl.matrix, angle, x, y, z);
             DEBUG > 1 && console.log("glRotatef", GL_Symbols[gl.matrixMode], angle, x, y, z, "=>", Array.from(gl.matrix));
         },
 
@@ -1402,33 +1402,51 @@ function translateMatrix(m, x, y, z) {
     m[15] += x * m[3] + y * m[7] + z * m[11];
 }
 
-function rotatef(m, angle, x, y, z) {
-    let c = Math.cos(angle * Math.PI / 180);
-    let s = Math.sin(-angle * Math.PI / 180);
-    let v = new Float32Array([x, y, z]);
-    let axis = v.map(e => e / (Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])));
-    let temp = axis.map(e => (1 - c) * e);
-
-    let r = new Float32Array([
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1,
-    ])
-
-    r[0] = c + temp[0] * axis[0];
-    r[1] = 0 + temp[0] * axis[1] + s * axis[2];
-    r[2] = 0 + temp[0] * axis[2] - s * axis[1];
-
-    r[4] = 0 + temp[1] * axis[0] - s * axis[2];
-    r[5] = c + temp[1] * axis[1];
-    r[6] = 0 + temp[1] * axis[2] + s * axis[0];
-
-    r[8] = 0 + temp[2] * axis[0] + s * axis[1];
-    r[9] = 0 + temp[2] * axis[1] - s * axis[0];
-    r[10] = c + temp[2] * axis[2];
-
-    return multMatrix(m, r);
+function rotateMatrix(m, angle, x, y, z) {
+    // normalize axis vector
+    var len = Math.sqrt(x * x + y * y + z * z);
+    if (len === 0) return;
+    if (len !== 1) {
+        len = 1 / len;
+        x *= len;
+        y *= len;
+        z *= len;
+    }
+    // create rotation matrix
+    var degrees = Math.PI / 180;
+    var c = Math.cos(angle * degrees);
+    var s = Math.sin(angle * degrees);
+    var t = 1 - c;
+    var m00 = x * x * t + c;
+    var m01 = x * y * t - z * s;
+    var m02 = x * z * t + y * s;
+    var m10 = y * x * t + z * s;
+    var m11 = y * y * t + c;
+    var m12 = y * z * t - x * s;
+    var m20 = z * x * t - y * s;
+    var m21 = z * y * t + x * s;
+    var m22 = z * z * t + c;
+    // multiply rotation matrix
+    var m0 = m[0] * m00 + m[4] * m01 + m[8] * m02;
+    var m1 = m[1] * m00 + m[5] * m01 + m[9] * m02;
+    var m2 = m[2] * m00 + m[6] * m01 + m[10] * m02;
+    var m3 = m[3] * m00 + m[7] * m01 + m[11] * m02;
+    var m4 = m[0] * m10 + m[4] * m11 + m[8] * m12;
+    var m5 = m[1] * m10 + m[5] * m11 + m[9] * m12;
+    var m6 = m[2] * m10 + m[6] * m11 + m[10] * m12;
+    var m7 = m[3] * m10 + m[7] * m11 + m[11] * m12;
+    m[8] = m[0] * m20 + m[4] * m21 + m[8] * m22;
+    m[9] = m[1] * m20 + m[5] * m21 + m[9] * m22;
+    m[10] = m[2] * m20 + m[6] * m21 + m[10] * m22;
+    m[11] = m[3] * m20 + m[7] * m21 + m[11] * m22;
+    m[0] = m0;
+    m[1] = m1;
+    m[2] = m2;
+    m[3] = m3;
+    m[4] = m4;
+    m[5] = m5;
+    m[6] = m6;
+    m[7] = m7;
 }
 
 function initGLConstants() {
