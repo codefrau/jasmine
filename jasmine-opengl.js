@@ -15,8 +15,9 @@
 // https://javagl.github.io/GLConstantsTranslator/GLConstantsTranslator.html
 
 // TODO
-// [ ] optimize list compilation glBegin/glEnd
 // [ ] implement draw arrays
+// [ ] fix glBitmap
+// [ ] optimize list compilation glBegin/glEnd
 
 // OpenGL constants (many missing in WebGL)
 var GL;
@@ -123,6 +124,15 @@ function OpenGL() {
                 pixelStoreUnpackSkipRows: 0,
                 pixelStoreUnpackSkipPixels: 0,
                 rasterPos: new Float32Array(4),
+                rasterColor: new Float32Array([1, 1, 1, 1]),
+                bitmapTexture: null, // texture for glBitmap
+                bitmapVertexBuffer: null, // vertex buffer for glBitmap
+                bitmapShader: { // shader program for glBitmap
+                    program: null,
+                    locations: {},
+                }, // shader for glBitmap
+                viewport: new Int32Array([0, 0, 0, 0]),
+                depthRange: new Float32Array([0, 1]),
             };
 
             // set initial state
@@ -201,9 +211,158 @@ function OpenGL() {
         },
 
         glBitmap: function(width, height, xorig, yorig, xmove, ymove, bitmap) {
+            // bitmap is supposed to be declared as "GLubyte*" per OpenGL spec,
+            // which the FFI would convert to Uint8Array for us. However, the
+            // image FFI declaration uses "void*", probably because it makes no
+            // difference in C, a pointer is a pointer. In JS, we get an
+            // ArrayBuffer for "void*" so we need to convert it to Uint8Array
+            // ourselves.
+            if (!bitmap.buffer) bitmap = new Uint8Array(bitmap);
             if (gl.listMode && this.addToList("glBitmap", [width, height, xorig, yorig, xmove, ymove, bitmap])) return;
             DEBUG > 0 && console.log("UNIMPLEMENTED glBitmap", width, height, xorig, yorig, xmove, ymove, bitmap);
-            if (width > 0 && height > 0) console.log("Bitmap at", gl.rasterPos[0] + xorig, gl.rasterPos[1] + yorig, "size", width, height)
+            if (width > 0 && height > 0) {
+                // we need to convert the 1-bit deep bitmap to a 1-byte
+                // per pixel texture in ALPHA format, with the bitmap
+                // mapping 0-bits to transparent, 1-bits to opaque,
+                // and then draw it as a textured quad covering the viewport
+                var texels = new Uint8Array(width * height);
+                var bytesPerRow = Math.ceil(width / 32) * 4;
+                for (var y = 0; y < height; y++) {
+                    var byteIndex = y * bytesPerRow;
+                    var bitIndex = 7;
+                    for (var x = 0; x < width; x++) {
+                        var bit = bitmap[byteIndex] & (1 << bitIndex);
+                        if (bit) texels[y * width + x] = 255;
+                        bitIndex--;
+                        if (bitIndex < 0) {
+                            byteIndex++;
+                            bitIndex = 7;
+                        }
+                    }
+                }
+                // debug: print bitmap
+                // s=''; for (y = height -1 ; y >= 0; y--) { for (x = 0; x < width; x++) s += texels[y * width + x] ? '⬛️' : '⬜️'; s+='\n'}; console.log(s)
+                var texture = gl.bitmapTexture;
+                if (!texture) {
+                    texture = gl.bitmapTexture = webgl.createTexture();
+                    webgl.bindTexture(webgl.TEXTURE_2D, texture);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+                } else {
+                    webgl.bindTexture(webgl.TEXTURE_2D, texture);
+                }
+                webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 1);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.ALPHA, width, height, 0, webgl.ALPHA, webgl.UNSIGNED_BYTE, texels);
+                webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
+
+                webgl.disable(webgl.CULL_FACE);
+                webgl.disable(webgl.DEPTH_TEST);
+                webgl.disable(webgl.BLEND);
+                webgl.colorMask(true, true, true, true);
+                webgl.viewport(0, 0, webgl.drawingBufferWidth, webgl.drawingBufferHeight);
+                var vertexBuffer = gl.bitmapVertexBuffer;
+                if (!vertexBuffer) {
+                    var vertices = new Float32Array([
+                        0, 0,
+                        1, 0,
+                        0, 1,
+                        1, 1,
+                    ]);
+                    vertexBuffer = gl.bitmapVertexBuffer = webgl.createBuffer();
+                    webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
+                    webgl.bufferData(webgl.ARRAY_BUFFER, vertices, webgl.STATIC_DRAW);
+                } else {
+                    webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
+                }
+                var shader = gl.bitmapShader;
+                if (!shader.program) {
+                    shader.program = webgl.createProgram();
+                    var vs = webgl.createShader(webgl.VERTEX_SHADER);
+                    webgl.shaderSource(vs, `
+                        attribute vec2 a_position;
+                        uniform vec3 u_raster;
+                        uniform vec2 u_rasterOffset;
+                        uniform vec2 u_rasterScale;
+                        uniform vec2 u_translate;
+                        uniform vec2 u_scale;
+                        varying vec2 v_texcoord;
+                        void main() {
+                            vec2 raster = u_raster.xy * u_rasterScale + u_rasterOffset;
+                            vec2 pos = (a_position + raster) * u_scale + u_translate;
+                            gl_Position = vec4(pos, u_raster.z, 1);
+                            v_texcoord = a_position;
+                        }
+                    `);
+                    webgl.compileShader(vs);
+                    if (!webgl.getShaderParameter(vs, webgl.COMPILE_STATUS)) {
+                        console.error("OpenGL: vertex shader compile error: " + webgl.getShaderInfoLog(vs));
+                        debugger;
+                        return;
+                    }
+                    var fs = webgl.createShader(webgl.FRAGMENT_SHADER);
+                    webgl.shaderSource(fs, `
+                        precision mediump float;
+                        uniform sampler2D u_texture;
+                        uniform vec4 u_color;
+                        varying vec2 v_texcoord;
+                        void main() {
+                            float alpha = texture2D(u_texture, v_texcoord).a;
+                            if (alpha < 0.5) discard;
+                            gl_FragColor = u_color;
+                        }
+                    `);
+                    webgl.compileShader(fs);
+                    if (!webgl.getShaderParameter(fs, webgl.COMPILE_STATUS)) {
+                        console.error("OpenGL: fragment shader compile error: " + webgl.getShaderInfoLog(fs));
+                        debugger;
+                        return;
+                    }
+                    webgl.attachShader(shader.program, vs);
+                    webgl.attachShader(shader.program, fs);
+                    webgl.linkProgram(shader.program);
+                    if (!webgl.getProgramParameter(shader.program, webgl.LINK_STATUS)) {
+                        console.error("OpenGL: shader link error: " + webgl.getProgramInfoLog(shader.program));
+                        debugger
+                        return;
+                    }
+                    shader.locations = {
+                        a_position: webgl.getAttribLocation(shader.program, "a_position"),
+                        u_texture: webgl.getUniformLocation(shader.program, "u_texture"),
+                        u_color: webgl.getUniformLocation(shader.program, "u_color"),
+                        u_raster: webgl.getUniformLocation(shader.program, "u_raster"),
+                        u_rasterOffset: webgl.getUniformLocation(shader.program, "u_rasterOffset"),
+                        u_rasterScale: webgl.getUniformLocation(shader.program, "u_rasterScale"),
+                        u_translate: webgl.getUniformLocation(shader.program, "u_translate"),
+                        u_scale: webgl.getUniformLocation(shader.program, "u_scale"),
+                    };
+                }
+                webgl.useProgram(shader.program);
+                webgl.enableVertexAttribArray(shader.locations.a_position);
+                webgl.vertexAttribPointer(shader.locations.a_position, 2, webgl.FLOAT, false, 0, 0);
+                webgl.uniform1i(shader.locations.u_texture, 0);
+                webgl.uniform4fv(shader.locations.u_color, gl.rasterColor);
+                // these seem to work for 640x480... I can't figure out the right transform yet
+                if (!this.bitmapScale) this.bitmapScale = [0.0311, 0.0419];
+                if (!this.bitmapTranslate) this.bitmapTranslate = [-1, -1];
+                if (!this.bitmapRasterOffset) this.bitmapRasterOffset = [0, 0];
+                if (!this.bitmapRasterScale) this.bitmapRasterScale = [0.1, 0.1];
+                // these properties allow intereactive debugging
+                webgl.uniform3f(shader.locations.u_raster, gl.rasterPos[0] + xorig, gl.rasterPos[1] + yorig, gl.rasterPos[2]);
+                webgl.uniform2fv(shader.locations.u_rasterOffset, this.bitmapRasterOffset);
+                webgl.uniform2fv(shader.locations.u_rasterScale, this.bitmapRasterScale);
+                webgl.uniform2fv(shader.locations.u_translate, this.bitmapTranslate);
+                webgl.uniform2fv(shader.locations.u_scale, this.bitmapScale);
+                webgl.drawArrays(webgl.TRIANGLE_STRIP, 0, 4);
+                webgl.disableVertexAttribArray(shader.locations.a_position);
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, null);
+                webgl.useProgram(null);
+                webgl.bindTexture(webgl.TEXTURE_2D, null);
+                webgl.enable(webgl.CULL_FACE);
+                webgl.enable(webgl.DEPTH_TEST);
+                webgl.enable(webgl.BLEND);
+            }
             gl.rasterPos[0] += xmove;
             gl.rasterPos[1] += ymove;
         },
@@ -243,7 +402,7 @@ function OpenGL() {
                     return;
             }
             for (var i = 0; i < n; i++) {
-                var list = array[gl.listBase + i];
+                var list = gl.listBase + array[i];
                 this.executeList(list);
             }
         },
@@ -357,6 +516,12 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glDepthMask", [flag])) return;
             DEBUG > 1 && console.log("glDepthMask", flag);
             webgl.depthMask(flag);
+        },
+
+        glDepthRange: function(zNear, zFar) {
+            if (gl.listMode && this.addToList("glDepthRange", [zNear, zFar])) return;
+            DEBUG > 1 && console.log("glDepthRange", zNear, zFar);
+            webgl.depthRange(zNear, zFar);
         },
 
         glDisable: function(cap) {
@@ -1015,6 +1180,12 @@ function OpenGL() {
             transformPoint(m, gl.rasterPos, gl.rasterPos);
             m = gl.matrices[GL.MODELVIEW][0];
             transformPoint(m, gl.rasterPos, gl.rasterPos);
+            // transform to window coordinates
+            gl.rasterPos[0] = (gl.rasterPos[0] * 0.5 + 0.5) * gl.viewport[2] + gl.viewport[0];
+            gl.rasterPos[1] = (gl.rasterPos[1] * 0.5 + 0.5) * gl.viewport[3] + gl.viewport[1];
+            gl.rasterPos[2] = (gl.rasterPos[2] * 0.5 + 0.5) * (gl.depthRange[1] - gl.depthRange[0]) + gl.depthRange[0];
+            // remember raster color
+            gl.rasterColor.set(gl.color);
         },
 
         glTranslated: function(x, y, z) {
@@ -1240,6 +1411,10 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glViewport", [x, y, width, height])) return;
             DEBUG > 1 && console.log("glViewport", x, y, width, height);
             webgl.viewport(x, y, width, height);
+            gl.viewport[0] = x;
+            gl.viewport[1] = y;
+            gl.viewport[2] = width;
+            gl.viewport[3] = height;
         },
 
         pushVertex: function(position) {

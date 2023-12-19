@@ -155,6 +155,16 @@ function B3DAcceleratorPlugin() {
             return true;
         },
 
+        primitiveDestroyTexture: function(argCount) {
+            if (argCount !== 2) return false;
+            var texture = this.interpreterProxy.stackIntegerValue(0);
+            if (!this.currentFromStack(1)) return false;
+            DEBUG > 0 && console.log("B3DAccel: primitiveDestroyTexture", texture);
+            OpenGL.glDeleteTextures(1, [texture]);
+            this.interpreterProxy.pop(argCount);
+            return true;
+        },
+
         primitiveFinishRenderer: function(argCount) {
             if (argCount !== 1) return false;
             if (!this.currentFromStack(0)) return false;
@@ -230,13 +240,26 @@ function B3DAcceleratorPlugin() {
             return true;
         },
 
+        primitiveSetBufferRect: function(argCount) {
+            if (argCount !== 5) return false;
+            if (!this.currentFromStack(4)) return false;
+            var x = this.interpreterProxy.stackIntegerValue(3);
+            var y = this.interpreterProxy.stackIntegerValue(2);
+            var w = this.interpreterProxy.stackIntegerValue(1);
+            var h = this.interpreterProxy.stackIntegerValue(0);
+            DEBUG > 1 && console.log("B3DAccel: primitiveSetBufferRect", x, y, w, h);
+            this.b3dxSetViewport(currentRenderer, x, y, w, h);
+            this.interpreterProxy.pop(argCount);
+            return true;
+        },
+
         primitiveSetViewport: function(argCount) {
             if (argCount !== 5) return false;
-            var h = this.interpreterProxy.stackIntegerValue(0);
-            var w = this.interpreterProxy.stackIntegerValue(1);
-            var y = this.interpreterProxy.stackIntegerValue(2);
-            var x = this.interpreterProxy.stackIntegerValue(3);
             if (!this.currentFromStack(4)) return false;
+            var x = this.interpreterProxy.stackIntegerValue(3);
+            var y = this.interpreterProxy.stackIntegerValue(2);
+            var w = this.interpreterProxy.stackIntegerValue(1);
+            var h = this.interpreterProxy.stackIntegerValue(0);
             DEBUG > 1 && console.log("B3DAccel: primitiveSetViewport", x, y, w, h);
             this.b3dxSetViewport(currentRenderer, x, y, w, h);
             this.interpreterProxy.pop(argCount);
@@ -364,8 +387,8 @@ function B3DAcceleratorPlugin() {
             OpenGL.glPushMatrix();
             OpenGL.glLoadIdentity();
 
-            var width = currentRenderer.canvas.width;
-            var height = currentRenderer.canvas.height;
+            var width = currentRenderer.webgl.drawingBufferWidth;
+            var height = currentRenderer.webgl.drawingBufferHeight;
             OpenGL.glViewport(0, 0, width, height);
             OpenGL.glScaled(2.0/width, -2.0/height, 1.0);
             OpenGL.glTranslated(width*-0.5, height*-0.5, 0.0);
