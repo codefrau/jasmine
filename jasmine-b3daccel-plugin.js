@@ -48,6 +48,28 @@ function B3DAcceleratorPlugin() {
                 currentRenderer = renderer;
                 if (OpenGL) OpenGL.makeCurrent(renderer);
             }
+            if (renderer.webgl.isContextLost()) {
+                if (!renderer.warning) {
+                    console.warn("B3DAccel: WebGL context lost");
+                    var div = document.createElement("div");
+                    div.style.position = "absolute";
+                    div.style.left = renderer.canvas.offsetLeft + "px";
+                    div.style.top = renderer.canvas.offsetTop + "px";
+                    div.style.width = renderer.canvas.width + "px";
+                    div.style.height = renderer.canvas.height + "px";
+                    div.style.backgroundColor = "rgba(0,0,0,0.8)";
+                    div.style.color = "white";
+                    div.style.fontFamily = "sans-serif";
+                    div.style.fontSize = "24px";
+                    div.style.textAlign = "center";
+                    div.style.lineHeight = renderer.canvas.height + "px";
+                    div.style.pointerEvents = "none";
+                    div.style.cursor = "normal";
+                    div.innerHTML = "WebGL context lost";
+                    document.body.appendChild(div);
+                    renderer.warning = div;
+                }
+            }
         },
 
         currentFromStack: function(i) {
@@ -146,6 +168,10 @@ function B3DAcceleratorPlugin() {
             if (!this.currentFromStack(0)) return false;
             DEBUG > 0 && console.log("B3DAccel: primitiveDestroyRenderer", currentRenderer.rendererId);
             if (OpenGL) OpenGL.destroyGL(currentRenderer);
+            if (currentRenderer.warning) {
+                currentRenderer.warning.remove();
+                currentRenderer.warning = null;
+            }
             currentRenderer.canvas.remove();
             currentRenderer.canvas = null;
             currentRenderer.webgl = null;
@@ -442,6 +468,13 @@ function B3DAcceleratorPlugin() {
             canvas.style.top = (y * scale) + "px";
             canvas.style.width = (w * scale) + "px";
             canvas.style.height = (h * scale) + "px";
+            var warning = renderer.warning;
+            if (warning) {
+                warning.style.left =(x * scale) + "px";
+                warning.style.top = (y * scale) + "px";
+                warning.style.width = (w * scale) + "px";
+                warning.style.height = (h * scale) + "px";
+            }
         },
 
         b3dxDisableLights: function(renderer) {
