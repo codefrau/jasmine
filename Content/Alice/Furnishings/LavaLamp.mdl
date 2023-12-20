@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+LavaLamp = _MakeObject(MakeObject, None, "LavaLamp", StoringScene=0)
+LavaLamp.SetTexture("LavaLamp.bmp", ObjectOnly, RightNow)
+LavaLamp.SetColor(White,ObjectOnly,rightnow)
+LavaLamp.SetShininess(0.0,ObjectOnly,rightnow)
+LavaLamp.SetHighLightColor(Black,ObjectOnly,rightnow)
+LavaLamp.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LavaLamp.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LavaLamp.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LavaLamp.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LavaLamp.BecomeFirstClass(RightNow)
+LavaLamp._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -0.0469000004232, 0.0, 1.0)))
+LoadGeometry(LavaLamp,"LavaLamp.vfb")
+LavaLamp.Base = _MakeObject(MakeObject, LavaLamp, "LavaLamp.Base", StoringScene=0)
+LavaLamp.Base.SetTexture("LavaLamp.bmp", ObjectOnly, RightNow)
+LavaLamp.Base.SetColor(White,ObjectOnly,rightnow)
+LavaLamp.Base.SetShininess(0.0,ObjectOnly,rightnow)
+LavaLamp.Base.SetHighLightColor(Black,ObjectOnly,rightnow)
+LavaLamp.Base.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LavaLamp.Base.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LavaLamp.Base.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LavaLamp.Base.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LavaLamp.Base.BecomePart(RightNow)
+LavaLamp.Base._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(LavaLamp.Base,"LavaLamp.Base.vfb")
+LavaLamp.Glass = _MakeObject(MakeObject, LavaLamp, "LavaLamp.Glass", StoringScene=0)
+LavaLamp.Glass.SetTexture("LavaLamp.bmp", ObjectOnly, RightNow)
+LavaLamp.Glass.SetColor(White,ObjectOnly,rightnow)
+LavaLamp.Glass.SetShininess(0.0,ObjectOnly,rightnow)
+LavaLamp.Glass.SetHighLightColor(Black,ObjectOnly,rightnow)
+LavaLamp.Glass.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LavaLamp.Glass.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LavaLamp.Glass.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LavaLamp.Glass.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LavaLamp.Glass.BecomePart(RightNow)
+LavaLamp.Glass._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(LavaLamp.Glass,"LavaLamp.Glass.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

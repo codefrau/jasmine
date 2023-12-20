@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+bed = _MakeObject(MakeObject, None, "bed", StoringScene=0)
+bed.SetTexture("bed.bmp", ObjectOnly, RightNow)
+bed.SetColor(White,ObjectOnly,rightnow)
+bed.SetShininess(0.0,ObjectOnly,rightnow)
+bed.SetHighLightColor(Black,ObjectOnly,rightnow)
+bed.SetEmissiveColor(Black,ObjectOnly,rightnow)
+bed.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+bed.SetFillingStyle(Filled, ObjectOnly, RightNow)
+bed.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+bed.BecomeFirstClass(RightNow)
+bed._SetLocalTransformation (((1.00000226498, 2.35829960262e-015, -2.86092625146e-008, 0.0), (8.66124731072e-015, 1.0, -3.34810440006e-015, 0.0), (2.12904573971e-008, -1.20325127679e-015, 1.00000178814, 0.0), (0.0, 0.0, -2.11758236814e-022, 1.0)))
+LoadGeometry(bed,"bed.vfb")
+bed.posts = _MakeObject(MakeObject, bed, "bed.posts", StoringScene=0)
+bed.posts.SetTexture("bed.bmp", ObjectOnly, RightNow)
+bed.posts.SetColor(White,ObjectOnly,rightnow)
+bed.posts.SetShininess(0.0,ObjectOnly,rightnow)
+bed.posts.SetHighLightColor(Black,ObjectOnly,rightnow)
+bed.posts.SetEmissiveColor(Black,ObjectOnly,rightnow)
+bed.posts.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+bed.posts.SetFillingStyle(Filled, ObjectOnly, RightNow)
+bed.posts.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+bed.posts.BecomePart(RightNow)
+bed.posts._SetLocalTransformation (((0.999999821186, -1.16072917864e-022, -3.65633630144e-014, 0.0), (-1.8049105957e-022, 1.0, 3.83653350468e-022, 0.0), (4.61888990597e-013, -6.50724229414e-023, 0.999999821186, 0.0), (-1.4199496294e-029, 0.0, 5.04870979341e-029, 1.0)))
+LoadGeometry(bed.posts,"bed.posts.vfb")
+bed.pillows = _MakeObject(MakeObject, bed, "bed.pillows", StoringScene=0)
+bed.pillows.SetTexture("bed.bmp", ObjectOnly, RightNow)
+bed.pillows.SetColor(White,ObjectOnly,rightnow)
+bed.pillows.SetShininess(0.0,ObjectOnly,rightnow)
+bed.pillows.SetHighLightColor(Black,ObjectOnly,rightnow)
+bed.pillows.SetEmissiveColor(Black,ObjectOnly,rightnow)
+bed.pillows.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+bed.pillows.SetFillingStyle(Filled, ObjectOnly, RightNow)
+bed.pillows.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+bed.pillows.BecomePart(RightNow)
+bed.pillows._SetLocalTransformation (((0.999999821186, -1.16072917864e-022, -3.65633630144e-014, 0.0), (-1.8049105957e-022, 1.0, 3.83653350468e-022, 0.0), (4.61888990597e-013, -6.50724229414e-023, 0.999999821186, 0.0), (1.91026401808e-006, 0.0, -0.699998497963, 1.0)))
+LoadGeometry(bed.pillows,"bed.pillows.vfb")
+bed.head = _MakeObject(MakeObject, bed, "bed.head", StoringScene=0)
+bed.head.SetTexture("bed.bmp", ObjectOnly, RightNow)
+bed.head.SetColor(White,ObjectOnly,rightnow)
+bed.head.SetShininess(0.0,ObjectOnly,rightnow)
+bed.head.SetHighLightColor(Black,ObjectOnly,rightnow)
+bed.head.SetEmissiveColor(Black,ObjectOnly,rightnow)
+bed.head.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+bed.head.SetFillingStyle(Filled, ObjectOnly, RightNow)
+bed.head.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+bed.head.BecomePart(RightNow)
+bed.head._SetLocalTransformation (((0.999999821186, 2.40651733158e-019, 0.000200000082259, 0.0), (6.69443318497e-019, 1.0, 1.73236642482e-018, 0.0), (-0.000199999820325, 4.71521486886e-019, 0.999999940395, 0.0), (2.72894067166e-006, 0.0, -0.999997794628, 1.0)))
+LoadGeometry(bed.head,"bed.head.vfb")
+bed.mattress = _MakeObject(MakeObject, bed, "bed.mattress", StoringScene=0)
+bed.mattress.SetTexture("bed.bmp", ObjectOnly, RightNow)
+bed.mattress.SetColor(White,ObjectOnly,rightnow)
+bed.mattress.SetShininess(0.0,ObjectOnly,rightnow)
+bed.mattress.SetHighLightColor(Black,ObjectOnly,rightnow)
+bed.mattress.SetEmissiveColor(Black,ObjectOnly,rightnow)
+bed.mattress.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+bed.mattress.SetFillingStyle(Filled, ObjectOnly, RightNow)
+bed.mattress.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+bed.mattress.BecomePart(RightNow)
+bed.mattress._SetLocalTransformation (((0.999999821186, -1.16072917864e-022, -3.65633630144e-014, 0.0), (-1.8049105957e-022, 1.0, 3.83653350468e-022, 0.0), (4.61888990597e-013, -6.50724229414e-023, 0.999999821186, 0.0), (1.73224505757e-015, -0.199999988079, -6.6961967299e-016, 1.0)))
+LoadGeometry(bed.mattress,"bed.mattress.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

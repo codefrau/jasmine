@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Toilet = _MakeObject(MakeObject, None, "Toilet", StoringScene=0)
+Toilet.SetTexture("Toilet.bmp", ObjectOnly, RightNow)
+Toilet.SetColor(White,ObjectOnly,rightnow)
+Toilet.SetShininess(0.0,ObjectOnly,rightnow)
+Toilet.SetHighLightColor(Black,ObjectOnly,rightnow)
+Toilet.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Toilet.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Toilet.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Toilet.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Toilet.BecomeFirstClass(RightNow)
+Toilet._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Toilet,"Toilet.vfb")
+Toilet.seat = _MakeObject(MakeObject, Toilet, "Toilet.seat", StoringScene=0)
+Toilet.seat.SetTexture("Toilet.bmp", ObjectOnly, RightNow)
+Toilet.seat.SetColor(White,ObjectOnly,rightnow)
+Toilet.seat.SetShininess(0.0,ObjectOnly,rightnow)
+Toilet.seat.SetHighLightColor(Black,ObjectOnly,rightnow)
+Toilet.seat.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Toilet.seat.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Toilet.seat.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Toilet.seat.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Toilet.seat.BecomePart(RightNow)
+Toilet.seat._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.330900013447, -0.133200004697, 1.0)))
+LoadGeometry(Toilet.seat,"Toilet.seat.vfb")
+Toilet.water = _MakeObject(MakeObject, Toilet, "Toilet.water", StoringScene=0)
+Toilet.water.SetTexture("Toilet.bmp", ObjectOnly, RightNow)
+Toilet.water.SetColor(White,ObjectOnly,rightnow)
+Toilet.water.SetShininess(0.0,ObjectOnly,rightnow)
+Toilet.water.SetHighLightColor(Black,ObjectOnly,rightnow)
+Toilet.water.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Toilet.water.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Toilet.water.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Toilet.water.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Toilet.water.BecomePart(RightNow)
+Toilet.water._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.267300009727, 0.0969000011683, 1.0)))
+LoadGeometry(Toilet.water,"Toilet.water.vfb")
+Toilet.flush = _MakeObject(MakeObject, Toilet, "Toilet.flush", StoringScene=0)
+Toilet.flush.SetTexture("Toilet.bmp", ObjectOnly, RightNow)
+Toilet.flush.SetColor(White,ObjectOnly,rightnow)
+Toilet.flush.SetShininess(0.0,ObjectOnly,rightnow)
+Toilet.flush.SetHighLightColor(Black,ObjectOnly,rightnow)
+Toilet.flush.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Toilet.flush.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Toilet.flush.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Toilet.flush.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Toilet.flush.BecomePart(RightNow)
+Toilet.flush._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.147400006652, 0.623600006104, -0.169599995017, 1.0)))
+LoadGeometry(Toilet.flush,"Toilet.flush.vfb")
+Toilet.lid = _MakeObject(MakeObject, Toilet, "Toilet.lid", StoringScene=0)
+Toilet.lid.SetTexture("Toilet.bmp", ObjectOnly, RightNow)
+Toilet.lid.SetColor(White,ObjectOnly,rightnow)
+Toilet.lid.SetShininess(0.0,ObjectOnly,rightnow)
+Toilet.lid.SetHighLightColor(Black,ObjectOnly,rightnow)
+Toilet.lid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Toilet.lid.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Toilet.lid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Toilet.lid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Toilet.lid.BecomePart(RightNow)
+Toilet.lid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.330900013447, -0.157399997115, 1.0)))
+LoadGeometry(Toilet.lid,"Toilet.lid.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,119 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+SlideProjector = _MakeObject(MakeObject, None, "SlideProjector", StoringScene=0)
+SlideProjector.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.BecomeFirstClass(RightNow)
+SlideProjector._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(SlideProjector,"SlideProjector.vfb")
+SlideProjector.Lens = _MakeObject(MakeObject, SlideProjector, "SlideProjector.Lens", StoringScene=0)
+SlideProjector.Lens.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.Lens.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.Lens.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.Lens.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.Lens.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.Lens.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.Lens.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.Lens.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.Lens.BecomePart(RightNow)
+SlideProjector.Lens._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (-7.45800018311, 3.27690005302, 9.81459999084, 1.0)))
+LoadGeometry(SlideProjector.Lens,"SlideProjector.Lens.vfb")
+SlideProjector.LeftFrontLeg = _MakeObject(MakeObject, SlideProjector, "SlideProjector.LeftFrontLeg", StoringScene=0)
+SlideProjector.LeftFrontLeg.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.LeftFrontLeg.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.LeftFrontLeg.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.LeftFrontLeg.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.LeftFrontLeg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.LeftFrontLeg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.LeftFrontLeg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.LeftFrontLeg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.LeftFrontLeg.BecomePart(RightNow)
+SlideProjector.LeftFrontLeg._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (8.53979969025, 0.631799995899, 8.80510044098, 1.0)))
+LoadGeometry(SlideProjector.LeftFrontLeg,"SlideProjector.LeftFrontLeg.vfb")
+SlideProjector.RightFrontLeg = _MakeObject(MakeObject, SlideProjector, "SlideProjector.RightFrontLeg", StoringScene=0)
+SlideProjector.RightFrontLeg.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.RightFrontLeg.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.RightFrontLeg.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.RightFrontLeg.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.RightFrontLeg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.RightFrontLeg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.RightFrontLeg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.RightFrontLeg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.RightFrontLeg.BecomePart(RightNow)
+SlideProjector.RightFrontLeg._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (-8.63309955597, 0.631799995899, 8.75360012054, 1.0)))
+LoadGeometry(SlideProjector.RightFrontLeg,"SlideProjector.RightFrontLeg.vfb")
+SlideProjector.RightBackLeg = _MakeObject(MakeObject, SlideProjector, "SlideProjector.RightBackLeg", StoringScene=0)
+SlideProjector.RightBackLeg.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.RightBackLeg.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.RightBackLeg.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.RightBackLeg.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.RightBackLeg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.RightBackLeg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.RightBackLeg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.RightBackLeg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.RightBackLeg.BecomePart(RightNow)
+SlideProjector.RightBackLeg._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (-8.63300037384, 0.631799995899, -8.62119960785, 1.0)))
+LoadGeometry(SlideProjector.RightBackLeg,"SlideProjector.RightBackLeg.vfb")
+SlideProjector.LeftBackLeg = _MakeObject(MakeObject, SlideProjector, "SlideProjector.LeftBackLeg", StoringScene=0)
+SlideProjector.LeftBackLeg.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.LeftBackLeg.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.LeftBackLeg.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.LeftBackLeg.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.LeftBackLeg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.LeftBackLeg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.LeftBackLeg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.LeftBackLeg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.LeftBackLeg.BecomePart(RightNow)
+SlideProjector.LeftBackLeg._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (8.53989982605, 0.631799995899, -8.62119960785, 1.0)))
+LoadGeometry(SlideProjector.LeftBackLeg,"SlideProjector.LeftBackLeg.vfb")
+SlideProjector.Tray = _MakeObject(MakeObject, SlideProjector, "SlideProjector.Tray", StoringScene=0)
+SlideProjector.Tray.SetTexture("SlideProjector.bmp", ObjectOnly, RightNow)
+SlideProjector.Tray.SetColor(White,ObjectOnly,rightnow)
+SlideProjector.Tray.SetShininess(0.0,ObjectOnly,rightnow)
+SlideProjector.Tray.SetHighLightColor(Black,ObjectOnly,rightnow)
+SlideProjector.Tray.SetEmissiveColor(Black,ObjectOnly,rightnow)
+SlideProjector.Tray.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+SlideProjector.Tray.SetFillingStyle(Filled, ObjectOnly, RightNow)
+SlideProjector.Tray.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+SlideProjector.Tray.BecomePart(RightNow)
+SlideProjector.Tray._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (0.0, 5.45249986649, -0.0998999997973, 1.0)))
+LoadGeometry(SlideProjector.Tray,"SlideProjector.Tray.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

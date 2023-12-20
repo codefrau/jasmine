@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Fighter = _MakeObject(MakeObject, None, "Fighter", StoringScene=0)
+Fighter.SetTexture("Fighter.bmp", ObjectOnly, RightNow)
+Fighter.SetColor(White,ObjectOnly,rightnow)
+Fighter.SetShininess(0.0,ObjectOnly,rightnow)
+Fighter.SetHighLightColor(Black,ObjectOnly,rightnow)
+Fighter.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Fighter.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Fighter.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Fighter.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Fighter.BecomeFirstClass(RightNow)
+Fighter._SetLocalTransformation (((0.25, 0.0, 0.0, 0.0), (0.0, 0.25, 0.0, 0.0), (0.0, 0.0, 0.25, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Fighter,"Fighter.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

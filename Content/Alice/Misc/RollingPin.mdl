@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+RollingPin = _MakeObject(MakeObject, None, "RollingPin", StoringScene=0)
+RollingPin.SetTexture("RollingPin.bmp", ObjectOnly, RightNow)
+RollingPin.SetColor(White,ObjectOnly,rightnow)
+RollingPin.SetShininess(0.0,ObjectOnly,rightnow)
+RollingPin.SetHighLightColor(Black,ObjectOnly,rightnow)
+RollingPin.SetEmissiveColor(Black,ObjectOnly,rightnow)
+RollingPin.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+RollingPin.SetFillingStyle(Filled, ObjectOnly, RightNow)
+RollingPin.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+RollingPin.BecomeFirstClass(RightNow)
+RollingPin._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(RollingPin,"RollingPin.vfb")
+RollingPin.RightHandle = _MakeObject(MakeObject, RollingPin, "RollingPin.RightHandle", StoringScene=0)
+RollingPin.RightHandle.SetTexture("RollingPin.bmp", ObjectOnly, RightNow)
+RollingPin.RightHandle.SetColor(White,ObjectOnly,rightnow)
+RollingPin.RightHandle.SetShininess(0.0,ObjectOnly,rightnow)
+RollingPin.RightHandle.SetHighLightColor(Black,ObjectOnly,rightnow)
+RollingPin.RightHandle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+RollingPin.RightHandle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+RollingPin.RightHandle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+RollingPin.RightHandle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+RollingPin.RightHandle.BecomePart(RightNow)
+RollingPin.RightHandle._SetLocalTransformation (((0.999700009823, -0.0251000002027, 0.000600000028498, 0.0), (0.0251000002027, 0.999400019646, -0.0251000002027, 0.0), (0.0, 0.0251000002027, 0.999700009823, 0.0), (-10.2033004761, -0.00920000020415, 0.0668999999762, 1.0)))
+LoadGeometry(RollingPin.RightHandle,"RollingPin.RightHandle.vfb")
+RollingPin.LeftHandle = _MakeObject(MakeObject, RollingPin, "RollingPin.LeftHandle", StoringScene=0)
+RollingPin.LeftHandle.SetTexture("RollingPin.bmp", ObjectOnly, RightNow)
+RollingPin.LeftHandle.SetColor(White,ObjectOnly,rightnow)
+RollingPin.LeftHandle.SetShininess(0.0,ObjectOnly,rightnow)
+RollingPin.LeftHandle.SetHighLightColor(Black,ObjectOnly,rightnow)
+RollingPin.LeftHandle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+RollingPin.LeftHandle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+RollingPin.LeftHandle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+RollingPin.LeftHandle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+RollingPin.LeftHandle.BecomePart(RightNow)
+RollingPin.LeftHandle._SetLocalTransformation (((0.999700009823, -0.0251000002027, 0.000600000028498, 0.0), (0.0251000002027, 0.999400019646, -0.0251000002027, 0.0), (0.0, 0.0251000002027, 0.999700009823, 0.0), (10.1638002396, -0.00910000037402, 0.0670000016689, 1.0)))
+LoadGeometry(RollingPin.LeftHandle,"RollingPin.LeftHandle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+DrinkParrot = _MakeObject(MakeObject, None, "DrinkParrot", StoringScene=0)
+DrinkParrot.SetTexture("DrinkParrot.bmp", ObjectOnly, RightNow)
+DrinkParrot.SetColor(White,ObjectOnly,rightnow)
+DrinkParrot.SetShininess(0.0,ObjectOnly,rightnow)
+DrinkParrot.SetHighLightColor(Black,ObjectOnly,rightnow)
+DrinkParrot.SetEmissiveColor(Black,ObjectOnly,rightnow)
+DrinkParrot.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+DrinkParrot.SetFillingStyle(Filled, ObjectOnly, RightNow)
+DrinkParrot.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+DrinkParrot.BecomeFirstClass(RightNow)
+DrinkParrot._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.000588679977227, 0.0, 1.0)))
+LoadGeometry(DrinkParrot,"DrinkParrot.vfb")
+DrinkParrot.Base = _MakeObject(MakeObject, DrinkParrot, "DrinkParrot.Base", StoringScene=0)
+DrinkParrot.Base.SetTexture("DrinkParrot.bmp", ObjectOnly, RightNow)
+DrinkParrot.Base.SetColor(White,ObjectOnly,rightnow)
+DrinkParrot.Base.SetShininess(0.0,ObjectOnly,rightnow)
+DrinkParrot.Base.SetHighLightColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Base.SetEmissiveColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Base.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+DrinkParrot.Base.SetFillingStyle(Filled, ObjectOnly, RightNow)
+DrinkParrot.Base.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+DrinkParrot.Base.BecomePart(RightNow)
+DrinkParrot.Base._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(DrinkParrot.Base,"DrinkParrot.Base.vfb")
+DrinkParrot.Body = _MakeObject(MakeObject, DrinkParrot, "DrinkParrot.Body", StoringScene=0)
+DrinkParrot.Body.SetTexture("DrinkParrot.bmp", ObjectOnly, RightNow)
+DrinkParrot.Body.SetColor(White,ObjectOnly,rightnow)
+DrinkParrot.Body.SetShininess(0.0,ObjectOnly,rightnow)
+DrinkParrot.Body.SetHighLightColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Body.SetEmissiveColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Body.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+DrinkParrot.Body.SetFillingStyle(Filled, ObjectOnly, RightNow)
+DrinkParrot.Body.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+DrinkParrot.Body.BecomePart(RightNow)
+DrinkParrot.Body._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.600000023842, 0.0, 1.0)))
+LoadGeometry(DrinkParrot.Body,"DrinkParrot.Body.vfb")
+DrinkParrot.Body.Water = _MakeObject(MakeObject, DrinkParrot.Body, "DrinkParrot.Body.Water", StoringScene=0)
+DrinkParrot.Body.Water.SetTexture("DrinkParrot.bmp", ObjectOnly, RightNow)
+DrinkParrot.Body.Water.SetColor(White,ObjectOnly,rightnow)
+DrinkParrot.Body.Water.SetShininess(0.0,ObjectOnly,rightnow)
+DrinkParrot.Body.Water.SetHighLightColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Body.Water.SetEmissiveColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Body.Water.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+DrinkParrot.Body.Water.SetFillingStyle(Filled, ObjectOnly, RightNow)
+DrinkParrot.Body.Water.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+DrinkParrot.Body.Water.BecomePart(RightNow)
+DrinkParrot.Body.Water._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -0.241799995303, -0.241799995303, 1.0)))
+LoadGeometry(DrinkParrot.Body.Water,"DrinkParrot.Body.Water.vfb")
+DrinkParrot.Body.GlassBody = _MakeObject(MakeObject, DrinkParrot.Body, "DrinkParrot.Body.GlassBody", StoringScene=0)
+DrinkParrot.Body.GlassBody.SetTexture("DrinkParrot.bmp", ObjectOnly, RightNow)
+DrinkParrot.Body.GlassBody.SetColor(White,ObjectOnly,rightnow)
+DrinkParrot.Body.GlassBody.SetShininess(0.0,ObjectOnly,rightnow)
+DrinkParrot.Body.GlassBody.SetHighLightColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Body.GlassBody.SetEmissiveColor(Black,ObjectOnly,rightnow)
+DrinkParrot.Body.GlassBody.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+DrinkParrot.Body.GlassBody.SetFillingStyle(Filled, ObjectOnly, RightNow)
+DrinkParrot.Body.GlassBody.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+DrinkParrot.Body.GlassBody.BecomePart(RightNow)
+DrinkParrot.Body.GlassBody._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(DrinkParrot.Body.GlassBody,"DrinkParrot.Body.GlassBody.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

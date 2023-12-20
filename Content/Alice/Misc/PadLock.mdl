@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+PadLock = _MakeObject(MakeObject, None, "PadLock", StoringScene=0)
+PadLock.SetTexture("PadLock.bmp", ObjectOnly, RightNow)
+PadLock.SetColor(White,ObjectOnly,rightnow)
+PadLock.SetShininess(0.0,ObjectOnly,rightnow)
+PadLock.SetHighLightColor(Black,ObjectOnly,rightnow)
+PadLock.SetEmissiveColor(Black,ObjectOnly,rightnow)
+PadLock.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+PadLock.SetFillingStyle(Filled, ObjectOnly, RightNow)
+PadLock.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+PadLock.BecomeFirstClass(RightNow)
+PadLock._SetLocalTransformation (((0.10000000149, 0.0, 0.0, 0.0), (0.0, 0.10000000149, 0.0, 0.0), (0.0, 0.0, 0.10000000149, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(PadLock,"PadLock.vfb")
+PadLock.Latch = _MakeObject(MakeObject, PadLock, "PadLock.Latch", StoringScene=0)
+PadLock.Latch.SetTexture("PadLock.bmp", ObjectOnly, RightNow)
+PadLock.Latch.SetColor(White,ObjectOnly,rightnow)
+PadLock.Latch.SetShininess(0.0,ObjectOnly,rightnow)
+PadLock.Latch.SetHighLightColor(Black,ObjectOnly,rightnow)
+PadLock.Latch.SetEmissiveColor(Black,ObjectOnly,rightnow)
+PadLock.Latch.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+PadLock.Latch.SetFillingStyle(Filled, ObjectOnly, RightNow)
+PadLock.Latch.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+PadLock.Latch.BecomePart(RightNow)
+PadLock.Latch._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (1.45299994946, 1.99210000038, -0.0305000003427, 1.0)))
+LoadGeometry(PadLock.Latch,"PadLock.Latch.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

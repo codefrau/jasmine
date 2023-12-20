@@ -1,0 +1,83 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Flashlight = _MakeObject(MakeObject, None, "Flashlight", StoringScene=0)
+Flashlight.SetTexture("Flashlight.bmp", ObjectOnly, RightNow)
+Flashlight.SetColor(White,ObjectOnly,rightnow)
+Flashlight.SetShininess(0.0,ObjectOnly,rightnow)
+Flashlight.SetHighLightColor(Black,ObjectOnly,rightnow)
+Flashlight.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Flashlight.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Flashlight.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Flashlight.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Flashlight.BecomeFirstClass(RightNow)
+Flashlight._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Flashlight,"Flashlight.vfb")
+Flashlight.Switch = _MakeObject(MakeObject, Flashlight, "Flashlight.Switch", StoringScene=0)
+Flashlight.Switch.SetTexture("Flashlight.bmp", ObjectOnly, RightNow)
+Flashlight.Switch.SetColor(White,ObjectOnly,rightnow)
+Flashlight.Switch.SetShininess(0.0,ObjectOnly,rightnow)
+Flashlight.Switch.SetHighLightColor(Black,ObjectOnly,rightnow)
+Flashlight.Switch.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Flashlight.Switch.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Flashlight.Switch.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Flashlight.Switch.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Flashlight.Switch.BecomePart(RightNow)
+Flashlight.Switch._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.019999999553, -0.0500000007451, 1.0)))
+LoadGeometry(Flashlight.Switch,"Flashlight.Switch.vfb")
+Flashlight.Top = _MakeObject(MakeObject, Flashlight, "Flashlight.Top", StoringScene=0)
+Flashlight.Top.SetTexture("Flashlight.bmp", ObjectOnly, RightNow)
+Flashlight.Top.SetColor(White,ObjectOnly,rightnow)
+Flashlight.Top.SetShininess(0.0,ObjectOnly,rightnow)
+Flashlight.Top.SetHighLightColor(Black,ObjectOnly,rightnow)
+Flashlight.Top.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Flashlight.Top.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Flashlight.Top.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Flashlight.Top.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Flashlight.Top.BecomePart(RightNow)
+Flashlight.Top._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Flashlight.Top,"Flashlight.Top.vfb")
+Flashlight.End = _MakeObject(MakeObject, Flashlight, "Flashlight.End", StoringScene=0)
+Flashlight.End.SetTexture("Flashlight.bmp", ObjectOnly, RightNow)
+Flashlight.End.SetColor(White,ObjectOnly,rightnow)
+Flashlight.End.SetShininess(0.0,ObjectOnly,rightnow)
+Flashlight.End.SetHighLightColor(Black,ObjectOnly,rightnow)
+Flashlight.End.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Flashlight.End.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Flashlight.End.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Flashlight.End.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Flashlight.End.BecomePart(RightNow)
+Flashlight.End._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Flashlight.End,"Flashlight.End.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,119 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Helicopter = _MakeObject(MakeObject, None, "Helicopter", StoringScene=0)
+Helicopter.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.SetColor(White,ObjectOnly,rightnow)
+Helicopter.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Helicopter.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.BecomeFirstClass(RightNow)
+Helicopter._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.442947119474, 0.0, 1.0)))
+LoadGeometry(Helicopter,"Helicopter.vfb")
+Helicopter.TopShaft = _MakeObject(MakeObject, Helicopter, "Helicopter.TopShaft", StoringScene=0)
+Helicopter.TopShaft.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.TopShaft.SetColor(White,ObjectOnly,rightnow)
+Helicopter.TopShaft.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.TopShaft.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.TopShaft.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.TopShaft.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Helicopter.TopShaft.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.TopShaft.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.TopShaft.BecomePart(RightNow)
+Helicopter.TopShaft._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.000199999994948, 0.364800006151, 0.00850000046194, 1.0)))
+LoadGeometry(Helicopter.TopShaft,"Helicopter.TopShaft.vfb")
+Helicopter.TopShaft.Rotor = _MakeObject(MakeObject, Helicopter.TopShaft, "Helicopter.TopShaft.Rotor", StoringScene=0)
+Helicopter.TopShaft.Rotor.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.TopShaft.Rotor.SetColor(White,ObjectOnly,rightnow)
+Helicopter.TopShaft.Rotor.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.TopShaft.Rotor.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.TopShaft.Rotor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.TopShaft.Rotor.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Helicopter.TopShaft.Rotor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.TopShaft.Rotor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.TopShaft.Rotor.BecomePart(RightNow)
+Helicopter.TopShaft.Rotor._SetLocalTransformation (((-1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, -1.0, 0.0), (0.0, 0.0816000029445, 0.0, 1.0)))
+LoadGeometry(Helicopter.TopShaft.Rotor,"Helicopter.TopShaft.Rotor.vfb")
+Helicopter.LeftSkid = _MakeObject(MakeObject, Helicopter, "Helicopter.LeftSkid", StoringScene=0)
+Helicopter.LeftSkid.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.LeftSkid.SetColor(White,ObjectOnly,rightnow)
+Helicopter.LeftSkid.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.LeftSkid.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.LeftSkid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.LeftSkid.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Helicopter.LeftSkid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.LeftSkid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.LeftSkid.BecomePart(RightNow)
+Helicopter.LeftSkid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.201600000262, -0.302399992943, 0.0, 1.0)))
+LoadGeometry(Helicopter.LeftSkid,"Helicopter.LeftSkid.vfb")
+Helicopter.BackShaft = _MakeObject(MakeObject, Helicopter, "Helicopter.BackShaft", StoringScene=0)
+Helicopter.BackShaft.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.BackShaft.SetColor(White,ObjectOnly,rightnow)
+Helicopter.BackShaft.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.BackShaft.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.BackShaft.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.BackShaft.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Helicopter.BackShaft.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.BackShaft.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.BackShaft.BecomePart(RightNow)
+Helicopter.BackShaft._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0463999994099, 0.302399992943, -1.23140001297, 1.0)))
+LoadGeometry(Helicopter.BackShaft,"Helicopter.BackShaft.vfb")
+Helicopter.BackShaft.Rotor = _MakeObject(MakeObject, Helicopter.BackShaft, "Helicopter.BackShaft.Rotor", StoringScene=0)
+Helicopter.BackShaft.Rotor.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.BackShaft.Rotor.SetColor(White,ObjectOnly,rightnow)
+Helicopter.BackShaft.Rotor.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.BackShaft.Rotor.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.BackShaft.Rotor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.BackShaft.Rotor.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Helicopter.BackShaft.Rotor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.BackShaft.Rotor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.BackShaft.Rotor.BecomePart(RightNow)
+Helicopter.BackShaft.Rotor._SetLocalTransformation (((-1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, -1.0, 0.0), (0.0768000036478, 0.0, 0.0, 1.0)))
+LoadGeometry(Helicopter.BackShaft.Rotor,"Helicopter.BackShaft.Rotor.vfb")
+Helicopter.RightSkid = _MakeObject(MakeObject, Helicopter, "Helicopter.RightSkid", StoringScene=0)
+Helicopter.RightSkid.SetTexture("Helicopter.bmp", ObjectOnly, RightNow)
+Helicopter.RightSkid.SetColor(White,ObjectOnly,rightnow)
+Helicopter.RightSkid.SetShininess(0.0,ObjectOnly,rightnow)
+Helicopter.RightSkid.SetHighLightColor(Black,ObjectOnly,rightnow)
+Helicopter.RightSkid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Helicopter.RightSkid.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Helicopter.RightSkid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Helicopter.RightSkid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Helicopter.RightSkid.BecomePart(RightNow)
+Helicopter.RightSkid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.196799993515, -0.302399992943, 0.0, 1.0)))
+LoadGeometry(Helicopter.RightSkid,"Helicopter.RightSkid.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

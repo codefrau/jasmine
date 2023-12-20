@@ -1,0 +1,24 @@
+#
+# Wavefront material file: f:\shar\libtvlibwin\tvlib_dev\character\mary\hand.mtl
+#
+# Converted by the PolyTrans geometry converter from Okino Computer Graphics, Inc.
+# Date/time of export: 02/13/2003 19:50:31
+#
+# Bounding box of geometry = (-0.010767,-0.119421,-0.034766) to (0.011867,0.013197,0.039336).
+
+newmtl default
+	Ns 32
+	d 1
+	illum 2
+	Kd 0.4 0.4 0.4
+	Ks 0.7 0.7 0.7
+	Ka 0.3 0.3 0.3
+
+newmtl hand
+	Ns 0
+	d 1
+	illum 2
+	Kd 0.707 0.418 0.2578
+	Ks 0 0 0
+	Ka 0.707 0.418 0.2578
+

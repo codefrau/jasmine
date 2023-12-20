@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Anvil = _MakeObject(MakeObject, None, "Anvil", StoringScene=0)
+Anvil.SetTexture("Anvil.bmp", ObjectOnly, RightNow)
+Anvil.SetColor(White,ObjectOnly,rightnow)
+Anvil.SetShininess(0.0,ObjectOnly,rightnow)
+Anvil.SetHighLightColor(Black,ObjectOnly,rightnow)
+Anvil.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Anvil.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Anvil.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Anvil.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Anvil.BecomeFirstClass(RightNow)
+Anvil._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Anvil,"Anvil.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

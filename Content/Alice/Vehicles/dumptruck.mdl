@@ -1,0 +1,102 @@
+# Alice Model File Format 1.0
+import Alice
+version = 19981105
+
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		global errorfile
+		sError = name + ":  Mesh load failed."
+		try:
+			errorfile.write("Error:  " + sError + "\n")
+		except:
+			errorfile = open(Alice.HomeDir+"Errors.txt","w")
+			errorfile.write("Error:  " + sError + "\n")
+		print "Error:  " + sError + "\n"
+
+dumptruck = Alice.MakeObject (Parent=None, Name="dumptruck")
+dumptruck.SetTexture("dumptruck.bmp", ObjectOnly, RightNow)
+dumptruck.SetColor(White,ObjectOnly,RightNow)
+dumptruck.SetVisibility(1.0000,ObjectOnly,RightNow)
+dumptruck.SetShininess(0.0000,ObjectOnly,RightNow)
+dumptruck.SetHighLightColor(Black,ObjectOnly,RightNow)
+dumptruck.SetEmissiveColor(Black,ObjectOnly,RightNow)
+dumptruck.SetLightingStyle(Lit, ObjectOnly, RightNow)
+dumptruck.SetFillingStyle(Filled, ObjectOnly, RightNow)
+dumptruck.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+dumptruck.BecomeFirstClass(RightNow)
+dumptruck._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.0000, 0.8288, 0.0000, 1.0000)))
+LoadGeometry(dumptruck,"dumptruck.vfb")
+dumptruck.Dumper = Alice.MakeObject (Parent=dumptruck, Name=".Dumper")
+dumptruck.Dumper.SetTexture("dumptruck.bmp", ObjectOnly, RightNow)
+dumptruck.Dumper.SetColor(White,ObjectOnly,RightNow)
+dumptruck.Dumper.SetVisibility(1.0000,ObjectOnly,RightNow)
+dumptruck.Dumper.SetShininess(0.0000,ObjectOnly,RightNow)
+dumptruck.Dumper.SetHighLightColor(Black,ObjectOnly,RightNow)
+dumptruck.Dumper.SetEmissiveColor(Black,ObjectOnly,RightNow)
+dumptruck.Dumper.SetLightingStyle(Lit, ObjectOnly, RightNow)
+dumptruck.Dumper.SetFillingStyle(Filled, ObjectOnly, RightNow)
+dumptruck.Dumper.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+dumptruck.Dumper.BecomePart(RightNow)
+dumptruck.Dumper._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (-0.0112, -0.1358, -0.7307, 1.0000)))
+LoadGeometry(dumptruck.Dumper,"dumptruck.Dumper.vfb")
+dumptruck.LeftFontWheel = Alice.MakeObject (Parent=dumptruck, Name=".LeftFontWheel")
+dumptruck.LeftFontWheel.SetTexture("dumptruck.bmp", ObjectOnly, RightNow)
+dumptruck.LeftFontWheel.SetColor(White,ObjectOnly,RightNow)
+dumptruck.LeftFontWheel.SetVisibility(1.0000,ObjectOnly,RightNow)
+dumptruck.LeftFontWheel.SetShininess(0.0000,ObjectOnly,RightNow)
+dumptruck.LeftFontWheel.SetHighLightColor(Black,ObjectOnly,RightNow)
+dumptruck.LeftFontWheel.SetEmissiveColor(Black,ObjectOnly,RightNow)
+dumptruck.LeftFontWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+dumptruck.LeftFontWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+dumptruck.LeftFontWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+dumptruck.LeftFontWheel.BecomePart(RightNow)
+dumptruck.LeftFontWheel._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.4854, -0.5264, 0.5323, 1.0000)))
+LoadGeometry(dumptruck.LeftFontWheel,"dumptruck.LeftFontWheel.vfb")
+dumptruck.LeftRearWheel = Alice.MakeObject (Parent=dumptruck, Name=".LeftRearWheel")
+dumptruck.LeftRearWheel.SetTexture("dumptruck.bmp", ObjectOnly, RightNow)
+dumptruck.LeftRearWheel.SetColor(White,ObjectOnly,RightNow)
+dumptruck.LeftRearWheel.SetVisibility(1.0000,ObjectOnly,RightNow)
+dumptruck.LeftRearWheel.SetShininess(0.0000,ObjectOnly,RightNow)
+dumptruck.LeftRearWheel.SetHighLightColor(Black,ObjectOnly,RightNow)
+dumptruck.LeftRearWheel.SetEmissiveColor(Black,ObjectOnly,RightNow)
+dumptruck.LeftRearWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+dumptruck.LeftRearWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+dumptruck.LeftRearWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+dumptruck.LeftRearWheel.BecomePart(RightNow)
+dumptruck.LeftRearWheel._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.3574, -0.5264, -0.6344, 1.0000)))
+LoadGeometry(dumptruck.LeftRearWheel,"dumptruck.LeftRearWheel.vfb")
+dumptruck.RightFrontWheel = Alice.MakeObject (Parent=dumptruck, Name=".RightFrontWheel")
+dumptruck.RightFrontWheel.SetTexture("dumptruck.bmp", ObjectOnly, RightNow)
+dumptruck.RightFrontWheel.SetColor(White,ObjectOnly,RightNow)
+dumptruck.RightFrontWheel.SetVisibility(1.0000,ObjectOnly,RightNow)
+dumptruck.RightFrontWheel.SetShininess(0.0000,ObjectOnly,RightNow)
+dumptruck.RightFrontWheel.SetHighLightColor(Black,ObjectOnly,RightNow)
+dumptruck.RightFrontWheel.SetEmissiveColor(Black,ObjectOnly,RightNow)
+dumptruck.RightFrontWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+dumptruck.RightFrontWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+dumptruck.RightFrontWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+dumptruck.RightFrontWheel.BecomePart(RightNow)
+dumptruck.RightFrontWheel._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (-0.5189, -0.5264, 0.5322, 1.0000)))
+LoadGeometry(dumptruck.RightFrontWheel,"dumptruck.RightFrontWheel.vfb")
+dumptruck.RightRearWheel = Alice.MakeObject (Parent=dumptruck, Name=".RightRearWheel")
+dumptruck.RightRearWheel.SetTexture("dumptruck.bmp", ObjectOnly, RightNow)
+dumptruck.RightRearWheel.SetColor(White,ObjectOnly,RightNow)
+dumptruck.RightRearWheel.SetVisibility(1.0000,ObjectOnly,RightNow)
+dumptruck.RightRearWheel.SetShininess(0.0000,ObjectOnly,RightNow)
+dumptruck.RightRearWheel.SetHighLightColor(Black,ObjectOnly,RightNow)
+dumptruck.RightRearWheel.SetEmissiveColor(Black,ObjectOnly,RightNow)
+dumptruck.RightRearWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+dumptruck.RightRearWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+dumptruck.RightRearWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+dumptruck.RightRearWheel.BecomePart(RightNow)
+dumptruck.RightRearWheel._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (-0.3943, -0.5264, -0.6351, 1.0000)))
+LoadGeometry(dumptruck.RightRearWheel,"dumptruck.RightRearWheel.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

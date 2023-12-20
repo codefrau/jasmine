@@ -1,0 +1,36 @@
+# Alice Model File Format 1.0
+import Alice
+version = 19990207
+
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		global errorfile
+		sError = name + ":  Mesh load failed."
+		try:
+			errorfile.write("Error:  " + sError + "\n")
+		except:
+			errorfile = open(Alice.HomeDir+"Errors.txt","w")
+			errorfile.write("Error:  " + sError + "\n")
+		print "Error:  " + sError + "\n"
+
+Bump = Alice.MakeObject (Parent=None, Name="Bump")
+Bump.SetColor(White,ObjectOnly,RightNow)
+Bump.SetVisibility(1.0000,ObjectOnly,RightNow)
+Bump.SetShininess(0.0000,ObjectOnly,RightNow)
+Bump.SetHighLightColor(Black,ObjectOnly,RightNow)
+Bump.SetEmissiveColor(Black,ObjectOnly,RightNow)
+Bump.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Bump.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Bump.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Bump.BecomeFirstClass(RightNow)
+Bump._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.0000, 0.0000, 0.0000, 1.0000)))
+LoadGeometry(Bump,"Bump.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,46 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+ucD = _MakeObject(MakeObject, None, "ucD", StoringScene=0)
+ucD.SetColor(White,ObjectOnly,rightnow)
+ucD.SetShininess(0.0,ObjectOnly,rightnow)
+ucD.SetHighLightColor(Black,ObjectOnly,rightnow)
+ucD.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ucD.SetLightingStyle(Lit, ObjectOnly, RightNow)
+ucD.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ucD.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ucD.BecomeFirstClass(RightNow)
+ucD._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(ucD,"ucD.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

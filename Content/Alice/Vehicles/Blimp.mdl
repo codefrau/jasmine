@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Blimp = _MakeObject(MakeObject, None, "Blimp", StoringScene=0)
+Blimp.SetTexture("Blimp.bmp", ObjectOnly, RightNow)
+Blimp.SetColor(White,ObjectOnly,rightnow)
+Blimp.SetShininess(0.0,ObjectOnly,rightnow)
+Blimp.SetHighLightColor(Black,ObjectOnly,rightnow)
+Blimp.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Blimp.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Blimp.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Blimp.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Blimp.BecomeFirstClass(RightNow)
+Blimp._SetLocalTransformation (((0.5, 0.0, 0.0, 0.0), (0.0, 0.5, 0.0, 0.0), (0.0, 0.0, 0.5, 0.0), (0.0, 1.375, 0.0, 1.0)))
+LoadGeometry(Blimp,"Blimp.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

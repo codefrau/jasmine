@@ -1,0 +1,107 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+flowerpot = _MakeObject(MakeObject, None, "flowerpot", StoringScene=0)
+flowerpot.SetTexture("flowerpot.bmp", ObjectOnly, RightNow)
+flowerpot.SetColor(White,ObjectOnly,rightnow)
+flowerpot.SetShininess(0.0,ObjectOnly,rightnow)
+flowerpot.SetHighLightColor(Black,ObjectOnly,rightnow)
+flowerpot.SetEmissiveColor(Black,ObjectOnly,rightnow)
+flowerpot.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+flowerpot.SetFillingStyle(Filled, ObjectOnly, RightNow)
+flowerpot.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+flowerpot.BecomeFirstClass(RightNow)
+flowerpot._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(flowerpot,"flowerpot.vfb")
+flowerpot.dirt = _MakeObject(MakeObject, flowerpot, "flowerpot.dirt", StoringScene=0)
+flowerpot.dirt.SetTexture("flowerpot.bmp", ObjectOnly, RightNow)
+flowerpot.dirt.SetColor(White,ObjectOnly,rightnow)
+flowerpot.dirt.SetShininess(0.0,ObjectOnly,rightnow)
+flowerpot.dirt.SetHighLightColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.SetEmissiveColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+flowerpot.dirt.SetFillingStyle(Filled, ObjectOnly, RightNow)
+flowerpot.dirt.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+flowerpot.dirt.BecomePart(RightNow)
+flowerpot.dirt._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.115000002086, 0.0, 1.0)))
+LoadGeometry(flowerpot.dirt,"flowerpot.dirt.vfb")
+flowerpot.dirt.flower3 = _MakeObject(MakeObject, flowerpot.dirt, "flowerpot.dirt.flower3", StoringScene=0)
+flowerpot.dirt.flower3.SetTexture("flowerpot.bmp", ObjectOnly, RightNow)
+flowerpot.dirt.flower3.SetColor(White,ObjectOnly,rightnow)
+flowerpot.dirt.flower3.SetShininess(0.0,ObjectOnly,rightnow)
+flowerpot.dirt.flower3.SetHighLightColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower3.SetEmissiveColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower3.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+flowerpot.dirt.flower3.SetFillingStyle(Filled, ObjectOnly, RightNow)
+flowerpot.dirt.flower3.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+flowerpot.dirt.flower3.BecomePart(RightNow)
+flowerpot.dirt.flower3._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0289999991655, -0.00400000018999, -0.01600000076, 1.0)))
+LoadGeometry(flowerpot.dirt.flower3,"flowerpot.dirt.flower3.vfb")
+flowerpot.dirt.flower4 = _MakeObject(MakeObject, flowerpot.dirt, "flowerpot.dirt.flower4", StoringScene=0)
+flowerpot.dirt.flower4.SetTexture("flowerpot.bmp", ObjectOnly, RightNow)
+flowerpot.dirt.flower4.SetColor(White,ObjectOnly,rightnow)
+flowerpot.dirt.flower4.SetShininess(0.0,ObjectOnly,rightnow)
+flowerpot.dirt.flower4.SetHighLightColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower4.SetEmissiveColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower4.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+flowerpot.dirt.flower4.SetFillingStyle(Filled, ObjectOnly, RightNow)
+flowerpot.dirt.flower4.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+flowerpot.dirt.flower4.BecomePart(RightNow)
+flowerpot.dirt.flower4._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -0.00400000018999, -0.0430000014603, 1.0)))
+LoadGeometry(flowerpot.dirt.flower4,"flowerpot.dirt.flower4.vfb")
+flowerpot.dirt.flower1 = _MakeObject(MakeObject, flowerpot.dirt, "flowerpot.dirt.flower1", StoringScene=0)
+flowerpot.dirt.flower1.SetTexture("flowerpot.bmp", ObjectOnly, RightNow)
+flowerpot.dirt.flower1.SetColor(White,ObjectOnly,rightnow)
+flowerpot.dirt.flower1.SetShininess(0.0,ObjectOnly,rightnow)
+flowerpot.dirt.flower1.SetHighLightColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+flowerpot.dirt.flower1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+flowerpot.dirt.flower1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+flowerpot.dirt.flower1.BecomePart(RightNow)
+flowerpot.dirt.flower1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00800000037998, -0.00400000018999, 0.0280000008643, 1.0)))
+LoadGeometry(flowerpot.dirt.flower1,"flowerpot.dirt.flower1.vfb")
+flowerpot.dirt.flower2 = _MakeObject(MakeObject, flowerpot.dirt, "flowerpot.dirt.flower2", StoringScene=0)
+flowerpot.dirt.flower2.SetTexture("flowerpot.bmp", ObjectOnly, RightNow)
+flowerpot.dirt.flower2.SetColor(White,ObjectOnly,rightnow)
+flowerpot.dirt.flower2.SetShininess(0.0,ObjectOnly,rightnow)
+flowerpot.dirt.flower2.SetHighLightColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+flowerpot.dirt.flower2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+flowerpot.dirt.flower2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+flowerpot.dirt.flower2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+flowerpot.dirt.flower2.BecomePart(RightNow)
+flowerpot.dirt.flower2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0399999991059, -0.00400000018999, -0.00300000002608, 1.0)))
+LoadGeometry(flowerpot.dirt.flower2,"flowerpot.dirt.flower2.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

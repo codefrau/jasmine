@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Switch2 = _MakeObject(MakeObject, None, "Switch2", StoringScene=0)
+Switch2.SetTexture("Switch2.bmp", ObjectOnly, RightNow)
+Switch2.SetColor(White,ObjectOnly,rightnow)
+Switch2.SetShininess(0.0,ObjectOnly,rightnow)
+Switch2.SetHighLightColor(Black,ObjectOnly,rightnow)
+Switch2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Switch2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Switch2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Switch2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Switch2.BecomeFirstClass(RightNow)
+Switch2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Switch2,"Switch2.vfb")
+Switch2.handle = _MakeObject(MakeObject, Switch2, "Switch2.handle", StoringScene=0)
+Switch2.handle.SetTexture("Switch2.bmp", ObjectOnly, RightNow)
+Switch2.handle.SetColor(White,ObjectOnly,rightnow)
+Switch2.handle.SetShininess(0.0,ObjectOnly,rightnow)
+Switch2.handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Switch2.handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Switch2.handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Switch2.handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Switch2.handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Switch2.handle.BecomePart(RightNow)
+Switch2.handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0750000029802, 1.0)))
+LoadGeometry(Switch2.handle,"Switch2.handle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

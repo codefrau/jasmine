@@ -1,0 +1,131 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+CementTruck = _MakeObject(MakeObject, None, "CementTruck", StoringScene=0)
+CementTruck.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.SetColor(White,ObjectOnly,rightnow)
+CementTruck.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+CementTruck.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.BecomeFirstClass(RightNow)
+CementTruck._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.581663668156, 0.0, 1.0)))
+LoadGeometry(CementTruck,"CementTruck.vfb")
+CementTruck.LeftFrontWheel = _MakeObject(MakeObject, CementTruck, "CementTruck.LeftFrontWheel", StoringScene=0)
+CementTruck.LeftFrontWheel.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.LeftFrontWheel.SetColor(White,ObjectOnly,rightnow)
+CementTruck.LeftFrontWheel.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.LeftFrontWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.LeftFrontWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.LeftFrontWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.LeftFrontWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.LeftFrontWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.LeftFrontWheel.BecomePart(RightNow)
+CementTruck.LeftFrontWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.452300012112, -0.376199990511, 0.915199995041, 1.0)))
+LoadGeometry(CementTruck.LeftFrontWheel,"CementTruck.LeftFrontWheel.vfb")
+CementTruck.RightFrontWheel = _MakeObject(MakeObject, CementTruck, "CementTruck.RightFrontWheel", StoringScene=0)
+CementTruck.RightFrontWheel.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.RightFrontWheel.SetColor(White,ObjectOnly,rightnow)
+CementTruck.RightFrontWheel.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.RightFrontWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.RightFrontWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.RightFrontWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.RightFrontWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.RightFrontWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.RightFrontWheel.BecomePart(RightNow)
+CementTruck.RightFrontWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.442999988794, -0.376199990511, 0.915199995041, 1.0)))
+LoadGeometry(CementTruck.RightFrontWheel,"CementTruck.RightFrontWheel.vfb")
+CementTruck.RightMiddleWheel = _MakeObject(MakeObject, CementTruck, "CementTruck.RightMiddleWheel", StoringScene=0)
+CementTruck.RightMiddleWheel.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.RightMiddleWheel.SetColor(White,ObjectOnly,rightnow)
+CementTruck.RightMiddleWheel.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.RightMiddleWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.RightMiddleWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.RightMiddleWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.RightMiddleWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.RightMiddleWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.RightMiddleWheel.BecomePart(RightNow)
+CementTruck.RightMiddleWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.442999988794, -0.376199990511, -0.537899971008, 1.0)))
+LoadGeometry(CementTruck.RightMiddleWheel,"CementTruck.RightMiddleWheel.vfb")
+CementTruck.RightBackWheel = _MakeObject(MakeObject, CementTruck, "CementTruck.RightBackWheel", StoringScene=0)
+CementTruck.RightBackWheel.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.RightBackWheel.SetColor(White,ObjectOnly,rightnow)
+CementTruck.RightBackWheel.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.RightBackWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.RightBackWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.RightBackWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.RightBackWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.RightBackWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.RightBackWheel.BecomePart(RightNow)
+CementTruck.RightBackWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.442999988794, -0.376199990511, -0.967999994755, 1.0)))
+LoadGeometry(CementTruck.RightBackWheel,"CementTruck.RightBackWheel.vfb")
+CementTruck.LeftBackWheel = _MakeObject(MakeObject, CementTruck, "CementTruck.LeftBackWheel", StoringScene=0)
+CementTruck.LeftBackWheel.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.LeftBackWheel.SetColor(White,ObjectOnly,rightnow)
+CementTruck.LeftBackWheel.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.LeftBackWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.LeftBackWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.LeftBackWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.LeftBackWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.LeftBackWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.LeftBackWheel.BecomePart(RightNow)
+CementTruck.LeftBackWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.452300012112, -0.376199990511, -0.967999994755, 1.0)))
+LoadGeometry(CementTruck.LeftBackWheel,"CementTruck.LeftBackWheel.vfb")
+CementTruck.Mixer = _MakeObject(MakeObject, CementTruck, "CementTruck.Mixer", StoringScene=0)
+CementTruck.Mixer.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.Mixer.SetColor(White,ObjectOnly,rightnow)
+CementTruck.Mixer.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.Mixer.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.Mixer.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.Mixer.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.Mixer.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.Mixer.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.Mixer.BecomePart(RightNow)
+CementTruck.Mixer._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 0.951099991798, 0.308999985456, 0.0), (0.0, -0.308999985456, 0.951099991798, 0.0), (0.0, 0.270700007677, -0.0926000028849, 1.0)))
+LoadGeometry(CementTruck.Mixer,"CementTruck.Mixer.vfb")
+CementTruck.LeftMiddleWheel = _MakeObject(MakeObject, CementTruck, "CementTruck.LeftMiddleWheel", StoringScene=0)
+CementTruck.LeftMiddleWheel.SetTexture("CementTruck.bmp", ObjectOnly, RightNow)
+CementTruck.LeftMiddleWheel.SetColor(White,ObjectOnly,rightnow)
+CementTruck.LeftMiddleWheel.SetShininess(0.0,ObjectOnly,rightnow)
+CementTruck.LeftMiddleWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+CementTruck.LeftMiddleWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+CementTruck.LeftMiddleWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+CementTruck.LeftMiddleWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+CementTruck.LeftMiddleWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+CementTruck.LeftMiddleWheel.BecomePart(RightNow)
+CementTruck.LeftMiddleWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.452300012112, -0.376199990511, -0.5367000103, 1.0)))
+LoadGeometry(CementTruck.LeftMiddleWheel,"CementTruck.LeftMiddleWheel.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

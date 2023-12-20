@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+TwoButtonSwitch = _MakeObject(MakeObject, None, "TwoButtonSwitch", StoringScene=0)
+TwoButtonSwitch.SetTexture("TwoButtonSwitch.bmp", ObjectOnly, RightNow)
+TwoButtonSwitch.SetColor(White,ObjectOnly,rightnow)
+TwoButtonSwitch.SetShininess(0.0,ObjectOnly,rightnow)
+TwoButtonSwitch.SetHighLightColor(Black,ObjectOnly,rightnow)
+TwoButtonSwitch.SetEmissiveColor(Black,ObjectOnly,rightnow)
+TwoButtonSwitch.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+TwoButtonSwitch.SetFillingStyle(Filled, ObjectOnly, RightNow)
+TwoButtonSwitch.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+TwoButtonSwitch.BecomeFirstClass(RightNow)
+TwoButtonSwitch._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(TwoButtonSwitch,"TwoButtonSwitch.vfb")
+TwoButtonSwitch.Button1 = _MakeObject(MakeObject, TwoButtonSwitch, "TwoButtonSwitch.Button1", StoringScene=0)
+TwoButtonSwitch.Button1.SetTexture("TwoButtonSwitch.bmp", ObjectOnly, RightNow)
+TwoButtonSwitch.Button1.SetColor(green,ObjectOnly,rightnow)
+TwoButtonSwitch.Button1.SetShininess(0.0,ObjectOnly,rightnow)
+TwoButtonSwitch.Button1.SetHighLightColor(Black,ObjectOnly,rightnow)
+TwoButtonSwitch.Button1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+TwoButtonSwitch.Button1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+TwoButtonSwitch.Button1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+TwoButtonSwitch.Button1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+TwoButtonSwitch.Button1.BecomePart(RightNow)
+TwoButtonSwitch.Button1._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, -0.000199999994948, 0.0), (0.0, 0.000199999994948, 1.0, 0.0), (-0.024299999699, 7.17539978027, 0.278200000525, 1.0)))
+LoadGeometry(TwoButtonSwitch.Button1,"TwoButtonSwitch.Button1.vfb")
+TwoButtonSwitch.Button2 = _MakeObject(MakeObject, TwoButtonSwitch, "TwoButtonSwitch.Button2", StoringScene=0)
+TwoButtonSwitch.Button2.SetTexture("TwoButtonSwitch.bmp", ObjectOnly, RightNow)
+TwoButtonSwitch.Button2.SetColor(red,ObjectOnly,rightnow)
+TwoButtonSwitch.Button2.SetShininess(0.0,ObjectOnly,rightnow)
+TwoButtonSwitch.Button2.SetHighLightColor(Black,ObjectOnly,rightnow)
+TwoButtonSwitch.Button2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+TwoButtonSwitch.Button2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+TwoButtonSwitch.Button2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+TwoButtonSwitch.Button2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+TwoButtonSwitch.Button2.BecomePart(RightNow)
+TwoButtonSwitch.Button2._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, -0.000199999994948, 0.0), (0.0, 0.000199999994948, 1.0, 0.0), (-0.024299999699, 3.46499991417, 0.278200000525, 1.0)))
+LoadGeometry(TwoButtonSwitch.Button2,"TwoButtonSwitch.Button2.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

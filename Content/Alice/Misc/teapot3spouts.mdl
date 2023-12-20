@@ -1,0 +1,107 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+teapot3spouts = _MakeObject(MakeObject, None, "teapot3spouts", StoringScene=0)
+teapot3spouts.SetTexture("teapot3spouts.bmp", ObjectOnly, RightNow)
+teapot3spouts.SetColor(White,ObjectOnly,rightnow)
+teapot3spouts.SetShininess(0.0,ObjectOnly,rightnow)
+teapot3spouts.SetHighLightColor(Black,ObjectOnly,rightnow)
+teapot3spouts.SetEmissiveColor(Black,ObjectOnly,rightnow)
+teapot3spouts.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+teapot3spouts.SetFillingStyle(Filled, ObjectOnly, RightNow)
+teapot3spouts.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+teapot3spouts.BecomeFirstClass(RightNow)
+teapot3spouts._SetLocalTransformation (((0.75, 0.0, 0.0, 0.0), (0.0, 0.75, 0.0, 0.0), (0.0, 0.0, 0.75, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(teapot3spouts,"teapot3spouts.vfb")
+teapot3spouts.Spout1 = _MakeObject(MakeObject, teapot3spouts, "teapot3spouts.Spout1", StoringScene=0)
+teapot3spouts.Spout1.SetTexture("teapot3spouts.bmp", ObjectOnly, RightNow)
+teapot3spouts.Spout1.SetColor(White,ObjectOnly,rightnow)
+teapot3spouts.Spout1.SetShininess(0.0,ObjectOnly,rightnow)
+teapot3spouts.Spout1.SetHighLightColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Spout1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Spout1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+teapot3spouts.Spout1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+teapot3spouts.Spout1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+teapot3spouts.Spout1.BecomePart(RightNow)
+teapot3spouts.Spout1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0239000003785, 0.816799998283, 0.0961000025272, 1.0)))
+LoadGeometry(teapot3spouts.Spout1,"teapot3spouts.Spout1.vfb")
+teapot3spouts.Spout2 = _MakeObject(MakeObject, teapot3spouts, "teapot3spouts.Spout2", StoringScene=0)
+teapot3spouts.Spout2.SetTexture("teapot3spouts.bmp", ObjectOnly, RightNow)
+teapot3spouts.Spout2.SetColor(White,ObjectOnly,rightnow)
+teapot3spouts.Spout2.SetShininess(0.0,ObjectOnly,rightnow)
+teapot3spouts.Spout2.SetHighLightColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Spout2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Spout2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+teapot3spouts.Spout2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+teapot3spouts.Spout2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+teapot3spouts.Spout2.BecomePart(RightNow)
+teapot3spouts.Spout2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0255999993533, 0.620700001717, 0.11969999969, 1.0)))
+LoadGeometry(teapot3spouts.Spout2,"teapot3spouts.Spout2.vfb")
+teapot3spouts.Spout3 = _MakeObject(MakeObject, teapot3spouts, "teapot3spouts.Spout3", StoringScene=0)
+teapot3spouts.Spout3.SetTexture("teapot3spouts.bmp", ObjectOnly, RightNow)
+teapot3spouts.Spout3.SetColor(White,ObjectOnly,rightnow)
+teapot3spouts.Spout3.SetShininess(0.0,ObjectOnly,rightnow)
+teapot3spouts.Spout3.SetHighLightColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Spout3.SetEmissiveColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Spout3.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+teapot3spouts.Spout3.SetFillingStyle(Filled, ObjectOnly, RightNow)
+teapot3spouts.Spout3.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+teapot3spouts.Spout3.BecomePart(RightNow)
+teapot3spouts.Spout3._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0313999988139, 0.436800003052, 0.2037999928, 1.0)))
+LoadGeometry(teapot3spouts.Spout3,"teapot3spouts.Spout3.vfb")
+teapot3spouts.Lid = _MakeObject(MakeObject, teapot3spouts, "teapot3spouts.Lid", StoringScene=0)
+teapot3spouts.Lid.SetTexture("teapot3spouts.bmp", ObjectOnly, RightNow)
+teapot3spouts.Lid.SetColor(White,ObjectOnly,rightnow)
+teapot3spouts.Lid.SetShininess(0.0,ObjectOnly,rightnow)
+teapot3spouts.Lid.SetHighLightColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Lid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Lid.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+teapot3spouts.Lid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+teapot3spouts.Lid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+teapot3spouts.Lid.BecomePart(RightNow)
+teapot3spouts.Lid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0010000000475, 1.02880001068, -0.2662999928, 1.0)))
+LoadGeometry(teapot3spouts.Lid,"teapot3spouts.Lid.vfb")
+teapot3spouts.Handle = _MakeObject(MakeObject, teapot3spouts, "teapot3spouts.Handle", StoringScene=0)
+teapot3spouts.Handle.SetTexture("teapot3spouts.bmp", ObjectOnly, RightNow)
+teapot3spouts.Handle.SetColor(White,ObjectOnly,rightnow)
+teapot3spouts.Handle.SetShininess(0.0,ObjectOnly,rightnow)
+teapot3spouts.Handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+teapot3spouts.Handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+teapot3spouts.Handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+teapot3spouts.Handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+teapot3spouts.Handle.BecomePart(RightNow)
+teapot3spouts.Handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00079999997979, 0.758400022984, -0.0214000009, 1.0)))
+LoadGeometry(teapot3spouts.Handle,"teapot3spouts.Handle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

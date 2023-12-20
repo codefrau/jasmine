@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+stage = _MakeObject(MakeObject, None, "stage", StoringScene=0)
+stage.SetTexture("stage.bmp", ObjectOnly, RightNow)
+stage.SetColor(White,ObjectOnly,rightnow)
+stage.SetShininess(0.0,ObjectOnly,rightnow)
+stage.SetHighLightColor(Black,ObjectOnly,rightnow)
+stage.SetEmissiveColor(Black,ObjectOnly,rightnow)
+stage.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+stage.SetFillingStyle(Filled, ObjectOnly, RightNow)
+stage.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+stage.BecomeFirstClass(RightNow)
+stage._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 1.0, 0.0, 1.0)))
+LoadGeometry(stage,"stage.vfb")
+stage.floor = _MakeObject(MakeObject, stage, "stage.floor", StoringScene=0)
+stage.floor.SetTexture("stage.bmp", ObjectOnly, RightNow)
+stage.floor.SetColor(White,ObjectOnly,rightnow)
+stage.floor.SetShininess(0.0,ObjectOnly,rightnow)
+stage.floor.SetHighLightColor(Black,ObjectOnly,rightnow)
+stage.floor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+stage.floor.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+stage.floor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+stage.floor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+stage.floor.BecomePart(RightNow)
+stage.floor._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(stage.floor,"stage.floor.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

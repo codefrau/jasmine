@@ -1,0 +1,131 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Phone = _MakeObject(MakeObject, None, "Phone", StoringScene=0)
+Phone.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.SetColor(White,ObjectOnly,rightnow)
+Phone.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.BecomeFirstClass(RightNow)
+Phone._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Phone,"Phone.vfb")
+Phone.cord1 = _MakeObject(MakeObject, Phone, "Phone.cord1", StoringScene=0)
+Phone.cord1.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.BecomePart(RightNow)
+Phone.cord1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.097000002861, -0.0140000004321, -0.0879999995232, 1.0)))
+LoadGeometry(Phone.cord1,"Phone.cord1.vfb")
+Phone.cord1.cord2 = _MakeObject(MakeObject, Phone.cord1, "Phone.cord1.cord2", StoringScene=0)
+Phone.cord1.cord2.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.cord2.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.cord2.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.cord2.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.cord2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.cord2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.cord2.BecomePart(RightNow)
+Phone.cord1.cord2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0359999984503, -0.0120000001043, -0.00700000021607, 1.0)))
+LoadGeometry(Phone.cord1.cord2,"Phone.cord1.cord2.vfb")
+Phone.cord1.cord2.cord3 = _MakeObject(MakeObject, Phone.cord1.cord2, "Phone.cord1.cord2.cord3", StoringScene=0)
+Phone.cord1.cord2.cord3.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.BecomePart(RightNow)
+Phone.cord1.cord2.cord3._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0149999996647, 0.0, -0.0299999993294, 1.0)))
+LoadGeometry(Phone.cord1.cord2.cord3,"Phone.cord1.cord2.cord3.vfb")
+Phone.cord1.cord2.cord3.cord4 = _MakeObject(MakeObject, Phone.cord1.cord2.cord3, "Phone.cord1.cord2.cord3.cord4", StoringScene=0)
+Phone.cord1.cord2.cord3.cord4.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.BecomePart(RightNow)
+Phone.cord1.cord2.cord3.cord4._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0179999992251, 0.00999999977648, -0.0299999993294, 1.0)))
+LoadGeometry(Phone.cord1.cord2.cord3.cord4,"Phone.cord1.cord2.cord3.cord4.vfb")
+Phone.cord1.cord2.cord3.cord4.cord5 = _MakeObject(MakeObject, Phone.cord1.cord2.cord3.cord4, "Phone.cord1.cord2.cord3.cord4.cord5", StoringScene=0)
+Phone.cord1.cord2.cord3.cord4.cord5.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.BecomePart(RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0320000015199, 0.01600000076, 0.0010000000475, 1.0)))
+LoadGeometry(Phone.cord1.cord2.cord3.cord4.cord5,"Phone.cord1.cord2.cord3.cord4.cord5.vfb")
+Phone.cord1.cord2.cord3.cord4.cord5.cord6 = _MakeObject(MakeObject, Phone.cord1.cord2.cord3.cord4.cord5, "Phone.cord1.cord2.cord3.cord4.cord5.cord6", StoringScene=0)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.BecomePart(RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0230000000447, 0.0130000002682, 0.0189999993891, 1.0)))
+LoadGeometry(Phone.cord1.cord2.cord3.cord4.cord5.cord6,"Phone.cord1.cord2.cord3.cord4.cord5.cord6.vfb")
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle = _MakeObject(MakeObject, Phone.cord1.cord2.cord3.cord4.cord5.cord6, "Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle", StoringScene=0)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetTexture("Phone.bmp", ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetColor(White,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetShininess(0.0,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.BecomePart(RightNow)
+Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00700000021607, 0.00600000005215, 0.035000000149, 1.0)))
+LoadGeometry(Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle,"Phone.cord1.cord2.cord3.cord4.cord5.cord6.handle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

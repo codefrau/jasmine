@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+desk = _MakeObject(MakeObject, None, "desk", StoringScene=0)
+desk.SetTexture("desk.bmp", ObjectOnly, RightNow)
+desk.SetColor(White,ObjectOnly,rightnow)
+desk.SetShininess(0.0,ObjectOnly,rightnow)
+desk.SetHighLightColor(Black,ObjectOnly,rightnow)
+desk.SetEmissiveColor(Black,ObjectOnly,rightnow)
+desk.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+desk.SetFillingStyle(Filled, ObjectOnly, RightNow)
+desk.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+desk.BecomeFirstClass(RightNow)
+desk._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(desk,"desk.vfb")
+desk.draw2 = _MakeObject(MakeObject, desk, "desk.draw2", StoringScene=0)
+desk.draw2.SetTexture("desk.bmp", ObjectOnly, RightNow)
+desk.draw2.SetColor(White,ObjectOnly,rightnow)
+desk.draw2.SetShininess(0.0,ObjectOnly,rightnow)
+desk.draw2.SetHighLightColor(Black,ObjectOnly,rightnow)
+desk.draw2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+desk.draw2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+desk.draw2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+desk.draw2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+desk.draw2.BecomePart(RightNow)
+desk.draw2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.449999988079, 0.0, 0.0, 1.0)))
+LoadGeometry(desk.draw2,"desk.draw2.vfb")
+desk.draw1 = _MakeObject(MakeObject, desk, "desk.draw1", StoringScene=0)
+desk.draw1.SetTexture("desk.bmp", ObjectOnly, RightNow)
+desk.draw1.SetColor(White,ObjectOnly,rightnow)
+desk.draw1.SetShininess(0.0,ObjectOnly,rightnow)
+desk.draw1.SetHighLightColor(Black,ObjectOnly,rightnow)
+desk.draw1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+desk.draw1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+desk.draw1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+desk.draw1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+desk.draw1.BecomePart(RightNow)
+desk.draw1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.449999988079, 0.311100006104, 0.0, 1.0)))
+LoadGeometry(desk.draw1,"desk.draw1.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

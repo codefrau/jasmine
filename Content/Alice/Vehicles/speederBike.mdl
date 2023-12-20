@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+speederbike = _MakeObject(MakeObject, None, "speederbike", StoringScene=0)
+speederbike.SetTexture("Speederbike.bmp", ObjectOnly, RightNow)
+speederbike.SetColor(White,ObjectOnly,rightnow)
+speederbike.SetShininess(0.0,ObjectOnly,rightnow)
+speederbike.SetHighLightColor(Black,ObjectOnly,rightnow)
+speederbike.SetEmissiveColor(Black,ObjectOnly,rightnow)
+speederbike.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+speederbike.SetFillingStyle(Filled, ObjectOnly, RightNow)
+speederbike.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+speederbike.BecomeFirstClass(RightNow)
+speederbike._SetLocalTransformation (((0.999999821186, -2.61231981142e-013, 7.63127250281e-009, 0.0), (1.59656887862e-013, 0.999999940395, 1.07551378285e-013, 0.0), (-3.47196910111e-010, 8.63929289436e-014, 0.999999880791, 0.0), (-4.15207832115e-021, 0.472319245338, -3.45455544234e-022, 1.0)))
+LoadGeometry(speederbike,"speederbike.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

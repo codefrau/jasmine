@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Dial = _MakeObject(MakeObject, None, "Dial", StoringScene=0)
+Dial.SetTexture("Dial.bmp", ObjectOnly, RightNow)
+Dial.SetColor(White,ObjectOnly,rightnow)
+Dial.SetShininess(0.0,ObjectOnly,rightnow)
+Dial.SetHighLightColor(Black,ObjectOnly,rightnow)
+Dial.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Dial.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Dial.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Dial.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Dial.BecomeFirstClass(RightNow)
+Dial._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Dial,"Dial.vfb")
+Dial.Knob = _MakeObject(MakeObject, Dial, "Dial.Knob", StoringScene=0)
+Dial.Knob.SetTexture("Dial.bmp", ObjectOnly, RightNow)
+Dial.Knob.SetColor(White,ObjectOnly,rightnow)
+Dial.Knob.SetShininess(0.0,ObjectOnly,rightnow)
+Dial.Knob.SetHighLightColor(Black,ObjectOnly,rightnow)
+Dial.Knob.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Dial.Knob.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Dial.Knob.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Dial.Knob.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Dial.Knob.BecomePart(RightNow)
+Dial.Knob._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.324999988079, 1.0)))
+LoadGeometry(Dial.Knob,"Dial.Knob.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

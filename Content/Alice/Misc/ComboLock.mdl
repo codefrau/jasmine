@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+ComboLock = _MakeObject(MakeObject, None, "ComboLock", StoringScene=0)
+ComboLock.SetTexture("ComboLock.bmp", ObjectOnly, RightNow)
+ComboLock.SetColor(White,ObjectOnly,rightnow)
+ComboLock.SetShininess(0.0,ObjectOnly,rightnow)
+ComboLock.SetHighLightColor(Black,ObjectOnly,rightnow)
+ComboLock.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ComboLock.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ComboLock.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ComboLock.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ComboLock.BecomeFirstClass(RightNow)
+ComboLock._SetLocalTransformation (((0.10000000149, 0.0, 0.0, 0.0), (0.0, 0.10000000149, 0.0, 0.0), (0.0, 0.0, 0.10000000149, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(ComboLock,"ComboLock.vfb")
+ComboLock.Latch = _MakeObject(MakeObject, ComboLock, "ComboLock.Latch", StoringScene=0)
+ComboLock.Latch.SetTexture("ComboLock.bmp", ObjectOnly, RightNow)
+ComboLock.Latch.SetColor(White,ObjectOnly,rightnow)
+ComboLock.Latch.SetShininess(0.0,ObjectOnly,rightnow)
+ComboLock.Latch.SetHighLightColor(Black,ObjectOnly,rightnow)
+ComboLock.Latch.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ComboLock.Latch.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ComboLock.Latch.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ComboLock.Latch.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ComboLock.Latch.BecomePart(RightNow)
+ComboLock.Latch._SetLocalTransformation (((1.0, -0.000199999994948, 0.0, 0.0), (0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (-1.35819995403, 2.22259998322, -0.042199999094, 1.0)))
+LoadGeometry(ComboLock.Latch,"ComboLock.Latch.vfb")
+ComboLock.Dial = _MakeObject(MakeObject, ComboLock, "ComboLock.Dial", StoringScene=0)
+ComboLock.Dial.SetTexture("ComboLock.bmp", ObjectOnly, RightNow)
+ComboLock.Dial.SetColor(White,ObjectOnly,rightnow)
+ComboLock.Dial.SetShininess(0.0,ObjectOnly,rightnow)
+ComboLock.Dial.SetHighLightColor(Black,ObjectOnly,rightnow)
+ComboLock.Dial.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ComboLock.Dial.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ComboLock.Dial.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ComboLock.Dial.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ComboLock.Dial.BecomePart(RightNow)
+ComboLock.Dial._SetLocalTransformation (((1.0, -0.000199999994948, 0.0, 0.0), (0.000199999994948, 1.0, 0.000199999994948, 0.0), (0.0, -0.000199999994948, 1.0, 0.0), (0.0, 2.4240000248, 0.94580000639, 1.0)))
+LoadGeometry(ComboLock.Dial,"ComboLock.Dial.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

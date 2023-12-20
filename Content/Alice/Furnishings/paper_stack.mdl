@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+paper_stack = _MakeObject(MakeObject, None, "paper_stack", StoringScene=0)
+paper_stack.SetTexture("paper_stack.bmp", ObjectOnly, RightNow)
+paper_stack.SetColor(White,ObjectOnly,rightnow)
+paper_stack.SetShininess(0.0,ObjectOnly,rightnow)
+paper_stack.SetHighLightColor(Black,ObjectOnly,rightnow)
+paper_stack.SetEmissiveColor(Black,ObjectOnly,rightnow)
+paper_stack.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+paper_stack.SetFillingStyle(Filled, ObjectOnly, RightNow)
+paper_stack.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+paper_stack.BecomeFirstClass(RightNow)
+paper_stack._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(paper_stack,"paper_stack.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

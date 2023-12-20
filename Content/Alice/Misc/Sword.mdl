@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Sword = _MakeObject(MakeObject, None, "Sword", StoringScene=0)
+Sword.SetTexture("Sword.bmp", ObjectOnly, RightNow)
+Sword.SetColor(White,ObjectOnly,rightnow)
+Sword.SetShininess(0.0,ObjectOnly,rightnow)
+Sword.SetHighLightColor(Black,ObjectOnly,rightnow)
+Sword.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Sword.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Sword.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Sword.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Sword.BecomeFirstClass(RightNow)
+Sword._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Sword,"Sword.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

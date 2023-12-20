@@ -1,0 +1,119 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Teapot = _MakeObject(MakeObject, None, "Teapot", StoringScene=0)
+Teapot.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.SetColor(White,ObjectOnly,rightnow)
+Teapot.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.BecomeFirstClass(RightNow)
+Teapot._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Teapot,"Teapot.vfb")
+Teapot.frontleg = _MakeObject(MakeObject, Teapot, "Teapot.frontleg", StoringScene=0)
+Teapot.frontleg.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.frontleg.SetColor(White,ObjectOnly,rightnow)
+Teapot.frontleg.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.frontleg.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.frontleg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.frontleg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.frontleg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.frontleg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.frontleg.BecomePart(RightNow)
+Teapot.frontleg._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00200000009499, 0.0537000000477, 0.189700007439, 1.0)))
+LoadGeometry(Teapot.frontleg,"Teapot.frontleg.vfb")
+Teapot.blleg = _MakeObject(MakeObject, Teapot, "Teapot.blleg", StoringScene=0)
+Teapot.blleg.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.blleg.SetColor(White,ObjectOnly,rightnow)
+Teapot.blleg.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.blleg.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.blleg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.blleg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.blleg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.blleg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.blleg.BecomePart(RightNow)
+Teapot.blleg._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.146699994802, 0.0537000000477, -0.0603000000119, 1.0)))
+LoadGeometry(Teapot.blleg,"Teapot.blleg.vfb")
+Teapot.spout = _MakeObject(MakeObject, Teapot, "Teapot.spout", StoringScene=0)
+Teapot.spout.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.spout.SetColor(White,ObjectOnly,rightnow)
+Teapot.spout.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.spout.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.spout.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.spout.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.spout.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.spout.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.spout.BecomePart(RightNow)
+Teapot.spout._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00200000009499, 0.327399998903, 0.224500000477, 1.0)))
+LoadGeometry(Teapot.spout,"Teapot.spout.vfb")
+Teapot.brleg = _MakeObject(MakeObject, Teapot, "Teapot.brleg", StoringScene=0)
+Teapot.brleg.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.brleg.SetColor(White,ObjectOnly,rightnow)
+Teapot.brleg.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.brleg.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.brleg.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.brleg.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.brleg.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.brleg.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.brleg.BecomePart(RightNow)
+Teapot.brleg._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.144400000572, 0.0537000000477, -0.0603000000119, 1.0)))
+LoadGeometry(Teapot.brleg,"Teapot.brleg.vfb")
+Teapot.handle = _MakeObject(MakeObject, Teapot, "Teapot.handle", StoringScene=0)
+Teapot.handle.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.handle.SetColor(White,ObjectOnly,rightnow)
+Teapot.handle.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.handle.BecomePart(RightNow)
+Teapot.handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00340000004508, 0.735599994659, -0.128700003028, 1.0)))
+LoadGeometry(Teapot.handle,"Teapot.handle.vfb")
+Teapot.lid = _MakeObject(MakeObject, Teapot, "Teapot.lid", StoringScene=0)
+Teapot.lid.SetTexture("Teapot.bmp", ObjectOnly, RightNow)
+Teapot.lid.SetColor(White,ObjectOnly,rightnow)
+Teapot.lid.SetShininess(0.0,ObjectOnly,rightnow)
+Teapot.lid.SetHighLightColor(Black,ObjectOnly,rightnow)
+Teapot.lid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Teapot.lid.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Teapot.lid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Teapot.lid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Teapot.lid.BecomePart(RightNow)
+Teapot.lid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-9.99999974738e-005, 0.820999979973, -0.14280000329, 1.0)))
+LoadGeometry(Teapot.lid,"Teapot.lid.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

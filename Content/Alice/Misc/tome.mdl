@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Tome = _MakeObject(MakeObject, None, "Tome", StoringScene=0)
+Tome.SetTexture("Tome.bmp", ObjectOnly, RightNow)
+Tome.SetColor(White,ObjectOnly,rightnow)
+Tome.SetShininess(0.0,ObjectOnly,rightnow)
+Tome.SetHighLightColor(Black,ObjectOnly,rightnow)
+Tome.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Tome.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Tome.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Tome.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Tome.BecomeFirstClass(RightNow)
+Tome._SetLocalTransformation (((0.999998807907, 0.0, -1.49260040177e-020, 0.0), (0.0, 1.0, 0.0, 0.0), (1.5246822464e-020, 0.0, 0.999998927116, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Tome,"Tome.vfb")
+Tome.Front = _MakeObject(MakeObject, Tome, "Tome.Front", StoringScene=0)
+Tome.Front.SetTexture("Tome.bmp", ObjectOnly, RightNow)
+Tome.Front.SetColor(White,ObjectOnly,rightnow)
+Tome.Front.SetShininess(0.0,ObjectOnly,rightnow)
+Tome.Front.SetHighLightColor(Black,ObjectOnly,rightnow)
+Tome.Front.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Tome.Front.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Tome.Front.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Tome.Front.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Tome.Front.BecomePart(RightNow)
+Tome.Front._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Tome.Front,"Tome.Front.vfb")
+Tome.Back = _MakeObject(MakeObject, Tome, "Tome.Back", StoringScene=0)
+Tome.Back.SetTexture("Tome.bmp", ObjectOnly, RightNow)
+Tome.Back.SetColor(White,ObjectOnly,rightnow)
+Tome.Back.SetShininess(0.0,ObjectOnly,rightnow)
+Tome.Back.SetHighLightColor(Black,ObjectOnly,rightnow)
+Tome.Back.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Tome.Back.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Tome.Back.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Tome.Back.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Tome.Back.BecomePart(RightNow)
+Tome.Back._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Tome.Back,"Tome.Back.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+monitor = _MakeObject(MakeObject, None, "monitor", StoringScene=0)
+monitor.SetTexture("monitor.bmp", ObjectOnly, RightNow)
+monitor.SetColor(White,ObjectOnly,rightnow)
+monitor.SetShininess(0.0,ObjectOnly,rightnow)
+monitor.SetHighLightColor(Black,ObjectOnly,rightnow)
+monitor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+monitor.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+monitor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+monitor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+monitor.BecomeFirstClass(RightNow)
+monitor._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(monitor,"monitor.vfb")
+monitor.monitor = _MakeObject(MakeObject, monitor, "monitor.monitor", StoringScene=0)
+monitor.monitor.SetTexture("monitor.bmp", ObjectOnly, RightNow)
+monitor.monitor.SetColor(White,ObjectOnly,rightnow)
+monitor.monitor.SetShininess(0.0,ObjectOnly,rightnow)
+monitor.monitor.SetHighLightColor(Black,ObjectOnly,rightnow)
+monitor.monitor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+monitor.monitor.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+monitor.monitor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+monitor.monitor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+monitor.monitor.BecomePart(RightNow)
+monitor.monitor._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0540000014007, 0.0, 1.0)))
+LoadGeometry(monitor.monitor,"monitor.monitor.vfb")
+monitor.monitor.screen = _MakeObject(MakeObject, monitor.monitor, "monitor.monitor.screen", StoringScene=0)
+monitor.monitor.screen.SetTexture("monitor.bmp", ObjectOnly, RightNow)
+monitor.monitor.screen.SetColor(White,ObjectOnly,rightnow)
+monitor.monitor.screen.SetShininess(0.0,ObjectOnly,rightnow)
+monitor.monitor.screen.SetHighLightColor(Black,ObjectOnly,rightnow)
+monitor.monitor.screen.SetEmissiveColor(Black,ObjectOnly,rightnow)
+monitor.monitor.screen.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+monitor.monitor.screen.SetFillingStyle(Filled, ObjectOnly, RightNow)
+monitor.monitor.screen.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+monitor.monitor.screen.BecomePart(RightNow)
+monitor.monitor.screen._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.25799998641, 0.177000001073, 1.0)))
+LoadGeometry(monitor.monitor.screen,"monitor.monitor.screen.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

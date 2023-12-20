@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Rug = _MakeObject(MakeObject, None, "Rug", StoringScene=0)
+Rug.SetTexture("Rug.bmp", ObjectOnly, RightNow)
+Rug.SetColor(White,ObjectOnly,rightnow)
+Rug.SetShininess(0.0,ObjectOnly,rightnow)
+Rug.SetHighLightColor(Black,ObjectOnly,rightnow)
+Rug.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Rug.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Rug.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Rug.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Rug.BecomeFirstClass(RightNow)
+Rug._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 0.5, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Rug,"Rug.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

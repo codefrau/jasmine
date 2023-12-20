@@ -1,0 +1,83 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+stadium = _MakeObject(MakeObject, None, "stadium", StoringScene=0)
+stadium.SetTexture("stadium.bmp", ObjectOnly, RightNow)
+stadium.SetColor(White,ObjectOnly,rightnow)
+stadium.SetShininess(0.0,ObjectOnly,rightnow)
+stadium.SetHighLightColor(Black,ObjectOnly,rightnow)
+stadium.SetEmissiveColor(Black,ObjectOnly,rightnow)
+stadium.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+stadium.SetFillingStyle(Filled, ObjectOnly, RightNow)
+stadium.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+stadium.BecomeFirstClass(RightNow)
+stadium._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(stadium,"stadium.vfb")
+stadium.seats1 = _MakeObject(MakeObject, stadium, "stadium.seats1", StoringScene=0)
+stadium.seats1.SetTexture("stadium.bmp", ObjectOnly, RightNow)
+stadium.seats1.SetColor(White,ObjectOnly,rightnow)
+stadium.seats1.SetShininess(0.0,ObjectOnly,rightnow)
+stadium.seats1.SetHighLightColor(Black,ObjectOnly,rightnow)
+stadium.seats1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+stadium.seats1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+stadium.seats1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+stadium.seats1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+stadium.seats1.BecomePart(RightNow)
+stadium.seats1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (70.0, 0.0, -2.0, 1.0)))
+LoadGeometry(stadium.seats1,"stadium.seats1.vfb")
+stadium.seats2 = _MakeObject(MakeObject, stadium, "stadium.seats2", StoringScene=0)
+stadium.seats2.SetTexture("stadium.bmp", ObjectOnly, RightNow)
+stadium.seats2.SetColor(White,ObjectOnly,rightnow)
+stadium.seats2.SetShininess(0.0,ObjectOnly,rightnow)
+stadium.seats2.SetHighLightColor(Black,ObjectOnly,rightnow)
+stadium.seats2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+stadium.seats2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+stadium.seats2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+stadium.seats2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+stadium.seats2.BecomePart(RightNow)
+stadium.seats2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-70.0, 0.0, -2.0, 1.0)))
+LoadGeometry(stadium.seats2,"stadium.seats2.vfb")
+stadium.field = _MakeObject(MakeObject, stadium, "stadium.field", StoringScene=0)
+stadium.field.SetTexture("stadium.bmp", ObjectOnly, RightNow)
+stadium.field.SetColor(White,ObjectOnly,rightnow)
+stadium.field.SetShininess(0.0,ObjectOnly,rightnow)
+stadium.field.SetHighLightColor(Black,ObjectOnly,rightnow)
+stadium.field.SetEmissiveColor(Black,ObjectOnly,rightnow)
+stadium.field.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+stadium.field.SetFillingStyle(Filled, ObjectOnly, RightNow)
+stadium.field.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+stadium.field.BecomePart(RightNow)
+stadium.field._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(stadium.field,"stadium.field.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

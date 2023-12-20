@@ -1,0 +1,107 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+ArmyCopter = _MakeObject(MakeObject, None, "ArmyCopter", StoringScene=0)
+ArmyCopter.SetTexture("ArmyCopter.bmp", ObjectOnly, RightNow)
+ArmyCopter.SetColor(White,ObjectOnly,rightnow)
+ArmyCopter.SetShininess(0.0,ObjectOnly,rightnow)
+ArmyCopter.SetHighLightColor(Black,ObjectOnly,rightnow)
+ArmyCopter.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ArmyCopter.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ArmyCopter.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ArmyCopter.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ArmyCopter.BecomeFirstClass(RightNow)
+ArmyCopter._SetLocalTransformation (((0.0710629671812, -0.0186122991145, -0.997265160084, 0.0), (0.0218267012388, 0.99958974123, -0.0171018466353, 0.0), (0.997225105762, -0.0205513052642, 0.0714315101504, 0.0), (-0.478379905224, 0.639871120453, -1.05156707764, 1.0)))
+LoadGeometry(ArmyCopter,"ArmyCopter.vfb")
+ArmyCopter.Body = _MakeObject(MakeObject, ArmyCopter, "ArmyCopter.Body", StoringScene=0)
+ArmyCopter.Body.SetTexture("ArmyCopter.bmp", ObjectOnly, RightNow)
+ArmyCopter.Body.SetColor(White,ObjectOnly,rightnow)
+ArmyCopter.Body.SetShininess(0.0,ObjectOnly,rightnow)
+ArmyCopter.Body.SetHighLightColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Body.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Body.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ArmyCopter.Body.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ArmyCopter.Body.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ArmyCopter.Body.BecomePart(RightNow)
+ArmyCopter.Body._SetLocalTransformation (((2.65629823843e-005, 4.60948712089e-007, 0.999999940395, 0.0), (-0.0175000000745, 0.999800026417, 0.0, 0.0), (-0.999800026417, -0.0174999963492, 2.66404822469e-005, 0.0), (0.0, -0.5, 0.0, 1.0)))
+LoadGeometry(ArmyCopter.Body,"ArmyCopter.Body.vfb")
+ArmyCopter.Rotor = _MakeObject(MakeObject, ArmyCopter, "ArmyCopter.Rotor", StoringScene=0)
+ArmyCopter.Rotor.SetTexture("ArmyCopter.bmp", ObjectOnly, RightNow)
+ArmyCopter.Rotor.SetColor(White,ObjectOnly,rightnow)
+ArmyCopter.Rotor.SetShininess(0.0,ObjectOnly,rightnow)
+ArmyCopter.Rotor.SetHighLightColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ArmyCopter.Rotor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ArmyCopter.Rotor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ArmyCopter.Rotor.BecomePart(RightNow)
+ArmyCopter.Rotor._SetLocalTransformation (((1.0, 0.0, -5.31710384166e-006, 0.0), (0.0, 1.0, 0.0, 0.0), (5.31710384166e-006, 0.0, 1.0, 0.0), (0.0, 0.600000023842, -0.5, 1.0)))
+LoadGeometry(ArmyCopter.Rotor,"ArmyCopter.Rotor.vfb")
+ArmyCopter.Rotor.Pivot = _MakeObject(MakeObject, ArmyCopter.Rotor, "ArmyCopter.Rotor.Pivot", StoringScene=0)
+ArmyCopter.Rotor.Pivot.SetTexture("ArmyCopter.bmp", ObjectOnly, RightNow)
+ArmyCopter.Rotor.Pivot.SetColor((0.113725498319, 0.113725498319, 0.113725498319),ObjectOnly,rightnow)
+ArmyCopter.Rotor.Pivot.SetShininess(0.0,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Pivot.SetHighLightColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Pivot.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Pivot.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Pivot.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Pivot.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Pivot.BecomePart(RightNow)
+ArmyCopter.Rotor.Pivot._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -1.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(ArmyCopter.Rotor.Pivot,"ArmyCopter.Rotor.Pivot.vfb")
+ArmyCopter.Rotor.Blade1 = _MakeObject(MakeObject, ArmyCopter.Rotor, "ArmyCopter.Rotor.Blade1", StoringScene=0)
+ArmyCopter.Rotor.Blade1.SetTexture("ArmyCopter.bmp", ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade1.SetColor((0.113725498319, 0.113725498319, 0.113725498319),ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade1.SetShininess(0.0,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade1.SetHighLightColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade1.BecomePart(RightNow)
+ArmyCopter.Rotor.Blade1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(ArmyCopter.Rotor.Blade1,"ArmyCopter.Rotor.Blade1.vfb")
+ArmyCopter.Rotor.Blade2 = _MakeObject(MakeObject, ArmyCopter.Rotor, "ArmyCopter.Rotor.Blade2", StoringScene=0)
+ArmyCopter.Rotor.Blade2.SetTexture("ArmyCopter.bmp", ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade2.SetColor((0.113725498319, 0.113725498319, 0.113725498319),ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade2.SetShininess(0.0,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade2.SetHighLightColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+ArmyCopter.Rotor.Blade2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+ArmyCopter.Rotor.Blade2.BecomePart(RightNow)
+ArmyCopter.Rotor.Blade2._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(ArmyCopter.Rotor.Blade2,"ArmyCopter.Rotor.Blade2.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

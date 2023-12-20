@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Scissors = _MakeObject(MakeObject, None, "Scissors", StoringScene=0)
+Scissors.SetTexture("Scissors.bmp", ObjectOnly, RightNow)
+Scissors.SetColor(White,ObjectOnly,rightnow)
+Scissors.SetShininess(0.0,ObjectOnly,rightnow)
+Scissors.SetHighLightColor(Black,ObjectOnly,rightnow)
+Scissors.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Scissors.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Scissors.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Scissors.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Scissors.BecomeFirstClass(RightNow)
+Scissors._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.09888009727, 0.0, 1.0)))
+LoadGeometry(Scissors,"Scissors.vfb")
+Scissors.Bottom = _MakeObject(MakeObject, Scissors, "Scissors.Bottom", StoringScene=0)
+Scissors.Bottom.SetTexture("Scissors.bmp", ObjectOnly, RightNow)
+Scissors.Bottom.SetColor(White,ObjectOnly,rightnow)
+Scissors.Bottom.SetShininess(0.0,ObjectOnly,rightnow)
+Scissors.Bottom.SetHighLightColor(Black,ObjectOnly,rightnow)
+Scissors.Bottom.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Scissors.Bottom.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Scissors.Bottom.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Scissors.Bottom.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Scissors.Bottom.BecomePart(RightNow)
+Scissors.Bottom._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Scissors.Bottom,"Scissors.Bottom.vfb")
+Scissors.Top = _MakeObject(MakeObject, Scissors, "Scissors.Top", StoringScene=0)
+Scissors.Top.SetTexture("Scissors.bmp", ObjectOnly, RightNow)
+Scissors.Top.SetColor(White,ObjectOnly,rightnow)
+Scissors.Top.SetShininess(0.0,ObjectOnly,rightnow)
+Scissors.Top.SetHighLightColor(Black,ObjectOnly,rightnow)
+Scissors.Top.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Scissors.Top.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Scissors.Top.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Scissors.Top.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Scissors.Top.BecomePart(RightNow)
+Scissors.Top._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Scissors.Top,"Scissors.Top.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

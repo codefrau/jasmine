@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Binoculars = _MakeObject(MakeObject, None, "Binoculars", StoringScene=0)
+Binoculars.SetTexture("Binoculars.bmp", ObjectOnly, RightNow)
+Binoculars.SetColor(White,ObjectOnly,rightnow)
+Binoculars.SetShininess(0.0,ObjectOnly,rightnow)
+Binoculars.SetHighLightColor(Black,ObjectOnly,rightnow)
+Binoculars.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Binoculars.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Binoculars.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Binoculars.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Binoculars.BecomeFirstClass(RightNow)
+Binoculars._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Binoculars,"Binoculars.vfb")
+Binoculars.LeftLens = _MakeObject(MakeObject, Binoculars, "Binoculars.LeftLens", StoringScene=0)
+Binoculars.LeftLens.SetTexture("Binoculars.bmp", ObjectOnly, RightNow)
+Binoculars.LeftLens.SetColor(White,ObjectOnly,rightnow)
+Binoculars.LeftLens.SetShininess(0.0,ObjectOnly,rightnow)
+Binoculars.LeftLens.SetHighLightColor(Black,ObjectOnly,rightnow)
+Binoculars.LeftLens.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Binoculars.LeftLens.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Binoculars.LeftLens.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Binoculars.LeftLens.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Binoculars.LeftLens.BecomePart(RightNow)
+Binoculars.LeftLens._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0331999994814, 3.63689994812, 0.030700000003, 1.0)))
+LoadGeometry(Binoculars.LeftLens,"Binoculars.LeftLens.vfb")
+Binoculars.LeftLens.LeftEye = _MakeObject(MakeObject, Binoculars.LeftLens, "Binoculars.LeftLens.LeftEye", StoringScene=0)
+Binoculars.LeftLens.LeftEye.SetTexture("Binoculars.bmp", ObjectOnly, RightNow)
+Binoculars.LeftLens.LeftEye.SetColor(White,ObjectOnly,rightnow)
+Binoculars.LeftLens.LeftEye.SetShininess(0.0,ObjectOnly,rightnow)
+Binoculars.LeftLens.LeftEye.SetHighLightColor(Black,ObjectOnly,rightnow)
+Binoculars.LeftLens.LeftEye.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Binoculars.LeftLens.LeftEye.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Binoculars.LeftLens.LeftEye.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Binoculars.LeftLens.LeftEye.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Binoculars.LeftLens.LeftEye.BecomePart(RightNow)
+Binoculars.LeftLens.LeftEye._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, -1.0, 0.0, 0.0), (0.0, 0.0, -1.0, 0.0), (2.8601000309, -0.530900001526, -3.6968998909, 1.0)))
+LoadGeometry(Binoculars.LeftLens.LeftEye,"Binoculars.LeftLens.LeftEye.vfb")
+Binoculars.RightLens = _MakeObject(MakeObject, Binoculars, "Binoculars.RightLens", StoringScene=0)
+Binoculars.RightLens.SetTexture("Binoculars.bmp", ObjectOnly, RightNow)
+Binoculars.RightLens.SetColor(White,ObjectOnly,rightnow)
+Binoculars.RightLens.SetShininess(0.0,ObjectOnly,rightnow)
+Binoculars.RightLens.SetHighLightColor(Black,ObjectOnly,rightnow)
+Binoculars.RightLens.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Binoculars.RightLens.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Binoculars.RightLens.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Binoculars.RightLens.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Binoculars.RightLens.BecomePart(RightNow)
+Binoculars.RightLens._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0377000011504, 3.63689994812, 0.030700000003, 1.0)))
+LoadGeometry(Binoculars.RightLens,"Binoculars.RightLens.vfb")
+Binoculars.RightLens.RightEye = _MakeObject(MakeObject, Binoculars.RightLens, "Binoculars.RightLens.RightEye", StoringScene=0)
+Binoculars.RightLens.RightEye.SetTexture("Binoculars.bmp", ObjectOnly, RightNow)
+Binoculars.RightLens.RightEye.SetColor(White,ObjectOnly,rightnow)
+Binoculars.RightLens.RightEye.SetShininess(0.0,ObjectOnly,rightnow)
+Binoculars.RightLens.RightEye.SetHighLightColor(Black,ObjectOnly,rightnow)
+Binoculars.RightLens.RightEye.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Binoculars.RightLens.RightEye.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Binoculars.RightLens.RightEye.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Binoculars.RightLens.RightEye.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Binoculars.RightLens.RightEye.BecomePart(RightNow)
+Binoculars.RightLens.RightEye._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, -1.0, 0.0, 0.0), (0.0, 0.0, -1.0, 0.0), (-2.91330003738, -0.532100021839, -3.6970000267, 1.0)))
+LoadGeometry(Binoculars.RightLens.RightEye,"Binoculars.RightLens.RightEye.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+LunchBox = _MakeObject(MakeObject, None, "LunchBox", StoringScene=0)
+LunchBox.SetTexture("LunchBox.bmp", ObjectOnly, RightNow)
+LunchBox.SetColor(White,ObjectOnly,rightnow)
+LunchBox.SetShininess(0.0,ObjectOnly,rightnow)
+LunchBox.SetHighLightColor(Black,ObjectOnly,rightnow)
+LunchBox.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LunchBox.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LunchBox.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LunchBox.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LunchBox.BecomeFirstClass(RightNow)
+LunchBox._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(LunchBox,"LunchBox.vfb")
+LunchBox.RightLink = _MakeObject(MakeObject, LunchBox, "LunchBox.RightLink", StoringScene=0)
+LunchBox.RightLink.SetTexture("LunchBox.bmp", ObjectOnly, RightNow)
+LunchBox.RightLink.SetColor(White,ObjectOnly,rightnow)
+LunchBox.RightLink.SetShininess(0.0,ObjectOnly,rightnow)
+LunchBox.RightLink.SetHighLightColor(Black,ObjectOnly,rightnow)
+LunchBox.RightLink.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LunchBox.RightLink.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LunchBox.RightLink.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LunchBox.RightLink.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LunchBox.RightLink.BecomePart(RightNow)
+LunchBox.RightLink._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0719999969006, 0.00400000018999, 0.112999998033, 1.0)))
+LoadGeometry(LunchBox.RightLink,"LunchBox.RightLink.vfb")
+LunchBox.Lid = _MakeObject(MakeObject, LunchBox, "LunchBox.Lid", StoringScene=0)
+LunchBox.Lid.SetTexture("LunchBox.bmp", ObjectOnly, RightNow)
+LunchBox.Lid.SetColor(White,ObjectOnly,rightnow)
+LunchBox.Lid.SetShininess(0.0,ObjectOnly,rightnow)
+LunchBox.Lid.SetHighLightColor(Black,ObjectOnly,rightnow)
+LunchBox.Lid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LunchBox.Lid.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LunchBox.Lid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LunchBox.Lid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LunchBox.Lid.BecomePart(RightNow)
+LunchBox.Lid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0010000000475, 0.0500000007451, -0.108000002801, 1.0)))
+LoadGeometry(LunchBox.Lid,"LunchBox.Lid.vfb")
+LunchBox.Handle = _MakeObject(MakeObject, LunchBox, "LunchBox.Handle", StoringScene=0)
+LunchBox.Handle.SetTexture("LunchBox.bmp", ObjectOnly, RightNow)
+LunchBox.Handle.SetColor(White,ObjectOnly,rightnow)
+LunchBox.Handle.SetShininess(0.0,ObjectOnly,rightnow)
+LunchBox.Handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+LunchBox.Handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LunchBox.Handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LunchBox.Handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LunchBox.Handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LunchBox.Handle.BecomePart(RightNow)
+LunchBox.Handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.00200000009499, 0.00300000002608, 0.112999998033, 1.0)))
+LoadGeometry(LunchBox.Handle,"LunchBox.Handle.vfb")
+LunchBox.LeftLink = _MakeObject(MakeObject, LunchBox, "LunchBox.LeftLink", StoringScene=0)
+LunchBox.LeftLink.SetTexture("LunchBox.bmp", ObjectOnly, RightNow)
+LunchBox.LeftLink.SetColor(White,ObjectOnly,rightnow)
+LunchBox.LeftLink.SetShininess(0.0,ObjectOnly,rightnow)
+LunchBox.LeftLink.SetHighLightColor(Black,ObjectOnly,rightnow)
+LunchBox.LeftLink.SetEmissiveColor(Black,ObjectOnly,rightnow)
+LunchBox.LeftLink.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+LunchBox.LeftLink.SetFillingStyle(Filled, ObjectOnly, RightNow)
+LunchBox.LeftLink.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+LunchBox.LeftLink.BecomePart(RightNow)
+LunchBox.LeftLink._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0710000023246, 0.00300000002608, 0.112999998033, 1.0)))
+LoadGeometry(LunchBox.LeftLink,"LunchBox.LeftLink.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

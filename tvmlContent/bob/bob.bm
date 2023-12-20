@@ -1,0 +1,47 @@
+# BOB in BOBMARY format
+Version 1.2
+
+ModelFile bob.bmo
+
+# length data of body parts
+thickness_foot	0.033
+length_legLower	0.18
+length_legUpper	0.18
+length_thigh	0.051
+length_body	0.225
+length_shoulder	0.108
+length_armUpper	0.18
+length_armLower	0.105
+length_neck	0.045
+ypos_eye	0.38
+zpos_eye	0.12
+
+# for initial pose
+hiplevel_stand	0.348
+angle_armLU_stand	0.0
+angle_armRU_stand	0.0
+angle_armLL_stand	70.0
+angle_armRL_stand	70.0
+
+# for walk, stand(stop), sit
+walkstopsit_speed	0.2
+walkstopsit_stroke	0.402
+walkstopsit_waistline	0.3204
+walkstopsit_raise	0.081
+
+hiplevel_sit	0.18
+hipzpos_sit	-0.15
+
+talk_mouth_degree	0.7
+talk_upjaw_degree	10.0
+talk_lowjaw_degree	0.06
+talk_gesture	-0.002
+
+openmouth_degree	1.0
+
+watch_speed	0.2
+
+turn_speed	0.3
+
+shiver_degree	1.8
+

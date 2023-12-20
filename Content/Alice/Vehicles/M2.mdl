@@ -1,0 +1,119 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+M2 = _MakeObject(MakeObject, None, "M2", StoringScene=0)
+M2.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.SetColor(White,ObjectOnly,rightnow)
+M2.SetShininess(0.0,ObjectOnly,rightnow)
+M2.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.BecomeFirstClass(RightNow)
+M2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(M2,"M2.vfb")
+M2.Turret = _MakeObject(MakeObject, M2, "M2.Turret", StoringScene=0)
+M2.Turret.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.Turret.SetColor(White,ObjectOnly,rightnow)
+M2.Turret.SetShininess(0.0,ObjectOnly,rightnow)
+M2.Turret.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.Turret.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.Turret.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.Turret.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.Turret.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.Turret.BecomePart(RightNow)
+M2.Turret._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0187999997288, 0.698199987411, -0.179700002074, 1.0)))
+LoadGeometry(M2.Turret,"M2.Turret.vfb")
+M2.Turret.Barrel = _MakeObject(MakeObject, M2.Turret, "M2.Turret.Barrel", StoringScene=0)
+M2.Turret.Barrel.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.Turret.Barrel.SetColor(White,ObjectOnly,rightnow)
+M2.Turret.Barrel.SetShininess(0.0,ObjectOnly,rightnow)
+M2.Turret.Barrel.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.Turret.Barrel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.Turret.Barrel.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.Turret.Barrel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.Turret.Barrel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.Turret.Barrel.BecomePart(RightNow)
+M2.Turret.Barrel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0104999998584, 0.193499997258, 0.175500005484, 1.0)))
+LoadGeometry(M2.Turret.Barrel,"M2.Turret.Barrel.vfb")
+M2.Turret.Barrel.Long = _MakeObject(MakeObject, M2.Turret.Barrel, "M2.Turret.Barrel.Long", StoringScene=0)
+M2.Turret.Barrel.Long.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.Turret.Barrel.Long.SetColor(White,ObjectOnly,rightnow)
+M2.Turret.Barrel.Long.SetShininess(0.0,ObjectOnly,rightnow)
+M2.Turret.Barrel.Long.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.Turret.Barrel.Long.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.Turret.Barrel.Long.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.Turret.Barrel.Long.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.Turret.Barrel.Long.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.Turret.Barrel.Long.BecomePart(RightNow)
+M2.Turret.Barrel.Long._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.040600001812, 0.0146000003442, 0.386500000954, 1.0)))
+LoadGeometry(M2.Turret.Barrel.Long,"M2.Turret.Barrel.Long.vfb")
+M2.Turret.Barrel.Short = _MakeObject(MakeObject, M2.Turret.Barrel, "M2.Turret.Barrel.Short", StoringScene=0)
+M2.Turret.Barrel.Short.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.Turret.Barrel.Short.SetColor(White,ObjectOnly,rightnow)
+M2.Turret.Barrel.Short.SetShininess(0.0,ObjectOnly,rightnow)
+M2.Turret.Barrel.Short.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.Turret.Barrel.Short.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.Turret.Barrel.Short.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.Turret.Barrel.Short.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.Turret.Barrel.Short.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.Turret.Barrel.Short.BecomePart(RightNow)
+M2.Turret.Barrel.Short._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0864000022411, 0.0146000003442, 0.227799996734, 1.0)))
+LoadGeometry(M2.Turret.Barrel.Short,"M2.Turret.Barrel.Short.vfb")
+M2.Turret.Tow = _MakeObject(MakeObject, M2.Turret, "M2.Turret.Tow", StoringScene=0)
+M2.Turret.Tow.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.Turret.Tow.SetColor(White,ObjectOnly,rightnow)
+M2.Turret.Tow.SetShininess(0.0,ObjectOnly,rightnow)
+M2.Turret.Tow.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.Turret.Tow.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.Turret.Tow.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.Turret.Tow.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.Turret.Tow.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.Turret.Tow.BecomePart(RightNow)
+M2.Turret.Tow._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.334500014782, 0.318500012159, 0.0205000005662, 1.0)))
+LoadGeometry(M2.Turret.Tow,"M2.Turret.Tow.vfb")
+M2.Body = _MakeObject(MakeObject, M2, "M2.Body", StoringScene=0)
+M2.Body.SetTexture("M2.bmp", ObjectOnly, RightNow)
+M2.Body.SetColor(White,ObjectOnly,rightnow)
+M2.Body.SetShininess(0.0,ObjectOnly,rightnow)
+M2.Body.SetHighLightColor(Black,ObjectOnly,rightnow)
+M2.Body.SetEmissiveColor(Black,ObjectOnly,rightnow)
+M2.Body.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+M2.Body.SetFillingStyle(Filled, ObjectOnly, RightNow)
+M2.Body.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+M2.Body.BecomePart(RightNow)
+M2.Body._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.00270000007004, 0.367900013924, -0.00209999992512, 1.0)))
+LoadGeometry(M2.Body,"M2.Body.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

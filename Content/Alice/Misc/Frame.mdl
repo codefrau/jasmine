@@ -1,0 +1,107 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Frame = _MakeObject(MakeObject, None, "Frame", StoringScene=0)
+Frame.SetTexture("Frame.bmp", ObjectOnly, RightNow)
+Frame.SetColor(White,ObjectOnly,rightnow)
+Frame.SetShininess(0.0,ObjectOnly,rightnow)
+Frame.SetHighLightColor(Black,ObjectOnly,rightnow)
+Frame.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Frame.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Frame.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Frame.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Frame.BecomeFirstClass(RightNow)
+Frame._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Frame,"Frame.vfb")
+Frame.East = _MakeObject(MakeObject, Frame, "Frame.East", StoringScene=0)
+Frame.East.SetTexture("Frame.bmp", ObjectOnly, RightNow)
+Frame.East.SetColor(White,ObjectOnly,rightnow)
+Frame.East.SetShininess(0.0,ObjectOnly,rightnow)
+Frame.East.SetHighLightColor(Black,ObjectOnly,rightnow)
+Frame.East.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Frame.East.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Frame.East.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Frame.East.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Frame.East.BecomePart(RightNow)
+Frame.East._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Frame.East,"Frame.East.vfb")
+Frame.North = _MakeObject(MakeObject, Frame, "Frame.North", StoringScene=0)
+Frame.North.SetTexture("Frame.bmp", ObjectOnly, RightNow)
+Frame.North.SetColor(White,ObjectOnly,rightnow)
+Frame.North.SetShininess(0.0,ObjectOnly,rightnow)
+Frame.North.SetHighLightColor(Black,ObjectOnly,rightnow)
+Frame.North.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Frame.North.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Frame.North.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Frame.North.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Frame.North.BecomePart(RightNow)
+Frame.North._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Frame.North,"Frame.North.vfb")
+Frame.West = _MakeObject(MakeObject, Frame, "Frame.West", StoringScene=0)
+Frame.West.SetTexture("Frame.bmp", ObjectOnly, RightNow)
+Frame.West.SetColor(White,ObjectOnly,rightnow)
+Frame.West.SetShininess(0.0,ObjectOnly,rightnow)
+Frame.West.SetHighLightColor(Black,ObjectOnly,rightnow)
+Frame.West.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Frame.West.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Frame.West.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Frame.West.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Frame.West.BecomePart(RightNow)
+Frame.West._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Frame.West,"Frame.West.vfb")
+Frame.South = _MakeObject(MakeObject, Frame, "Frame.South", StoringScene=0)
+Frame.South.SetTexture("Frame.bmp", ObjectOnly, RightNow)
+Frame.South.SetColor(White,ObjectOnly,rightnow)
+Frame.South.SetShininess(0.0,ObjectOnly,rightnow)
+Frame.South.SetHighLightColor(Black,ObjectOnly,rightnow)
+Frame.South.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Frame.South.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Frame.South.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Frame.South.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Frame.South.BecomePart(RightNow)
+Frame.South._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Frame.South,"Frame.South.vfb")
+Frame.Matte = _MakeObject(MakeObject, Frame, "Frame.Matte", StoringScene=0)
+Frame.Matte.SetTexture("Frame.bmp", ObjectOnly, RightNow)
+Frame.Matte.SetColor(White,ObjectOnly,rightnow)
+Frame.Matte.SetShininess(0.0,ObjectOnly,rightnow)
+Frame.Matte.SetHighLightColor(Black,ObjectOnly,rightnow)
+Frame.Matte.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Frame.Matte.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Frame.Matte.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Frame.Matte.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Frame.Matte.BecomePart(RightNow)
+Frame.Matte._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Frame.Matte,"Frame.Matte.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Dragon = _MakeObject(MakeObject, None, "Dragon", StoringScene=0)
+Dragon.SetTexture("Dragon.bmp", ObjectOnly, RightNow)
+Dragon.SetColor(White,ObjectOnly,rightnow)
+Dragon.SetShininess(0.0,ObjectOnly,rightnow)
+Dragon.SetHighLightColor(Black,ObjectOnly,rightnow)
+Dragon.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Dragon.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Dragon.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Dragon.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Dragon.BecomeFirstClass(RightNow)
+Dragon._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Dragon,"Dragon.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

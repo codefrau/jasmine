@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Humvee = _MakeObject(MakeObject, None, "Humvee", StoringScene=0)
+Humvee.SetTexture("Humvee.bmp", ObjectOnly, RightNow)
+Humvee.SetColor(White,ObjectOnly,rightnow)
+Humvee.SetShininess(0.0,ObjectOnly,rightnow)
+Humvee.SetHighLightColor(Black,ObjectOnly,rightnow)
+Humvee.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Humvee.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Humvee.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Humvee.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Humvee.BecomeFirstClass(RightNow)
+Humvee._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.00745099782944, 0.0, 1.0)))
+LoadGeometry(Humvee,"Humvee.vfb")
+Humvee.LeftFrontWheel = _MakeObject(MakeObject, Humvee, "Humvee.LeftFrontWheel", StoringScene=0)
+Humvee.LeftFrontWheel.SetTexture("Humvee.bmp", ObjectOnly, RightNow)
+Humvee.LeftFrontWheel.SetColor(White,ObjectOnly,rightnow)
+Humvee.LeftFrontWheel.SetShininess(0.0,ObjectOnly,rightnow)
+Humvee.LeftFrontWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+Humvee.LeftFrontWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Humvee.LeftFrontWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Humvee.LeftFrontWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Humvee.LeftFrontWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Humvee.LeftFrontWheel.BecomePart(RightNow)
+Humvee.LeftFrontWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.925000011921, 0.479999989271, 1.48000001907, 1.0)))
+LoadGeometry(Humvee.LeftFrontWheel,"Humvee.LeftFrontWheel.vfb")
+Humvee.RightBackWheel = _MakeObject(MakeObject, Humvee, "Humvee.RightBackWheel", StoringScene=0)
+Humvee.RightBackWheel.SetTexture("Humvee.bmp", ObjectOnly, RightNow)
+Humvee.RightBackWheel.SetColor(White,ObjectOnly,rightnow)
+Humvee.RightBackWheel.SetShininess(0.0,ObjectOnly,rightnow)
+Humvee.RightBackWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+Humvee.RightBackWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Humvee.RightBackWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Humvee.RightBackWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Humvee.RightBackWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Humvee.RightBackWheel.BecomePart(RightNow)
+Humvee.RightBackWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.925000011921, 0.479999989271, -1.37000000477, 1.0)))
+LoadGeometry(Humvee.RightBackWheel,"Humvee.RightBackWheel.vfb")
+Humvee.LeftBackWheel = _MakeObject(MakeObject, Humvee, "Humvee.LeftBackWheel", StoringScene=0)
+Humvee.LeftBackWheel.SetTexture("Humvee.bmp", ObjectOnly, RightNow)
+Humvee.LeftBackWheel.SetColor(White,ObjectOnly,rightnow)
+Humvee.LeftBackWheel.SetShininess(0.0,ObjectOnly,rightnow)
+Humvee.LeftBackWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+Humvee.LeftBackWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Humvee.LeftBackWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Humvee.LeftBackWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Humvee.LeftBackWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Humvee.LeftBackWheel.BecomePart(RightNow)
+Humvee.LeftBackWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.925000011921, 0.479999989271, -1.37000000477, 1.0)))
+LoadGeometry(Humvee.LeftBackWheel,"Humvee.LeftBackWheel.vfb")
+Humvee.RightFrontWheel = _MakeObject(MakeObject, Humvee, "Humvee.RightFrontWheel", StoringScene=0)
+Humvee.RightFrontWheel.SetTexture("Humvee.bmp", ObjectOnly, RightNow)
+Humvee.RightFrontWheel.SetColor(White,ObjectOnly,rightnow)
+Humvee.RightFrontWheel.SetShininess(0.0,ObjectOnly,rightnow)
+Humvee.RightFrontWheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+Humvee.RightFrontWheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Humvee.RightFrontWheel.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Humvee.RightFrontWheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Humvee.RightFrontWheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Humvee.RightFrontWheel.BecomePart(RightNow)
+Humvee.RightFrontWheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.925000011921, 0.479999989271, 1.48000001907, 1.0)))
+LoadGeometry(Humvee.RightFrontWheel,"Humvee.RightFrontWheel.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,46 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+equalSign = _MakeObject(MakeObject, None, "equalSign", StoringScene=0)
+equalSign.SetColor(White,ObjectOnly,rightnow)
+equalSign.SetShininess(0.0,ObjectOnly,rightnow)
+equalSign.SetHighLightColor(Black,ObjectOnly,rightnow)
+equalSign.SetEmissiveColor(Black,ObjectOnly,rightnow)
+equalSign.SetLightingStyle(Lit, ObjectOnly, RightNow)
+equalSign.SetFillingStyle(Filled, ObjectOnly, RightNow)
+equalSign.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+equalSign.BecomeFirstClass(RightNow)
+equalSign._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(equalSign,"EqualSign.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,83 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Candlestick = _MakeObject(MakeObject, None, "Candlestick", StoringScene=0)
+Candlestick.SetTexture("Candlestick.bmp", ObjectOnly, RightNow)
+Candlestick.SetColor(White,ObjectOnly,rightnow)
+Candlestick.SetShininess(0.0,ObjectOnly,rightnow)
+Candlestick.SetHighLightColor(Black,ObjectOnly,rightnow)
+Candlestick.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Candlestick.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Candlestick.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Candlestick.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Candlestick.BecomeFirstClass(RightNow)
+Candlestick._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Candlestick,"Candlestick.vfb")
+Candlestick.Top = _MakeObject(MakeObject, Candlestick, "Candlestick.Top", StoringScene=0)
+Candlestick.Top.SetTexture("Candlestick.bmp", ObjectOnly, RightNow)
+Candlestick.Top.SetColor(White,ObjectOnly,rightnow)
+Candlestick.Top.SetShininess(0.0,ObjectOnly,rightnow)
+Candlestick.Top.SetHighLightColor(Black,ObjectOnly,rightnow)
+Candlestick.Top.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Candlestick.Top.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Candlestick.Top.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Candlestick.Top.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Candlestick.Top.BecomePart(RightNow)
+Candlestick.Top._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Candlestick.Top,"Candlestick.Top.vfb")
+Candlestick.Top.Candle = _MakeObject(MakeObject, Candlestick.Top, "Candlestick.Top.Candle", StoringScene=0)
+Candlestick.Top.Candle.SetTexture("Candlestick.bmp", ObjectOnly, RightNow)
+Candlestick.Top.Candle.SetColor(White,ObjectOnly,rightnow)
+Candlestick.Top.Candle.SetShininess(0.0,ObjectOnly,rightnow)
+Candlestick.Top.Candle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Candlestick.Top.Candle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Candlestick.Top.Candle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Candlestick.Top.Candle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Candlestick.Top.Candle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Candlestick.Top.Candle.BecomePart(RightNow)
+Candlestick.Top.Candle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Candlestick.Top.Candle,"Candlestick.Top.Candle.vfb")
+Candlestick.Top.Flame = _MakeObject(MakeObject, Candlestick.Top, "Candlestick.Top.Flame", StoringScene=0)
+Candlestick.Top.Flame.SetTexture("Candlestick.bmp", ObjectOnly, RightNow)
+Candlestick.Top.Flame.SetColor(White,ObjectOnly,rightnow)
+Candlestick.Top.Flame.SetShininess(0.0,ObjectOnly,rightnow)
+Candlestick.Top.Flame.SetHighLightColor(Black,ObjectOnly,rightnow)
+Candlestick.Top.Flame.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Candlestick.Top.Flame.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Candlestick.Top.Flame.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Candlestick.Top.Flame.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Candlestick.Top.Flame.BecomePart(RightNow)
+Candlestick.Top.Flame._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.17499999702, 0.0, 1.0)))
+LoadGeometry(Candlestick.Top.Flame,"Candlestick.Top.Flame.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

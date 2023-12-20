@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+BellHelmet = _MakeObject(MakeObject, None, "BellHelmet", StoringScene=0)
+BellHelmet.SetTexture("BellHelmet.bmp", ObjectOnly, RightNow)
+BellHelmet.SetColor(White,ObjectOnly,rightnow)
+BellHelmet.SetShininess(0.0,ObjectOnly,rightnow)
+BellHelmet.SetHighLightColor(Black,ObjectOnly,rightnow)
+BellHelmet.SetEmissiveColor(Black,ObjectOnly,rightnow)
+BellHelmet.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+BellHelmet.SetFillingStyle(Filled, ObjectOnly, RightNow)
+BellHelmet.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+BellHelmet.BecomeFirstClass(RightNow)
+BellHelmet._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(BellHelmet,"BellHelmet.vfb")
+BellHelmet.Shell = _MakeObject(MakeObject, BellHelmet, "BellHelmet.Shell", StoringScene=0)
+BellHelmet.Shell.SetTexture("BellHelmet.bmp", ObjectOnly, RightNow)
+BellHelmet.Shell.SetColor(White,ObjectOnly,rightnow)
+BellHelmet.Shell.SetShininess(0.0,ObjectOnly,rightnow)
+BellHelmet.Shell.SetHighLightColor(Black,ObjectOnly,rightnow)
+BellHelmet.Shell.SetEmissiveColor(Black,ObjectOnly,rightnow)
+BellHelmet.Shell.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+BellHelmet.Shell.SetFillingStyle(Filled, ObjectOnly, RightNow)
+BellHelmet.Shell.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+BellHelmet.Shell.BecomePart(RightNow)
+BellHelmet.Shell._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -0.1875, 0.0, 1.0)))
+LoadGeometry(BellHelmet.Shell,"BellHelmet.Shell.vfb")
+BellHelmet.Visor = _MakeObject(MakeObject, BellHelmet, "BellHelmet.Visor", StoringScene=0)
+BellHelmet.Visor.SetTexture("BellHelmet.bmp", ObjectOnly, RightNow)
+BellHelmet.Visor.SetColor(White,ObjectOnly,rightnow)
+BellHelmet.Visor.SetShininess(0.0,ObjectOnly,rightnow)
+BellHelmet.Visor.SetHighLightColor(Black,ObjectOnly,rightnow)
+BellHelmet.Visor.SetEmissiveColor(Black,ObjectOnly,rightnow)
+BellHelmet.Visor.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+BellHelmet.Visor.SetFillingStyle(Filled, ObjectOnly, RightNow)
+BellHelmet.Visor.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+BellHelmet.Visor.BecomePart(RightNow)
+BellHelmet.Visor._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.10000000149, 0.0, 0.144999995828, 1.0)))
+LoadGeometry(BellHelmet.Visor,"BellHelmet.Visor.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

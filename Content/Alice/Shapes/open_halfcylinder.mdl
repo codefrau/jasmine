@@ -1,0 +1,36 @@
+# Alice Model File Format 1.0
+import Alice
+version = 19990207
+
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		global errorfile
+		sError = name + ":  Mesh load failed."
+		try:
+			errorfile.write("Error:  " + sError + "\n")
+		except:
+			errorfile = open(Alice.HomeDir+"Errors.txt","w")
+			errorfile.write("Error:  " + sError + "\n")
+		print "Error:  " + sError + "\n"
+
+open_halfcylinder = Alice.MakeObject (Parent=None, Name="open_halfcylinder")
+open_halfcylinder.SetColor(White,ObjectOnly,RightNow)
+open_halfcylinder.SetVisibility(1.0000,ObjectOnly,RightNow)
+open_halfcylinder.SetShininess(0.0000,ObjectOnly,RightNow)
+open_halfcylinder.SetHighLightColor(Black,ObjectOnly,RightNow)
+open_halfcylinder.SetEmissiveColor(Black,ObjectOnly,RightNow)
+open_halfcylinder.SetLightingStyle(Lit, ObjectOnly, RightNow)
+open_halfcylinder.SetFillingStyle(Filled, ObjectOnly, RightNow)
+open_halfcylinder.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+open_halfcylinder.BecomeFirstClass(RightNow)
+open_halfcylinder._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.0000, 0.0000, 0.0000, 1.0000)))
+LoadGeometry(open_halfcylinder,"open_halfcylinder.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

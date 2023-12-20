@@ -1,0 +1,36 @@
+# Alice Model File Format 1.0
+import Alice
+version = 19990207
+
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		global errorfile
+		sError = name + ":  Mesh load failed."
+		try:
+			errorfile.write("Error:  " + sError + "\n")
+		except:
+			errorfile = open(Alice.HomeDir+"Errors.txt","w")
+			errorfile.write("Error:  " + sError + "\n")
+		print "Error:  " + sError + "\n"
+
+slice2 = Alice.MakeObject (Parent=None, Name="slice2")
+slice2.SetColor(White,ObjectOnly,RightNow)
+slice2.SetVisibility(1.0000,ObjectOnly,RightNow)
+slice2.SetShininess(0.0000,ObjectOnly,RightNow)
+slice2.SetHighLightColor(Black,ObjectOnly,RightNow)
+slice2.SetEmissiveColor(Black,ObjectOnly,RightNow)
+slice2.SetLightingStyle(Lit, ObjectOnly, RightNow)
+slice2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+slice2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+slice2.BecomeFirstClass(RightNow)
+slice2._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.0000, 0.0000, 0.0000, 1.0000)))
+LoadGeometry(slice2,"slice2.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

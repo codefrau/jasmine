@@ -1,0 +1,35 @@
+#
+# Wavefront material file: d:\hayashi\bob1.2\bob\jaw.mtl
+#
+# Converted by the PolyTrans geometry converter from Okino Computer Graphics, Inc.
+# Date/time of export: 04/08/2003 20:14:48
+#
+# Bounding box of geometry = (-0.133,0.008,0.061) to (0.132,0.292,0.246).
+newmtl default
+	Ns 32
+	d 1
+	illum 2
+	Kd 0.4 0.4 0.4
+	Ks 0.7 0.7 0.7
+	Ka 0.3 0.3 0.3
+newmtl 0Mtl29_mtl1
+	Ns 0
+	d 1
+	illum 2
+	Kd 0.545098 0.309804 1.000000
+	Ks 0 0 0
+	Ka 0.272549 0.154902 0.500000
+newmtl TVML_bob_ha_1_0
+	Ns 0
+	d 1
+	illum 2
+	Kd 1.000000 1.000000 0.878431
+	Ks 0 0 0
+	Ka 0.500000 0.500000 0.439216
+newmtl lowerlip
+	Ns 25
+	d 1
+	illum 2
+	Kd 1.000000 0.298039 0.317647
+	Ks 0 0 0
+	Ka 0.500000 0.149019 0.158824

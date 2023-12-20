@@ -1,0 +1,107 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Lamp = _MakeObject(MakeObject, None, "Lamp", StoringScene=0)
+Lamp.SetTexture("Lamp.bmp", ObjectOnly, RightNow)
+Lamp.SetColor(White,ObjectOnly,rightnow)
+Lamp.SetShininess(0.0,ObjectOnly,rightnow)
+Lamp.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lamp.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lamp.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lamp.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lamp.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lamp.BecomeFirstClass(RightNow)
+Lamp._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lamp,"Lamp.vfb")
+Lamp.Shade = _MakeObject(MakeObject, Lamp, "Lamp.Shade", StoringScene=0)
+Lamp.Shade.SetTexture("Lamp.bmp", ObjectOnly, RightNow)
+Lamp.Shade.SetColor(White,ObjectOnly,rightnow)
+Lamp.Shade.SetShininess(0.0,ObjectOnly,rightnow)
+Lamp.Shade.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lamp.Shade.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lamp.Shade.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lamp.Shade.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lamp.Shade.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lamp.Shade.BecomePart(RightNow)
+Lamp.Shade._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.34999999404, 0.0, 1.0)))
+LoadGeometry(Lamp.Shade,"Lamp.Shade.vfb")
+Lamp.Shade.Panes = _MakeObject(MakeObject, Lamp.Shade, "Lamp.Shade.Panes", StoringScene=0)
+Lamp.Shade.Panes.SetTexture("Lamp.bmp", ObjectOnly, RightNow)
+Lamp.Shade.Panes.SetColor(White,ObjectOnly,rightnow)
+Lamp.Shade.Panes.SetShininess(0.0,ObjectOnly,rightnow)
+Lamp.Shade.Panes.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lamp.Shade.Panes.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lamp.Shade.Panes.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lamp.Shade.Panes.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lamp.Shade.Panes.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lamp.Shade.Panes.BecomePart(RightNow)
+Lamp.Shade.Panes._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lamp.Shade.Panes,"Lamp.Shade.Panes.vfb")
+Lamp.Shade.Brass = _MakeObject(MakeObject, Lamp.Shade, "Lamp.Shade.Brass", StoringScene=0)
+Lamp.Shade.Brass.SetTexture("Lamp.bmp", ObjectOnly, RightNow)
+Lamp.Shade.Brass.SetColor(White,ObjectOnly,rightnow)
+Lamp.Shade.Brass.SetShininess(0.0,ObjectOnly,rightnow)
+Lamp.Shade.Brass.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lamp.Shade.Brass.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lamp.Shade.Brass.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lamp.Shade.Brass.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lamp.Shade.Brass.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lamp.Shade.Brass.BecomePart(RightNow)
+Lamp.Shade.Brass._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lamp.Shade.Brass,"Lamp.Shade.Brass.vfb")
+Lamp.Bulb = _MakeObject(MakeObject, Lamp, "Lamp.Bulb", StoringScene=0)
+Lamp.Bulb.SetTexture("Lamp.bmp", ObjectOnly, RightNow)
+Lamp.Bulb.SetColor(White,ObjectOnly,rightnow)
+Lamp.Bulb.SetShininess(0.0,ObjectOnly,rightnow)
+Lamp.Bulb.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lamp.Bulb.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lamp.Bulb.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lamp.Bulb.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lamp.Bulb.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lamp.Bulb.BecomePart(RightNow)
+Lamp.Bulb._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.34999999404, 0.0, 1.0)))
+LoadGeometry(Lamp.Bulb,"Lamp.Bulb.vfb")
+Lamp.Base = _MakeObject(MakeObject, Lamp, "Lamp.Base", StoringScene=0)
+Lamp.Base.SetTexture("Lamp.bmp", ObjectOnly, RightNow)
+Lamp.Base.SetColor(White,ObjectOnly,rightnow)
+Lamp.Base.SetShininess(0.0,ObjectOnly,rightnow)
+Lamp.Base.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lamp.Base.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lamp.Base.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lamp.Base.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lamp.Base.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lamp.Base.BecomePart(RightNow)
+Lamp.Base._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lamp.Base,"Lamp.Base.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

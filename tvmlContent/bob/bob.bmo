@@ -1,0 +1,38 @@
+# buddy bmo file
+# Convert Lightwave to Wavefront OBJ
+# Y.Aikawa Looped Picture Company
+# http://www.loopedpicture.com
+# 2003/02/04
+
+#model face animation type (expression or onin)
+#face_animation	expression_onin
+
+#head node object animation type
+type_mouth	none
+type_head	none
+type_eye	none
+type_eyebrow	none
+type_eyelid	none
+type_ear	none
+type_hair	none
+type_nose	none
+type_jaw	none
+
+
+chest 	body.obj
+handL	handl.obj
+handR	handr.obj
+footL	foot.obj
+footR	foot.obj
+head	head.obj
+legLU	leg.obj
+legLD	leg.obj
+legRU	leg.obj
+legRD	leg.obj
+armLU	arm.obj
+armLD	darm.obj
+armRU	arm.obj
+armRD	darm.obj
+jaw 	jaw.obj
+neck	neck.obj
+

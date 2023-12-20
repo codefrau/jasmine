@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Lever = _MakeObject(MakeObject, None, "Lever", StoringScene=0)
+Lever.SetTexture("Lever.bmp", ObjectOnly, RightNow)
+Lever.SetColor(White,ObjectOnly,rightnow)
+Lever.SetShininess(0.0,ObjectOnly,rightnow)
+Lever.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lever.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lever.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lever.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lever.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lever.BecomeFirstClass(RightNow)
+Lever._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lever,"Lever.vfb")
+Lever.Base = _MakeObject(MakeObject, Lever, "Lever.Base", StoringScene=0)
+Lever.Base.SetTexture("Lever.bmp", ObjectOnly, RightNow)
+Lever.Base.SetColor(White,ObjectOnly,rightnow)
+Lever.Base.SetShininess(0.0,ObjectOnly,rightnow)
+Lever.Base.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lever.Base.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lever.Base.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lever.Base.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lever.Base.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lever.Base.BecomePart(RightNow)
+Lever.Base._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lever.Base,"Lever.Base.vfb")
+Lever.Base.Wheel = _MakeObject(MakeObject, Lever.Base, "Lever.Base.Wheel", StoringScene=0)
+Lever.Base.Wheel.SetTexture("Lever.bmp", ObjectOnly, RightNow)
+Lever.Base.Wheel.SetColor(White,ObjectOnly,rightnow)
+Lever.Base.Wheel.SetShininess(0.0,ObjectOnly,rightnow)
+Lever.Base.Wheel.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lever.Base.Wheel.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lever.Base.Wheel.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lever.Base.Wheel.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lever.Base.Wheel.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lever.Base.Wheel.BecomePart(RightNow)
+Lever.Base.Wheel._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.10000000149, 1.0)))
+LoadGeometry(Lever.Base.Wheel,"Lever.Base.Wheel.vfb")
+Lever.Base.Base = _MakeObject(MakeObject, Lever.Base, "Lever.Base.Base", StoringScene=0)
+Lever.Base.Base.SetTexture("Lever.bmp", ObjectOnly, RightNow)
+Lever.Base.Base.SetColor(White,ObjectOnly,rightnow)
+Lever.Base.Base.SetShininess(0.0,ObjectOnly,rightnow)
+Lever.Base.Base.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lever.Base.Base.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lever.Base.Base.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lever.Base.Base.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lever.Base.Base.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lever.Base.Base.BecomePart(RightNow)
+Lever.Base.Base._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Lever.Base.Base,"Lever.Base.Base.vfb")
+Lever.Handle = _MakeObject(MakeObject, Lever, "Lever.Handle", StoringScene=0)
+Lever.Handle.SetTexture("Lever.bmp", ObjectOnly, RightNow)
+Lever.Handle.SetColor(White,ObjectOnly,rightnow)
+Lever.Handle.SetShininess(0.0,ObjectOnly,rightnow)
+Lever.Handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Lever.Handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Lever.Handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Lever.Handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Lever.Handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Lever.Handle.BecomePart(RightNow)
+Lever.Handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.10000000149, 1.0)))
+LoadGeometry(Lever.Handle,"Lever.Handle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

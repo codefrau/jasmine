@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Luxo = _MakeObject(MakeObject, None, "Luxo", StoringScene=0)
+Luxo.SetTexture("Luxo.bmp", ObjectOnly, RightNow)
+Luxo.SetColor(White,ObjectOnly,rightnow)
+Luxo.SetShininess(0.0,ObjectOnly,rightnow)
+Luxo.SetHighLightColor(Black,ObjectOnly,rightnow)
+Luxo.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Luxo.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Luxo.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Luxo.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Luxo.BecomeFirstClass(RightNow)
+Luxo._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, -0.4375, 0.0, 1.0)))
+LoadGeometry(Luxo,"Luxo.vfb")
+Luxo.FirstStage = _MakeObject(MakeObject, Luxo, "Luxo.FirstStage", StoringScene=0)
+Luxo.FirstStage.SetTexture("Luxo.bmp", ObjectOnly, RightNow)
+Luxo.FirstStage.SetColor(White,ObjectOnly,rightnow)
+Luxo.FirstStage.SetShininess(0.0,ObjectOnly,rightnow)
+Luxo.FirstStage.SetHighLightColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Luxo.FirstStage.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Luxo.FirstStage.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Luxo.FirstStage.BecomePart(RightNow)
+Luxo.FirstStage._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.4375, 0.0, 1.0)))
+LoadGeometry(Luxo.FirstStage,"Luxo.FirstStage.vfb")
+Luxo.FirstStage.SecondStage = _MakeObject(MakeObject, Luxo.FirstStage, "Luxo.FirstStage.SecondStage", StoringScene=0)
+Luxo.FirstStage.SecondStage.SetTexture("Luxo.bmp", ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.SetColor(White,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.SetShininess(0.0,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.SetHighLightColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.BecomePart(RightNow)
+Luxo.FirstStage.SecondStage._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 1.5, 0.0, 1.0)))
+LoadGeometry(Luxo.FirstStage.SecondStage,"Luxo.FirstStage.SecondStage.vfb")
+Luxo.FirstStage.SecondStage.Head = _MakeObject(MakeObject, Luxo.FirstStage.SecondStage, "Luxo.FirstStage.SecondStage.Head", StoringScene=0)
+Luxo.FirstStage.SecondStage.Head.SetTexture("Luxo.bmp", ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.SetColor(White,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.SetShininess(0.0,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.SetHighLightColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.BecomePart(RightNow)
+Luxo.FirstStage.SecondStage.Head._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 1.5, 0.0, 1.0)))
+LoadGeometry(Luxo.FirstStage.SecondStage.Head,"Luxo.FirstStage.SecondStage.Head.vfb")
+Luxo.FirstStage.SecondStage.Head.Bulb = _MakeObject(MakeObject, Luxo.FirstStage.SecondStage.Head, "Luxo.FirstStage.SecondStage.Head.Bulb", StoringScene=0)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetTexture("Luxo.bmp", ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetColor(White,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetShininess(0.0,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetHighLightColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.Bulb.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Luxo.FirstStage.SecondStage.Head.Bulb.BecomePart(RightNow)
+Luxo.FirstStage.SecondStage.Head.Bulb._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0155999995768, 0.218799993396, -0.234400004148, 1.0)))
+LoadGeometry(Luxo.FirstStage.SecondStage.Head.Bulb,"Luxo.FirstStage.SecondStage.Head.Bulb.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

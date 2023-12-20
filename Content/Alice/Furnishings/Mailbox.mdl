@@ -1,0 +1,83 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Mailbox = _MakeObject(MakeObject, None, "Mailbox", StoringScene=0)
+Mailbox.SetTexture("Mailbox.bmp", ObjectOnly, RightNow)
+Mailbox.SetColor(White,ObjectOnly,rightnow)
+Mailbox.SetShininess(0.0,ObjectOnly,rightnow)
+Mailbox.SetHighLightColor(Black,ObjectOnly,rightnow)
+Mailbox.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Mailbox.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Mailbox.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Mailbox.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Mailbox.BecomeFirstClass(RightNow)
+Mailbox._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Mailbox,"Mailbox.vfb")
+Mailbox.Stand = _MakeObject(MakeObject, Mailbox, "Mailbox.Stand", StoringScene=0)
+Mailbox.Stand.SetTexture("Mailbox.bmp", ObjectOnly, RightNow)
+Mailbox.Stand.SetColor(White,ObjectOnly,rightnow)
+Mailbox.Stand.SetShininess(0.0,ObjectOnly,rightnow)
+Mailbox.Stand.SetHighLightColor(Black,ObjectOnly,rightnow)
+Mailbox.Stand.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Mailbox.Stand.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Mailbox.Stand.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Mailbox.Stand.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Mailbox.Stand.BecomePart(RightNow)
+Mailbox.Stand._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, -0.000199999994948, 0.0), (0.0, 0.000199999994948, 1.0, 0.0), (0.000399999989895, -0.600600004196, 0.00319999991916, 1.0)))
+LoadGeometry(Mailbox.Stand,"Mailbox.Stand.vfb")
+Mailbox.Flag = _MakeObject(MakeObject, Mailbox, "Mailbox.Flag", StoringScene=0)
+Mailbox.Flag.SetTexture("Mailbox.bmp", ObjectOnly, RightNow)
+Mailbox.Flag.SetColor(White,ObjectOnly,rightnow)
+Mailbox.Flag.SetShininess(0.0,ObjectOnly,rightnow)
+Mailbox.Flag.SetHighLightColor(Black,ObjectOnly,rightnow)
+Mailbox.Flag.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Mailbox.Flag.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Mailbox.Flag.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Mailbox.Flag.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Mailbox.Flag.BecomePart(RightNow)
+Mailbox.Flag._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, -0.000199999994948, 0.0), (0.0, 0.000199999994948, 1.0, 0.0), (0.102499999106, 0.113799996674, 0.0838000029325, 1.0)))
+LoadGeometry(Mailbox.Flag,"Mailbox.Flag.vfb")
+Mailbox.Lid = _MakeObject(MakeObject, Mailbox, "Mailbox.Lid", StoringScene=0)
+Mailbox.Lid.SetTexture("Mailbox.bmp", ObjectOnly, RightNow)
+Mailbox.Lid.SetColor(White,ObjectOnly,rightnow)
+Mailbox.Lid.SetShininess(0.0,ObjectOnly,rightnow)
+Mailbox.Lid.SetHighLightColor(Black,ObjectOnly,rightnow)
+Mailbox.Lid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Mailbox.Lid.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Mailbox.Lid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Mailbox.Lid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Mailbox.Lid.BecomePart(RightNow)
+Mailbox.Lid._SetLocalTransformation (((1.0, 0.000199999994948, 0.0, 0.0), (-0.000199999994948, 1.0, -0.000199999994948, 0.0), (0.0, 0.000199999994948, 1.0, 0.0), (0.00159999995958, -0.000600000028498, 0.235799998045, 1.0)))
+LoadGeometry(Mailbox.Lid,"Mailbox.Lid.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Plunger = _MakeObject(MakeObject, None, "Plunger", StoringScene=0)
+Plunger.SetTexture("Plunger.bmp", ObjectOnly, RightNow)
+Plunger.SetColor(White,ObjectOnly,rightnow)
+Plunger.SetShininess(0.0,ObjectOnly,rightnow)
+Plunger.SetHighLightColor(Black,ObjectOnly,rightnow)
+Plunger.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Plunger.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Plunger.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Plunger.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Plunger.BecomeFirstClass(RightNow)
+Plunger._SetLocalTransformation (((1.6739000082, 0.0, 0.0, 0.0), (0.0, 1.6739000082, 0.0, 0.0), (0.0, 0.0, 1.6739000082, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Plunger,"Plunger.vfb")
+Plunger.stick = _MakeObject(MakeObject, Plunger, "Plunger.stick", StoringScene=0)
+Plunger.stick.SetTexture("Plunger.bmp", ObjectOnly, RightNow)
+Plunger.stick.SetColor(White,ObjectOnly,rightnow)
+Plunger.stick.SetShininess(0.0,ObjectOnly,rightnow)
+Plunger.stick.SetHighLightColor(Black,ObjectOnly,rightnow)
+Plunger.stick.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Plunger.stick.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Plunger.stick.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Plunger.stick.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Plunger.stick.BecomePart(RightNow)
+Plunger.stick._SetLocalTransformation (((0.0, 1.0, 0.0, 0.0), (-1.0, 0.0, 9.99999974738e-005, 0.0), (9.99999974738e-005, 0.0, 1.0, 0.0), (0.0010000000475, 0.0738999992609, 0.0, 1.0)))
+LoadGeometry(Plunger.stick,"Plunger.stick.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

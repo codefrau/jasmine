@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Switch = _MakeObject(MakeObject, None, "Switch", StoringScene=0)
+Switch.SetTexture("Switch.bmp", ObjectOnly, RightNow)
+Switch.SetColor(White,ObjectOnly,rightnow)
+Switch.SetShininess(0.0,ObjectOnly,rightnow)
+Switch.SetHighLightColor(Black,ObjectOnly,rightnow)
+Switch.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Switch.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Switch.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Switch.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Switch.BecomeFirstClass(RightNow)
+Switch._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Switch,"Switch.vfb")
+Switch.Handle = _MakeObject(MakeObject, Switch, "Switch.Handle", StoringScene=0)
+Switch.Handle.SetTexture("Switch.bmp", ObjectOnly, RightNow)
+Switch.Handle.SetColor(White,ObjectOnly,rightnow)
+Switch.Handle.SetShininess(0.0,ObjectOnly,rightnow)
+Switch.Handle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Switch.Handle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Switch.Handle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Switch.Handle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Switch.Handle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Switch.Handle.BecomePart(RightNow)
+Switch.Handle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0375000014901, 1.0)))
+LoadGeometry(Switch.Handle,"Switch.Handle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

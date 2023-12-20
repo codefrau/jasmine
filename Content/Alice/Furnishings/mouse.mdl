@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+mouse = _MakeObject(MakeObject, None, "mouse", StoringScene=0)
+mouse.SetTexture("mouse.bmp", ObjectOnly, RightNow)
+mouse.SetColor(White,ObjectOnly,rightnow)
+mouse.SetShininess(0.0,ObjectOnly,rightnow)
+mouse.SetHighLightColor(Black,ObjectOnly,rightnow)
+mouse.SetEmissiveColor(Black,ObjectOnly,rightnow)
+mouse.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+mouse.SetFillingStyle(Filled, ObjectOnly, RightNow)
+mouse.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+mouse.BecomeFirstClass(RightNow)
+mouse._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(mouse,"mouse.vfb")
+mouse.lbutton = _MakeObject(MakeObject, mouse, "mouse.lbutton", StoringScene=0)
+mouse.lbutton.SetTexture("mouse.bmp", ObjectOnly, RightNow)
+mouse.lbutton.SetColor(White,ObjectOnly,rightnow)
+mouse.lbutton.SetShininess(0.0,ObjectOnly,rightnow)
+mouse.lbutton.SetHighLightColor(Black,ObjectOnly,rightnow)
+mouse.lbutton.SetEmissiveColor(Black,ObjectOnly,rightnow)
+mouse.lbutton.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+mouse.lbutton.SetFillingStyle(Filled, ObjectOnly, RightNow)
+mouse.lbutton.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+mouse.lbutton.BecomePart(RightNow)
+mouse.lbutton._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.117200002074, 0.0666999965906, 0.18559999764, 1.0)))
+LoadGeometry(mouse.lbutton,"mouse.lbutton.vfb")
+mouse.rbutton = _MakeObject(MakeObject, mouse, "mouse.rbutton", StoringScene=0)
+mouse.rbutton.SetTexture("mouse.bmp", ObjectOnly, RightNow)
+mouse.rbutton.SetColor(White,ObjectOnly,rightnow)
+mouse.rbutton.SetShininess(0.0,ObjectOnly,rightnow)
+mouse.rbutton.SetHighLightColor(Black,ObjectOnly,rightnow)
+mouse.rbutton.SetEmissiveColor(Black,ObjectOnly,rightnow)
+mouse.rbutton.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+mouse.rbutton.SetFillingStyle(Filled, ObjectOnly, RightNow)
+mouse.rbutton.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+mouse.rbutton.BecomePart(RightNow)
+mouse.rbutton._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0702999979258, 0.0666999965906, 0.18559999764, 1.0)))
+LoadGeometry(mouse.rbutton,"mouse.rbutton.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

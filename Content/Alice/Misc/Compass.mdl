@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Compass = _MakeObject(MakeObject, None, "Compass", StoringScene=0)
+Compass.SetTexture("Compass.bmp", ObjectOnly, RightNow)
+Compass.SetColor(White,ObjectOnly,rightnow)
+Compass.SetShininess(0.0,ObjectOnly,rightnow)
+Compass.SetHighLightColor(Black,ObjectOnly,rightnow)
+Compass.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Compass.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Compass.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Compass.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Compass.BecomeFirstClass(RightNow)
+Compass._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Compass,"Compass.vfb")
+Compass.Needle = _MakeObject(MakeObject, Compass, "Compass.Needle", StoringScene=0)
+Compass.Needle.SetTexture("Compass.bmp", ObjectOnly, RightNow)
+Compass.Needle.SetColor(White,ObjectOnly,rightnow)
+Compass.Needle.SetShininess(0.0,ObjectOnly,rightnow)
+Compass.Needle.SetHighLightColor(Black,ObjectOnly,rightnow)
+Compass.Needle.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Compass.Needle.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Compass.Needle.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Compass.Needle.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Compass.Needle.BecomePart(RightNow)
+Compass.Needle._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00150000001304, -0.000300000014249, 0.0932999998331, 1.0)))
+LoadGeometry(Compass.Needle,"Compass.Needle.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

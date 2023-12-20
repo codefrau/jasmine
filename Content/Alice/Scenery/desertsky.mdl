@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+desertsky = _MakeObject(MakeObject, None, "desertsky", StoringScene=0)
+desertsky.SetTexture("desertsky.bmp", ObjectOnly, RightNow)
+desertsky.SetColor(White,ObjectOnly,rightnow)
+desertsky.SetShininess(0.0,ObjectOnly,rightnow)
+desertsky.SetHighLightColor(Black,ObjectOnly,rightnow)
+desertsky.SetEmissiveColor(Black,ObjectOnly,rightnow)
+desertsky.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+desertsky.SetFillingStyle(Filled, ObjectOnly, RightNow)
+desertsky.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+desertsky.BecomeFirstClass(RightNow)
+desertsky._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(desertsky,"desertsky.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

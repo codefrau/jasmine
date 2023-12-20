@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+beach = _MakeObject(MakeObject, None, "beach", StoringScene=0)
+beach.SetTexture("beach.bmp", ObjectOnly, RightNow)
+beach.SetColor(White,ObjectOnly,rightnow)
+beach.SetShininess(0.0,ObjectOnly,rightnow)
+beach.SetHighLightColor(Black,ObjectOnly,rightnow)
+beach.SetEmissiveColor(Black,ObjectOnly,rightnow)
+beach.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+beach.SetFillingStyle(Filled, ObjectOnly, RightNow)
+beach.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+beach.BecomeFirstClass(RightNow)
+beach._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(beach,"beach.vfb")
+beach.ocean = _MakeObject(MakeObject, beach, "beach.ocean", StoringScene=0)
+beach.ocean.SetTexture("beach.bmp", ObjectOnly, RightNow)
+beach.ocean.SetColor(White,ObjectOnly,rightnow)
+beach.ocean.SetShininess(0.0,ObjectOnly,rightnow)
+beach.ocean.SetHighLightColor(Black,ObjectOnly,rightnow)
+beach.ocean.SetEmissiveColor(Black,ObjectOnly,rightnow)
+beach.ocean.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+beach.ocean.SetFillingStyle(Filled, ObjectOnly, RightNow)
+beach.ocean.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+beach.ocean.BecomePart(RightNow)
+beach.ocean._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(beach.ocean,"beach.ocean.vfb")
+beach.waves = _MakeObject(MakeObject, beach, "beach.waves", StoringScene=0)
+beach.waves.SetTexture("beach.bmp", ObjectOnly, RightNow)
+beach.waves.SetColor(White,ObjectOnly,rightnow)
+beach.waves.SetShininess(0.0,ObjectOnly,rightnow)
+beach.waves.SetHighLightColor(Black,ObjectOnly,rightnow)
+beach.waves.SetEmissiveColor(Black,ObjectOnly,rightnow)
+beach.waves.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+beach.waves.SetFillingStyle(Filled, ObjectOnly, RightNow)
+beach.waves.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+beach.waves.BecomePart(RightNow)
+beach.waves._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(beach.waves,"beach.waves.vfb")
+beach.wetsand = _MakeObject(MakeObject, beach, "beach.wetsand", StoringScene=0)
+beach.wetsand.SetTexture("beach.bmp", ObjectOnly, RightNow)
+beach.wetsand.SetColor(White,ObjectOnly,rightnow)
+beach.wetsand.SetShininess(0.0,ObjectOnly,rightnow)
+beach.wetsand.SetHighLightColor(Black,ObjectOnly,rightnow)
+beach.wetsand.SetEmissiveColor(Black,ObjectOnly,rightnow)
+beach.wetsand.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+beach.wetsand.SetFillingStyle(Filled, ObjectOnly, RightNow)
+beach.wetsand.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+beach.wetsand.BecomePart(RightNow)
+beach.wetsand._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(beach.wetsand,"beach.wetsand.vfb")
+beach.sand = _MakeObject(MakeObject, beach, "beach.sand", StoringScene=0)
+beach.sand.SetTexture("beach.bmp", ObjectOnly, RightNow)
+beach.sand.SetColor(White,ObjectOnly,rightnow)
+beach.sand.SetShininess(0.0,ObjectOnly,rightnow)
+beach.sand.SetHighLightColor(Black,ObjectOnly,rightnow)
+beach.sand.SetEmissiveColor(Black,ObjectOnly,rightnow)
+beach.sand.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+beach.sand.SetFillingStyle(Filled, ObjectOnly, RightNow)
+beach.sand.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+beach.sand.BecomePart(RightNow)
+beach.sand._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(beach.sand,"beach.sand.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

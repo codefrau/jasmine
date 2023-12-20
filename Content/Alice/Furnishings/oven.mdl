@@ -1,0 +1,95 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+oven = _MakeObject(MakeObject, None, "oven", StoringScene=0)
+oven.SetTexture("oven.bmp", ObjectOnly, RightNow)
+oven.SetColor(White,ObjectOnly,rightnow)
+oven.SetShininess(0.0,ObjectOnly,rightnow)
+oven.SetHighLightColor(Black,ObjectOnly,rightnow)
+oven.SetEmissiveColor(Black,ObjectOnly,rightnow)
+oven.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+oven.SetFillingStyle(Filled, ObjectOnly, RightNow)
+oven.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+oven.BecomeFirstClass(RightNow)
+oven._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.00949999969453, 0.392500013113, -0.00789999961853, 1.0)))
+LoadGeometry(oven,"oven.vfb")
+oven.Door = _MakeObject(MakeObject, oven, "oven.Door", StoringScene=0)
+oven.Door.SetTexture("oven.bmp", ObjectOnly, RightNow)
+oven.Door.SetColor(White,ObjectOnly,rightnow)
+oven.Door.SetShininess(0.0,ObjectOnly,rightnow)
+oven.Door.SetHighLightColor(Black,ObjectOnly,rightnow)
+oven.Door.SetEmissiveColor(Black,ObjectOnly,rightnow)
+oven.Door.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+oven.Door.SetFillingStyle(Filled, ObjectOnly, RightNow)
+oven.Door.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+oven.Door.BecomePart(RightNow)
+oven.Door._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.00240000011399, -0.287699997425, 0.334100008011, 1.0)))
+LoadGeometry(oven.Door,"oven.Door.vfb")
+oven.Grill = _MakeObject(MakeObject, oven, "oven.Grill", StoringScene=0)
+oven.Grill.SetTexture("oven.bmp", ObjectOnly, RightNow)
+oven.Grill.SetColor(White,ObjectOnly,rightnow)
+oven.Grill.SetShininess(0.0,ObjectOnly,rightnow)
+oven.Grill.SetHighLightColor(Black,ObjectOnly,rightnow)
+oven.Grill.SetEmissiveColor(Black,ObjectOnly,rightnow)
+oven.Grill.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+oven.Grill.SetFillingStyle(Filled, ObjectOnly, RightNow)
+oven.Grill.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+oven.Grill.BecomePart(RightNow)
+oven.Grill._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.00130000000354, -0.034699998796, 0.0487999990582, 1.0)))
+LoadGeometry(oven.Grill,"oven.Grill.vfb")
+oven.Knob_1 = _MakeObject(MakeObject, oven, "oven.Knob_1", StoringScene=0)
+oven.Knob_1.SetTexture("oven.bmp", ObjectOnly, RightNow)
+oven.Knob_1.SetColor(White,ObjectOnly,rightnow)
+oven.Knob_1.SetShininess(0.0,ObjectOnly,rightnow)
+oven.Knob_1.SetHighLightColor(Black,ObjectOnly,rightnow)
+oven.Knob_1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+oven.Knob_1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+oven.Knob_1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+oven.Knob_1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+oven.Knob_1.BecomePart(RightNow)
+oven.Knob_1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 0.707099974155, -0.707099974155, 0.0), (0.0, 0.707099974155, 0.707099974155, 0.0), (0.195299997926, 0.339899986982, 0.286599993706, 1.0)))
+LoadGeometry(oven.Knob_1,"oven.Knob_1.vfb")
+oven.Knob_2 = _MakeObject(MakeObject, oven, "oven.Knob_2", StoringScene=0)
+oven.Knob_2.SetTexture("oven.bmp", ObjectOnly, RightNow)
+oven.Knob_2.SetColor(White,ObjectOnly,rightnow)
+oven.Knob_2.SetShininess(0.0,ObjectOnly,rightnow)
+oven.Knob_2.SetHighLightColor(Black,ObjectOnly,rightnow)
+oven.Knob_2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+oven.Knob_2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+oven.Knob_2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+oven.Knob_2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+oven.Knob_2.BecomePart(RightNow)
+oven.Knob_2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 0.707099974155, -0.707099974155, 0.0), (0.0, 0.707099974155, 0.707099974155, 0.0), (0.0995000004768, 0.339899986982, 0.286599993706, 1.0)))
+LoadGeometry(oven.Knob_2,"oven.Knob_2.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

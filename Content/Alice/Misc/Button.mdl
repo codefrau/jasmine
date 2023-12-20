@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+button = _MakeObject(MakeObject, None, "button", StoringScene=0)
+button.SetTexture("button.bmp", ObjectOnly, RightNow)
+button.SetColor(White,ObjectOnly,rightnow)
+button.SetShininess(0.0,ObjectOnly,rightnow)
+button.SetHighLightColor(Black,ObjectOnly,rightnow)
+button.SetEmissiveColor(Black,ObjectOnly,rightnow)
+button.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+button.SetFillingStyle(Filled, ObjectOnly, RightNow)
+button.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+button.BecomeFirstClass(RightNow)
+button._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0010000000475, 0.0, 1.0)))
+LoadGeometry(button,"button.vfb")
+button.Button = _MakeObject(MakeObject, button, "button.Button", StoringScene=0)
+button.Button.SetTexture("button.bmp", ObjectOnly, RightNow)
+button.Button.SetColor(red,ObjectOnly,rightnow)
+button.Button.SetShininess(0.0,ObjectOnly,rightnow)
+button.Button.SetHighLightColor(Black,ObjectOnly,rightnow)
+button.Button.SetEmissiveColor(Black,ObjectOnly,rightnow)
+button.Button.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+button.Button.SetFillingStyle(Filled, ObjectOnly, RightNow)
+button.Button.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+button.Button.BecomePart(RightNow)
+button.Button._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.048599999398, 5.90829992294, 0.926400005817, 1.0)))
+LoadGeometry(button.Button,"Button.Button.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

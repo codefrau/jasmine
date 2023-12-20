@@ -1,0 +1,59 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+TallTree = _MakeObject(MakeObject, None, "TallTree", StoringScene=0)
+TallTree.SetTexture("TallTree.bmp", ObjectOnly, RightNow)
+TallTree.SetColor(White,ObjectOnly,rightnow)
+TallTree.SetShininess(0.0,ObjectOnly,rightnow)
+TallTree.SetHighLightColor(Black,ObjectOnly,rightnow)
+TallTree.SetEmissiveColor(Black,ObjectOnly,rightnow)
+TallTree.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+TallTree.SetFillingStyle(Filled, ObjectOnly, RightNow)
+TallTree.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+TallTree.BecomeFirstClass(RightNow)
+TallTree._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(TallTree,"TallTree.vfb")
+TallTree.Leaves = _MakeObject(MakeObject, TallTree, "TallTree.Leaves", StoringScene=0)
+TallTree.Leaves.SetTexture("TallTree.bmp", ObjectOnly, RightNow)
+TallTree.Leaves.SetColor(White,ObjectOnly,rightnow)
+TallTree.Leaves.SetShininess(0.0,ObjectOnly,rightnow)
+TallTree.Leaves.SetHighLightColor(Black,ObjectOnly,rightnow)
+TallTree.Leaves.SetEmissiveColor(Black,ObjectOnly,rightnow)
+TallTree.Leaves.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+TallTree.Leaves.SetFillingStyle(Filled, ObjectOnly, RightNow)
+TallTree.Leaves.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+TallTree.Leaves.BecomePart(RightNow)
+TallTree.Leaves._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0493000000715, 8.7892999649, 0.11249999702, 1.0)))
+LoadGeometry(TallTree.Leaves,"TallTree.Leaves.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

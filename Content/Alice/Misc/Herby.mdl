@@ -1,0 +1,119 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Herby = _MakeObject(MakeObject, None, "Herby", StoringScene=0)
+Herby.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.SetColor(White,ObjectOnly,rightnow)
+Herby.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.BecomeFirstClass(RightNow)
+Herby._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Herby,"Herby.vfb")
+Herby.Treads = _MakeObject(MakeObject, Herby, "Herby.Treads", StoringScene=0)
+Herby.Treads.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.Treads.SetColor(White,ObjectOnly,rightnow)
+Herby.Treads.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.Treads.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.Treads.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.Treads.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.Treads.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.Treads.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.Treads.BecomePart(RightNow)
+Herby.Treads._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0697999969125, 0.0, 1.0)))
+LoadGeometry(Herby.Treads,"Herby.Treads.vfb")
+Herby.Head = _MakeObject(MakeObject, Herby, "Herby.Head", StoringScene=0)
+Herby.Head.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.Head.SetColor(White,ObjectOnly,rightnow)
+Herby.Head.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.Head.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.Head.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.Head.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.Head.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.Head.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.Head.BecomePart(RightNow)
+Herby.Head._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.597500026226, -0.0762000009418, 1.0)))
+LoadGeometry(Herby.Head,"Herby.Head.vfb")
+Herby.LeftArm = _MakeObject(MakeObject, Herby, "Herby.LeftArm", StoringScene=0)
+Herby.LeftArm.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.LeftArm.SetColor(White,ObjectOnly,rightnow)
+Herby.LeftArm.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.LeftArm.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.LeftArm.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.LeftArm.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.LeftArm.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.LeftArm.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.LeftArm.BecomePart(RightNow)
+Herby.LeftArm._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.165099993348, 0.500999987125, -0.0762000009418, 1.0)))
+LoadGeometry(Herby.LeftArm,"Herby.LeftArm.vfb")
+Herby.LeftArm.LeftHand = _MakeObject(MakeObject, Herby.LeftArm, "Herby.LeftArm.LeftHand", StoringScene=0)
+Herby.LeftArm.LeftHand.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.LeftArm.LeftHand.SetColor(White,ObjectOnly,rightnow)
+Herby.LeftArm.LeftHand.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.LeftArm.LeftHand.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.LeftArm.LeftHand.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.LeftArm.LeftHand.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.LeftArm.LeftHand.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.LeftArm.LeftHand.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.LeftArm.LeftHand.BecomePart(RightNow)
+Herby.LeftArm.LeftHand._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0381000004709, -0.301600009203, 0.025399999693, 1.0)))
+LoadGeometry(Herby.LeftArm.LeftHand,"Herby.LeftArm.LeftHand.vfb")
+Herby.RightArm = _MakeObject(MakeObject, Herby, "Herby.RightArm", StoringScene=0)
+Herby.RightArm.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.RightArm.SetColor(White,ObjectOnly,rightnow)
+Herby.RightArm.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.RightArm.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.RightArm.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.RightArm.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.RightArm.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.RightArm.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.RightArm.BecomePart(RightNow)
+Herby.RightArm._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.165099993348, 0.500999987125, -0.0762000009418, 1.0)))
+LoadGeometry(Herby.RightArm,"Herby.RightArm.vfb")
+Herby.RightArm.RightHand = _MakeObject(MakeObject, Herby.RightArm, "Herby.RightArm.RightHand", StoringScene=0)
+Herby.RightArm.RightHand.SetTexture("Herby.bmp", ObjectOnly, RightNow)
+Herby.RightArm.RightHand.SetColor(White,ObjectOnly,rightnow)
+Herby.RightArm.RightHand.SetShininess(0.0,ObjectOnly,rightnow)
+Herby.RightArm.RightHand.SetHighLightColor(Black,ObjectOnly,rightnow)
+Herby.RightArm.RightHand.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Herby.RightArm.RightHand.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Herby.RightArm.RightHand.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Herby.RightArm.RightHand.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Herby.RightArm.RightHand.BecomePart(RightNow)
+Herby.RightArm.RightHand._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0381000004709, -0.301600009203, 0.025399999693, 1.0)))
+LoadGeometry(Herby.RightArm.RightHand,"Herby.RightArm.RightHand.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

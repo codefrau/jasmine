@@ -1,0 +1,131 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Coalcar = _MakeObject(MakeObject, None, "Coalcar", StoringScene=0)
+Coalcar.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.SetColor(White,ObjectOnly,rightnow)
+Coalcar.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.BecomeFirstClass(RightNow)
+Coalcar._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Coalcar,"Coalcar.vfb")
+Coalcar.wheels = _MakeObject(MakeObject, Coalcar, "Coalcar.wheels", StoringScene=0)
+Coalcar.wheels.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.BecomePart(RightNow)
+Coalcar.wheels._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.118600003421, 0.0, 1.0)))
+LoadGeometry(Coalcar.wheels,"Coalcar.wheels.vfb")
+Coalcar.wheels.rear = _MakeObject(MakeObject, Coalcar.wheels, "Coalcar.wheels.rear", StoringScene=0)
+Coalcar.wheels.rear.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.rear.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.rear.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.rear.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.rear.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.rear.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.rear.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.rear.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.rear.BecomePart(RightNow)
+Coalcar.wheels.rear._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.00789999961853, -0.221399992704, 1.0)))
+LoadGeometry(Coalcar.wheels.rear,"Coalcar.wheels.rear.vfb")
+Coalcar.wheels.rear.left = _MakeObject(MakeObject, Coalcar.wheels.rear, "Coalcar.wheels.rear.left", StoringScene=0)
+Coalcar.wheels.rear.left.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.rear.left.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.rear.left.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.rear.left.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.rear.left.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.rear.left.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.rear.left.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.rear.left.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.rear.left.BecomePart(RightNow)
+Coalcar.wheels.rear.left._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.18979999423, 0.0, 0.0, 1.0)))
+LoadGeometry(Coalcar.wheels.rear.left,"Coalcar.wheels.rear.left.vfb")
+Coalcar.wheels.rear.right = _MakeObject(MakeObject, Coalcar.wheels.rear, "Coalcar.wheels.rear.right", StoringScene=0)
+Coalcar.wheels.rear.right.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.rear.right.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.rear.right.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.rear.right.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.rear.right.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.rear.right.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.rear.right.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.rear.right.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.rear.right.BecomePart(RightNow)
+Coalcar.wheels.rear.right._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.18979999423, 0.0, 0.0, 1.0)))
+LoadGeometry(Coalcar.wheels.rear.right,"Coalcar.wheels.rear.right.vfb")
+Coalcar.wheels.front = _MakeObject(MakeObject, Coalcar.wheels, "Coalcar.wheels.front", StoringScene=0)
+Coalcar.wheels.front.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.front.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.front.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.front.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.front.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.front.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.front.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.front.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.front.BecomePart(RightNow)
+Coalcar.wheels.front._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.00789999961853, 0.253100007772, 1.0)))
+LoadGeometry(Coalcar.wheels.front,"Coalcar.wheels.front.vfb")
+Coalcar.wheels.front.left = _MakeObject(MakeObject, Coalcar.wheels.front, "Coalcar.wheels.front.left", StoringScene=0)
+Coalcar.wheels.front.left.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.front.left.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.front.left.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.front.left.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.front.left.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.front.left.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.front.left.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.front.left.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.front.left.BecomePart(RightNow)
+Coalcar.wheels.front.left._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.18979999423, 0.0, 0.0, 1.0)))
+LoadGeometry(Coalcar.wheels.front.left,"Coalcar.wheels.front.left.vfb")
+Coalcar.wheels.front.right = _MakeObject(MakeObject, Coalcar.wheels.front, "Coalcar.wheels.front.right", StoringScene=0)
+Coalcar.wheels.front.right.SetTexture("Coalcar.bmp", ObjectOnly, RightNow)
+Coalcar.wheels.front.right.SetColor(White,ObjectOnly,rightnow)
+Coalcar.wheels.front.right.SetShininess(0.0,ObjectOnly,rightnow)
+Coalcar.wheels.front.right.SetHighLightColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.front.right.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Coalcar.wheels.front.right.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Coalcar.wheels.front.right.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Coalcar.wheels.front.right.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Coalcar.wheels.front.right.BecomePart(RightNow)
+Coalcar.wheels.front.right._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.18979999423, 0.0, 0.0, 1.0)))
+LoadGeometry(Coalcar.wheels.front.right,"Coalcar.wheels.front.right.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

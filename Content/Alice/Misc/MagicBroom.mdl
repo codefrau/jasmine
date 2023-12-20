@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+MagicBroom = _MakeObject(MakeObject, None, "MagicBroom", StoringScene=0)
+MagicBroom.SetTexture("MagicBroom.bmp", ObjectOnly, RightNow)
+MagicBroom.SetColor(White,ObjectOnly,rightnow)
+MagicBroom.SetShininess(0.0,ObjectOnly,rightnow)
+MagicBroom.SetHighLightColor(Black,ObjectOnly,rightnow)
+MagicBroom.SetEmissiveColor(Black,ObjectOnly,rightnow)
+MagicBroom.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+MagicBroom.SetFillingStyle(Filled, ObjectOnly, RightNow)
+MagicBroom.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+MagicBroom.BecomeFirstClass(RightNow)
+MagicBroom._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(MagicBroom,"MagicBroom.vfb")
+MagicBroom.LeftArm = _MakeObject(MakeObject, MagicBroom, "MagicBroom.LeftArm", StoringScene=0)
+MagicBroom.LeftArm.SetTexture("MagicBroom.bmp", ObjectOnly, RightNow)
+MagicBroom.LeftArm.SetColor(White,ObjectOnly,rightnow)
+MagicBroom.LeftArm.SetShininess(0.0,ObjectOnly,rightnow)
+MagicBroom.LeftArm.SetHighLightColor(Black,ObjectOnly,rightnow)
+MagicBroom.LeftArm.SetEmissiveColor(Black,ObjectOnly,rightnow)
+MagicBroom.LeftArm.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+MagicBroom.LeftArm.SetFillingStyle(Filled, ObjectOnly, RightNow)
+MagicBroom.LeftArm.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+MagicBroom.LeftArm.BecomePart(RightNow)
+MagicBroom.LeftArm._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0155999995768, 1.0, 0.0, 1.0)))
+LoadGeometry(MagicBroom.LeftArm,"MagicBroom.LeftArm.vfb")
+MagicBroom.RightArm = _MakeObject(MakeObject, MagicBroom, "MagicBroom.RightArm", StoringScene=0)
+MagicBroom.RightArm.SetTexture("MagicBroom.bmp", ObjectOnly, RightNow)
+MagicBroom.RightArm.SetColor(White,ObjectOnly,rightnow)
+MagicBroom.RightArm.SetShininess(0.0,ObjectOnly,rightnow)
+MagicBroom.RightArm.SetHighLightColor(Black,ObjectOnly,rightnow)
+MagicBroom.RightArm.SetEmissiveColor(Black,ObjectOnly,rightnow)
+MagicBroom.RightArm.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+MagicBroom.RightArm.SetFillingStyle(Filled, ObjectOnly, RightNow)
+MagicBroom.RightArm.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+MagicBroom.RightArm.BecomePart(RightNow)
+MagicBroom.RightArm._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0155999995768, 1.0, 0.0, 1.0)))
+LoadGeometry(MagicBroom.RightArm,"MagicBroom.RightArm.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

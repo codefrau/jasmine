@@ -1,0 +1,71 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+blender = _MakeObject(MakeObject, None, "blender", StoringScene=0)
+blender.SetTexture("blender.bmp", ObjectOnly, RightNow)
+blender.SetColor(White,ObjectOnly,rightnow)
+blender.SetShininess(0.0,ObjectOnly,rightnow)
+blender.SetHighLightColor(Black,ObjectOnly,rightnow)
+blender.SetEmissiveColor(Black,ObjectOnly,rightnow)
+blender.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+blender.SetFillingStyle(Filled, ObjectOnly, RightNow)
+blender.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+blender.BecomeFirstClass(RightNow)
+blender._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(blender,"blender.vfb")
+blender.top = _MakeObject(MakeObject, blender, "blender.top", StoringScene=0)
+blender.top.SetTexture("blender.bmp", ObjectOnly, RightNow)
+blender.top.SetColor(White,ObjectOnly,rightnow)
+blender.top.SetShininess(0.0,ObjectOnly,rightnow)
+blender.top.SetHighLightColor(Black,ObjectOnly,rightnow)
+blender.top.SetEmissiveColor(Black,ObjectOnly,rightnow)
+blender.top.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+blender.top.SetFillingStyle(Filled, ObjectOnly, RightNow)
+blender.top.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+blender.top.BecomePart(RightNow)
+blender.top._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.281899988651, 0.0, 1.0)))
+LoadGeometry(blender.top,"blender.top.vfb")
+blender.main = _MakeObject(MakeObject, blender, "blender.main", StoringScene=0)
+blender.main.SetTexture("blender.bmp", ObjectOnly, RightNow)
+blender.main.SetColor(White,ObjectOnly,rightnow)
+blender.main.SetShininess(0.0,ObjectOnly,rightnow)
+blender.main.SetHighLightColor(Black,ObjectOnly,rightnow)
+blender.main.SetEmissiveColor(Black,ObjectOnly,rightnow)
+blender.main.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+blender.main.SetFillingStyle(Filled, ObjectOnly, RightNow)
+blender.main.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+blender.main.BecomePart(RightNow)
+blender.main._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0913999974728, 0.0, 1.0)))
+LoadGeometry(blender.main,"blender.main.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

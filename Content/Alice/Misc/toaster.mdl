@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+toaster = _MakeObject(MakeObject, None, "toaster", StoringScene=0)
+toaster.SetTexture("toaster.bmp", ObjectOnly, RightNow)
+toaster.SetColor(White,ObjectOnly,rightnow)
+toaster.SetShininess(0.0,ObjectOnly,rightnow)
+toaster.SetHighLightColor(Black,ObjectOnly,rightnow)
+toaster.SetEmissiveColor(Black,ObjectOnly,rightnow)
+toaster.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+toaster.SetFillingStyle(Filled, ObjectOnly, RightNow)
+toaster.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+toaster.BecomeFirstClass(RightNow)
+toaster._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(toaster,"toaster.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

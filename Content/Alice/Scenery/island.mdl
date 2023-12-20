@@ -1,0 +1,107 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+island = _MakeObject(MakeObject, None, "island", StoringScene=0)
+island.SetTexture("island.bmp", ObjectOnly, RightNow)
+island.SetColor(White,ObjectOnly,rightnow)
+island.SetShininess(0.0,ObjectOnly,rightnow)
+island.SetHighLightColor(Black,ObjectOnly,rightnow)
+island.SetEmissiveColor(Black,ObjectOnly,rightnow)
+island.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+island.SetFillingStyle(Filled, ObjectOnly, RightNow)
+island.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+island.BecomeFirstClass(RightNow)
+island._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(island,"island.vfb")
+island.palmtree = _MakeObject(MakeObject, island, "island.palmtree", StoringScene=0)
+island.palmtree.SetTexture("island.bmp", ObjectOnly, RightNow)
+island.palmtree.SetColor(White,ObjectOnly,rightnow)
+island.palmtree.SetShininess(0.0,ObjectOnly,rightnow)
+island.palmtree.SetHighLightColor(Black,ObjectOnly,rightnow)
+island.palmtree.SetEmissiveColor(Black,ObjectOnly,rightnow)
+island.palmtree.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+island.palmtree.SetFillingStyle(Filled, ObjectOnly, RightNow)
+island.palmtree.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+island.palmtree.BecomePart(RightNow)
+island.palmtree._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (1.03999996185, 0.680000007153, -1.28999996185, 1.0)))
+LoadGeometry(island.palmtree,"island.palmtree.vfb")
+island.palmtree.coconut2 = _MakeObject(MakeObject, island.palmtree, "island.palmtree.coconut2", StoringScene=0)
+island.palmtree.coconut2.SetTexture("island.bmp", ObjectOnly, RightNow)
+island.palmtree.coconut2.SetColor(White,ObjectOnly,rightnow)
+island.palmtree.coconut2.SetShininess(0.0,ObjectOnly,rightnow)
+island.palmtree.coconut2.SetHighLightColor(Black,ObjectOnly,rightnow)
+island.palmtree.coconut2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+island.palmtree.coconut2.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+island.palmtree.coconut2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+island.palmtree.coconut2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+island.palmtree.coconut2.BecomePart(RightNow)
+island.palmtree.coconut2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0900000035763, 2.16000008583, -0.259999990463, 1.0)))
+LoadGeometry(island.palmtree.coconut2,"island.palmtree.coconut2.vfb")
+island.palmtree.coconut1 = _MakeObject(MakeObject, island.palmtree, "island.palmtree.coconut1", StoringScene=0)
+island.palmtree.coconut1.SetTexture("island.bmp", ObjectOnly, RightNow)
+island.palmtree.coconut1.SetColor(White,ObjectOnly,rightnow)
+island.palmtree.coconut1.SetShininess(0.0,ObjectOnly,rightnow)
+island.palmtree.coconut1.SetHighLightColor(Black,ObjectOnly,rightnow)
+island.palmtree.coconut1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+island.palmtree.coconut1.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+island.palmtree.coconut1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+island.palmtree.coconut1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+island.palmtree.coconut1.BecomePart(RightNow)
+island.palmtree.coconut1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.140000000596, 2.31999993324, 0.0799999982119, 1.0)))
+LoadGeometry(island.palmtree.coconut1,"island.palmtree.coconut1.vfb")
+island.palmtree.fronds = _MakeObject(MakeObject, island.palmtree, "island.palmtree.fronds", StoringScene=0)
+island.palmtree.fronds.SetTexture("island.bmp", ObjectOnly, RightNow)
+island.palmtree.fronds.SetColor(White,ObjectOnly,rightnow)
+island.palmtree.fronds.SetShininess(0.0,ObjectOnly,rightnow)
+island.palmtree.fronds.SetHighLightColor(Black,ObjectOnly,rightnow)
+island.palmtree.fronds.SetEmissiveColor(Black,ObjectOnly,rightnow)
+island.palmtree.fronds.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+island.palmtree.fronds.SetFillingStyle(Filled, ObjectOnly, RightNow)
+island.palmtree.fronds.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+island.palmtree.fronds.BecomePart(RightNow)
+island.palmtree.fronds._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 2.13000011444, -0.10000000149, 1.0)))
+LoadGeometry(island.palmtree.fronds,"island.palmtree.fronds.vfb")
+island.palmtree.coconut3 = _MakeObject(MakeObject, island.palmtree, "island.palmtree.coconut3", StoringScene=0)
+island.palmtree.coconut3.SetTexture("island.bmp", ObjectOnly, RightNow)
+island.palmtree.coconut3.SetColor(White,ObjectOnly,rightnow)
+island.palmtree.coconut3.SetShininess(0.0,ObjectOnly,rightnow)
+island.palmtree.coconut3.SetHighLightColor(Black,ObjectOnly,rightnow)
+island.palmtree.coconut3.SetEmissiveColor(Black,ObjectOnly,rightnow)
+island.palmtree.coconut3.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+island.palmtree.coconut3.SetFillingStyle(Filled, ObjectOnly, RightNow)
+island.palmtree.coconut3.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+island.palmtree.coconut3.BecomePart(RightNow)
+island.palmtree.coconut3._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.159999996424, 2.24629998207, -0.261999994516, 1.0)))
+LoadGeometry(island.palmtree.coconut3,"island.palmtree.coconut3.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

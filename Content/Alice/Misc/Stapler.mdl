@@ -1,0 +1,131 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Stapler = _MakeObject(MakeObject, None, "Stapler", StoringScene=0)
+Stapler.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.SetColor(White,ObjectOnly,rightnow)
+Stapler.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.BecomeFirstClass(RightNow)
+Stapler._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.0010000000475, 0.0, -0.0010000000475, 1.0)))
+LoadGeometry(Stapler,"Stapler.vfb")
+Stapler.Head = _MakeObject(MakeObject, Stapler, "Stapler.Head", StoringScene=0)
+Stapler.Head.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Head.SetColor(White,ObjectOnly,rightnow)
+Stapler.Head.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Head.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Head.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Head.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Head.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Head.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Head.BecomePart(RightNow)
+Stapler.Head._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Stapler.Head,"Stapler.Head.vfb")
+Stapler.Head.Lid = _MakeObject(MakeObject, Stapler.Head, "Stapler.Head.Lid", StoringScene=0)
+Stapler.Head.Lid.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Head.Lid.SetColor(White,ObjectOnly,rightnow)
+Stapler.Head.Lid.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Head.Lid.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Head.Lid.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Head.Lid.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Head.Lid.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Head.Lid.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Head.Lid.BecomePart(RightNow)
+Stapler.Head.Lid._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Stapler.Head.Lid,"Stapler.Head.Lid.vfb")
+Stapler.Head.Carriage = _MakeObject(MakeObject, Stapler.Head, "Stapler.Head.Carriage", StoringScene=0)
+Stapler.Head.Carriage.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Head.Carriage.SetColor(White,ObjectOnly,rightnow)
+Stapler.Head.Carriage.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Head.Carriage.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Head.Carriage.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Head.Carriage.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Head.Carriage.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Head.Carriage.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Head.Carriage.BecomePart(RightNow)
+Stapler.Head.Carriage._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Stapler.Head.Carriage,"Stapler.Head.Carriage.vfb")
+Stapler.Base = _MakeObject(MakeObject, Stapler, "Stapler.Base", StoringScene=0)
+Stapler.Base.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Base.SetColor(White,ObjectOnly,rightnow)
+Stapler.Base.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Base.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Base.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Base.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Base.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Base.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Base.BecomePart(RightNow)
+Stapler.Base._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Stapler.Base,"Stapler.Base.vfb")
+Stapler.Base.BackPad = _MakeObject(MakeObject, Stapler.Base, "Stapler.Base.BackPad", StoringScene=0)
+Stapler.Base.BackPad.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Base.BackPad.SetColor(White,ObjectOnly,rightnow)
+Stapler.Base.BackPad.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Base.BackPad.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Base.BackPad.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Base.BackPad.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Base.BackPad.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Base.BackPad.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Base.BackPad.BecomePart(RightNow)
+Stapler.Base.BackPad._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0010000000475, -0.0230000000447, -0.00400000018999, 1.0)))
+LoadGeometry(Stapler.Base.BackPad,"Stapler.Base.BackPad.vfb")
+Stapler.Base.Plate = _MakeObject(MakeObject, Stapler.Base, "Stapler.Base.Plate", StoringScene=0)
+Stapler.Base.Plate.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Base.Plate.SetColor(White,ObjectOnly,rightnow)
+Stapler.Base.Plate.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Base.Plate.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Base.Plate.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Base.Plate.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Base.Plate.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Base.Plate.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Base.Plate.BecomePart(RightNow)
+Stapler.Base.Plate._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0010000000475, -0.0130000002682, 0.0930000022054, 1.0)))
+LoadGeometry(Stapler.Base.Plate,"Stapler.Base.Plate.vfb")
+Stapler.Base.FrontPad = _MakeObject(MakeObject, Stapler.Base, "Stapler.Base.FrontPad", StoringScene=0)
+Stapler.Base.FrontPad.SetTexture("Stapler.bmp", ObjectOnly, RightNow)
+Stapler.Base.FrontPad.SetColor(White,ObjectOnly,rightnow)
+Stapler.Base.FrontPad.SetShininess(0.0,ObjectOnly,rightnow)
+Stapler.Base.FrontPad.SetHighLightColor(Black,ObjectOnly,rightnow)
+Stapler.Base.FrontPad.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Stapler.Base.FrontPad.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Stapler.Base.FrontPad.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Stapler.Base.FrontPad.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Stapler.Base.FrontPad.BecomePart(RightNow)
+Stapler.Base.FrontPad._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0010000000475, -0.0230000000447, 0.104000002146, 1.0)))
+LoadGeometry(Stapler.Base.FrontPad,"Stapler.Base.FrontPad.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

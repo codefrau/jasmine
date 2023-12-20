@@ -1,0 +1,90 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+cardboardbox = _MakeObject(MakeObject, None, "cardboardbox", StoringScene=0)
+cardboardbox.SetColor(White,ObjectOnly,rightnow)
+cardboardbox.SetShininess(0.0,ObjectOnly,rightnow)
+cardboardbox.SetHighLightColor(Black,ObjectOnly,rightnow)
+cardboardbox.SetEmissiveColor(Black,ObjectOnly,rightnow)
+cardboardbox.SetLightingStyle(Lit, ObjectOnly, RightNow)
+cardboardbox.SetFillingStyle(Filled, ObjectOnly, RightNow)
+cardboardbox.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+cardboardbox.BecomeFirstClass(RightNow)
+cardboardbox._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(cardboardbox,"cardboardbox.vfb")
+cardboardbox.BottomFlap2 = _MakeObject(MakeObject, cardboardbox, "cardboardbox.BottomFlap2", StoringScene=0)
+cardboardbox.BottomFlap2.SetColor(White,ObjectOnly,rightnow)
+cardboardbox.BottomFlap2.SetShininess(0.0,ObjectOnly,rightnow)
+cardboardbox.BottomFlap2.SetHighLightColor(Black,ObjectOnly,rightnow)
+cardboardbox.BottomFlap2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+cardboardbox.BottomFlap2.SetLightingStyle(Lit, ObjectOnly, RightNow)
+cardboardbox.BottomFlap2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+cardboardbox.BottomFlap2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+cardboardbox.BottomFlap2.BecomePart(RightNow)
+cardboardbox.BottomFlap2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (-0.490999996662, 0.778599977493, 0.000399999989895, 1.0)))
+LoadGeometry(cardboardbox.BottomFlap2,"cardboardbox.BottomFlap2.vfb")
+cardboardbox.BottomFlap1 = _MakeObject(MakeObject, cardboardbox, "cardboardbox.BottomFlap1", StoringScene=0)
+cardboardbox.BottomFlap1.SetColor(White,ObjectOnly,rightnow)
+cardboardbox.BottomFlap1.SetShininess(0.0,ObjectOnly,rightnow)
+cardboardbox.BottomFlap1.SetHighLightColor(Black,ObjectOnly,rightnow)
+cardboardbox.BottomFlap1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+cardboardbox.BottomFlap1.SetLightingStyle(Lit, ObjectOnly, RightNow)
+cardboardbox.BottomFlap1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+cardboardbox.BottomFlap1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+cardboardbox.BottomFlap1.BecomePart(RightNow)
+cardboardbox.BottomFlap1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.48939999938, 0.778599977493, 0.000399999989895, 1.0)))
+LoadGeometry(cardboardbox.BottomFlap1,"cardboardbox.BottomFlap1.vfb")
+cardboardbox.TopFlap2 = _MakeObject(MakeObject, cardboardbox, "cardboardbox.TopFlap2", StoringScene=0)
+cardboardbox.TopFlap2.SetColor(White,ObjectOnly,rightnow)
+cardboardbox.TopFlap2.SetShininess(0.0,ObjectOnly,rightnow)
+cardboardbox.TopFlap2.SetHighLightColor(Black,ObjectOnly,rightnow)
+cardboardbox.TopFlap2.SetEmissiveColor(Black,ObjectOnly,rightnow)
+cardboardbox.TopFlap2.SetLightingStyle(Lit, ObjectOnly, RightNow)
+cardboardbox.TopFlap2.SetFillingStyle(Filled, ObjectOnly, RightNow)
+cardboardbox.TopFlap2.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+cardboardbox.TopFlap2.BecomePart(RightNow)
+cardboardbox.TopFlap2._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.812200009823, 0.49660000205, 1.0)))
+LoadGeometry(cardboardbox.TopFlap2,"cardboardbox.TopFlap2.vfb")
+cardboardbox.TopFlap1 = _MakeObject(MakeObject, cardboardbox, "cardboardbox.TopFlap1", StoringScene=0)
+cardboardbox.TopFlap1.SetColor(White,ObjectOnly,rightnow)
+cardboardbox.TopFlap1.SetShininess(0.0,ObjectOnly,rightnow)
+cardboardbox.TopFlap1.SetHighLightColor(Black,ObjectOnly,rightnow)
+cardboardbox.TopFlap1.SetEmissiveColor(Black,ObjectOnly,rightnow)
+cardboardbox.TopFlap1.SetLightingStyle(Lit, ObjectOnly, RightNow)
+cardboardbox.TopFlap1.SetFillingStyle(Filled, ObjectOnly, RightNow)
+cardboardbox.TopFlap1.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+cardboardbox.TopFlap1.BecomePart(RightNow)
+cardboardbox.TopFlap1._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.812200009823, -0.493099987507, 1.0)))
+LoadGeometry(cardboardbox.TopFlap1,"cardboardbox.TopFlap1.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

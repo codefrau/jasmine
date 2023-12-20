@@ -1,0 +1,36 @@
+# Alice Model File Format 1.0
+import Alice
+version = 19990207
+
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		global errorfile
+		sError = name + ":  Mesh load failed."
+		try:
+			errorfile.write("Error:  " + sError + "\n")
+		except:
+			errorfile = open(Alice.HomeDir+"Errors.txt","w")
+			errorfile.write("Error:  " + sError + "\n")
+		print "Error:  " + sError + "\n"
+
+Cylinder = Alice.MakeObject (Parent=None, Name="Cylinder")
+Cylinder.SetColor(White,ObjectOnly,RightNow)
+Cylinder.SetVisibility(1.0000,ObjectOnly,RightNow)
+Cylinder.SetShininess(0.0000,ObjectOnly,RightNow)
+Cylinder.SetHighLightColor(Black,ObjectOnly,RightNow)
+Cylinder.SetEmissiveColor(Black,ObjectOnly,RightNow)
+Cylinder.SetLightingStyle(Lit, ObjectOnly, RightNow)
+Cylinder.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Cylinder.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Cylinder.BecomeFirstClass(RightNow)
+Cylinder._SetLocalTransformation (((1.0000, 0.0000, 0.0000, 0.0000), (0.0000, 1.0000, 0.0000, 0.0000), (0.0000, 0.0000, 1.0000, 0.0000), (0.0000, 0.5365, 0.0000, 1.0000)))
+LoadGeometry(Cylinder,"Cylinder.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

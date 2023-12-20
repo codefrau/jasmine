@@ -1,0 +1,49 @@
+#
+# Wavefront material file: d:\hayashi\bob1.2\mary\head.mtl
+#
+# Converted by the PolyTrans geometry converter from Okino Computer Graphics, Inc.
+# Date/time of export: 04/08/2003 20:27:12
+#
+# Bounding box of geometry = (-0.194,0,-0.197) to (0.2,0.609,0.245).
+newmtl default
+	Ns 32
+	d 1
+	illum 2
+	Kd 0.4 0.4 0.4
+	Ks 0.7 0.7 0.7
+	Ka 0.3 0.3 0.3
+newmtl 1Mtl0_mtl1
+	Ns 0
+	d 1
+	illum 2
+	Kd 1.000000 0.298039 0.333333
+	Ks 0 0 0
+	Ka 0.500000 0.149019 0.166666
+newmtl eyes
+	Ns 25
+	d 1
+	illum 2
+	Kd 1.000000 0.984314 0.325490
+	Ks 0 0 0
+	Ka 0.500000 0.492157 0.162745
+newmtl headshell
+	Ns 25
+	d 1
+	illum 2
+	Kd 0.419608 0.498039 1.000000
+	Ks 0 0 0
+	Ka 0.209804 0.249020 0.500000
+newmtl insidemouth
+	Ns 0
+	d 1
+	illum 2
+	Kd 0.700000 0.409020 0.441961
+	Ks 0 0 0
+	Ka 0.350000 0.204510 0.220980
+newmtl teeth
+	Ns 25
+	d 1
+	illum 2
+	Kd 1.000000 1.000000 0.878431
+	Ks 0 0 0
+	Ka 0.500000 0.500000 0.439216

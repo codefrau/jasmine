@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+PoliceHat = _MakeObject(MakeObject, None, "PoliceHat", StoringScene=0)
+PoliceHat.SetTexture("PoliceHat.bmp", ObjectOnly, RightNow)
+PoliceHat.SetColor(White,ObjectOnly,rightnow)
+PoliceHat.SetShininess(0.0,ObjectOnly,rightnow)
+PoliceHat.SetHighLightColor(Black,ObjectOnly,rightnow)
+PoliceHat.SetEmissiveColor(Black,ObjectOnly,rightnow)
+PoliceHat.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+PoliceHat.SetFillingStyle(Filled, ObjectOnly, RightNow)
+PoliceHat.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+PoliceHat.BecomeFirstClass(RightNow)
+PoliceHat._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(PoliceHat,"PoliceHat.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

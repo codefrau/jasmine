@@ -1,0 +1,36 @@
+# Alice Model File Format 1.0
+import Alice
+version = 19990207
+
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		global errorfile
+		sError = name + ":  Mesh load failed."
+		try:
+			errorfile.write("Error:  " + sError + "\n")
+		except:
+			errorfile = open(Alice.HomeDir+"Errors.txt","w")
+			errorfile.write("Error:  " + sError + "\n")
+		print "Error:  " + sError + "\n"
+
+parabola = Alice.MakeObject (Parent=None, Name="parabola")
+parabola.SetColor(White,ObjectOnly,RightNow)
+parabola.SetVisibility(1.0000,ObjectOnly,RightNow)
+parabola.SetShininess(0.0000,ObjectOnly,RightNow)
+parabola.SetHighLightColor(Black,ObjectOnly,RightNow)
+parabola.SetEmissiveColor(Black,ObjectOnly,RightNow)
+parabola.SetLightingStyle(Lit, ObjectOnly, RightNow)
+parabola.SetFillingStyle(Filled, ObjectOnly, RightNow)
+parabola.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+parabola.BecomeFirstClass(RightNow)
+parabola._SetLocalTransformation (((-0.3256, 0.9354, 0.1379, 0.0000), (0.4703, 0.0337, 0.8819, 0.0000), (0.8203, 0.3520, -0.4509, 0.0000), (-0.3245, 0.6587, 0.2551, 1.0000)))
+LoadGeometry(parabola,"parabola.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

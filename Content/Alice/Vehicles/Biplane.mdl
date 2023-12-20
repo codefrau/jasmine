@@ -1,0 +1,83 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+Biplane = _MakeObject(MakeObject, None, "Biplane", StoringScene=0)
+Biplane.SetTexture("Biplane.bmp", ObjectOnly, RightNow)
+Biplane.SetColor(White,ObjectOnly,rightnow)
+Biplane.SetShininess(0.0,ObjectOnly,rightnow)
+Biplane.SetHighLightColor(Black,ObjectOnly,rightnow)
+Biplane.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Biplane.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Biplane.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Biplane.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Biplane.BecomeFirstClass(RightNow)
+Biplane._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Biplane,"Biplane.vfb")
+Biplane.Propeller = _MakeObject(MakeObject, Biplane, "Biplane.Propeller", StoringScene=0)
+Biplane.Propeller.SetTexture("Biplane.bmp", ObjectOnly, RightNow)
+Biplane.Propeller.SetColor(White,ObjectOnly,rightnow)
+Biplane.Propeller.SetShininess(0.0,ObjectOnly,rightnow)
+Biplane.Propeller.SetHighLightColor(Black,ObjectOnly,rightnow)
+Biplane.Propeller.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Biplane.Propeller.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Biplane.Propeller.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Biplane.Propeller.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Biplane.Propeller.BecomePart(RightNow)
+Biplane.Propeller._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.300000011921, 1.0)))
+LoadGeometry(Biplane.Propeller,"Biplane.Propeller.vfb")
+Biplane.Body = _MakeObject(MakeObject, Biplane, "Biplane.Body", StoringScene=0)
+Biplane.Body.SetTexture("Biplane.bmp", ObjectOnly, RightNow)
+Biplane.Body.SetColor(White,ObjectOnly,rightnow)
+Biplane.Body.SetShininess(0.0,ObjectOnly,rightnow)
+Biplane.Body.SetHighLightColor(Black,ObjectOnly,rightnow)
+Biplane.Body.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Biplane.Body.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Biplane.Body.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Biplane.Body.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Biplane.Body.BecomePart(RightNow)
+Biplane.Body._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Biplane.Body,"Biplane.Body.vfb")
+Biplane.Wings = _MakeObject(MakeObject, Biplane, "Biplane.Wings", StoringScene=0)
+Biplane.Wings.SetTexture("Biplane.bmp", ObjectOnly, RightNow)
+Biplane.Wings.SetColor(White,ObjectOnly,rightnow)
+Biplane.Wings.SetShininess(0.0,ObjectOnly,rightnow)
+Biplane.Wings.SetHighLightColor(Black,ObjectOnly,rightnow)
+Biplane.Wings.SetEmissiveColor(Black,ObjectOnly,rightnow)
+Biplane.Wings.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+Biplane.Wings.SetFillingStyle(Filled, ObjectOnly, RightNow)
+Biplane.Wings.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+Biplane.Wings.BecomePart(RightNow)
+Biplane.Wings._SetLocalTransformation (((1.0, 0.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0), (0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(Biplane.Wings,"Biplane.Wings.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

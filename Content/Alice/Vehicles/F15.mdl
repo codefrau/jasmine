@@ -1,0 +1,123 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+F15 = _MakeObject(MakeObject, None, "F15", StoringScene=0)
+F15.SetColor(White,ObjectOnly,rightnow)
+F15.SetShininess(0.0,ObjectOnly,rightnow)
+F15.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.BecomeFirstClass(RightNow)
+F15._SetLocalTransformation (((0.0948999971151, -0.00170000002254, -0.0315000005066, 0.0), (0.00139999995008, 0.10000000149, -0.001200000057, 0.0), (0.0315999984741, 0.000699999975041, 0.0948999971151, 0.0), (0.0, 0.20039999485, 0.0, 1.0)))
+LoadGeometry(F15,"F15.vfb")
+F15.Intake = _MakeObject(MakeObject, F15, "F15.Intake", StoringScene=0)
+F15.Intake.SetColor((0.101960793138, 0.101960793138, 0.101960793138),ObjectOnly,rightnow)
+F15.Intake.SetShininess(0.0,ObjectOnly,rightnow)
+F15.Intake.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.Intake.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.Intake.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.Intake.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.Intake.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.Intake.BecomePart(RightNow)
+F15.Intake._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.Intake,"F15.Intake.vfb")
+F15.Exhaust = _MakeObject(MakeObject, F15, "F15.Exhaust", StoringScene=0)
+F15.Exhaust.SetColor((0.0666666701436, 0.0666666701436, 0.0666666701436),ObjectOnly,rightnow)
+F15.Exhaust.SetShininess(0.0,ObjectOnly,rightnow)
+F15.Exhaust.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.Exhaust.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.Exhaust.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.Exhaust.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.Exhaust.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.Exhaust.BecomePart(RightNow)
+F15.Exhaust._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.Exhaust,"F15.Exhaust.vfb")
+F15.Stabilizers = _MakeObject(MakeObject, F15, "F15.Stabilizers", StoringScene=0)
+F15.Stabilizers.SetColor((0.694117665291, 0.694117665291, 0.694117665291),ObjectOnly,rightnow)
+F15.Stabilizers.SetShininess(0.0,ObjectOnly,rightnow)
+F15.Stabilizers.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.Stabilizers.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.Stabilizers.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.Stabilizers.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.Stabilizers.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.Stabilizers.BecomePart(RightNow)
+F15.Stabilizers._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.Stabilizers,"F15.Stabilizers.vfb")
+F15.Wings = _MakeObject(MakeObject, F15, "F15.Wings", StoringScene=0)
+F15.Wings.SetColor((0.694117665291, 0.694117665291, 0.694117665291),ObjectOnly,rightnow)
+F15.Wings.SetShininess(0.0,ObjectOnly,rightnow)
+F15.Wings.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.Wings.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.Wings.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.Wings.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.Wings.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.Wings.BecomePart(RightNow)
+F15.Wings._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.Wings,"F15.Wings.vfb")
+F15.TailFins = _MakeObject(MakeObject, F15, "F15.TailFins", StoringScene=0)
+F15.TailFins.SetColor((0.694117665291, 0.694117665291, 0.694117665291),ObjectOnly,rightnow)
+F15.TailFins.SetShininess(0.0,ObjectOnly,rightnow)
+F15.TailFins.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.TailFins.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.TailFins.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.TailFins.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.TailFins.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.TailFins.BecomePart(RightNow)
+F15.TailFins._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.TailFins,"F15.TailFins.vfb")
+F15.Body = _MakeObject(MakeObject, F15, "F15.Body", StoringScene=0)
+F15.Body.SetColor((0.694117665291, 0.694117665291, 0.694117665291),ObjectOnly,rightnow)
+F15.Body.SetShininess(0.0,ObjectOnly,rightnow)
+F15.Body.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.Body.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.Body.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.Body.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.Body.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.Body.BecomePart(RightNow)
+F15.Body._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.Body,"F15.Body.vfb")
+F15.Cockpit = _MakeObject(MakeObject, F15, "F15.Cockpit", StoringScene=0)
+F15.Cockpit.SetColor((0.694117665291, 0.694117665291, 0.694117665291),ObjectOnly,rightnow)
+F15.Cockpit.SetShininess(0.0,ObjectOnly,rightnow)
+F15.Cockpit.SetHighLightColor(Black,ObjectOnly,rightnow)
+F15.Cockpit.SetEmissiveColor(Black,ObjectOnly,rightnow)
+F15.Cockpit.SetLightingStyle(Lit, ObjectOnly, RightNow)
+F15.Cockpit.SetFillingStyle(Filled, ObjectOnly, RightNow)
+F15.Cockpit.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+F15.Cockpit.BecomePart(RightNow)
+F15.Cockpit._SetLocalTransformation (((0.0, 0.0, -1.0, 0.0), (0.0, 1.0, 0.0, 0.0), (1.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(F15.Cockpit,"F15.Cockpit.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

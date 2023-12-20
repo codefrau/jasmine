@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+FishBoat = _MakeObject(MakeObject, None, "FishBoat", StoringScene=0)
+FishBoat.SetTexture("FishBoat.bmp", ObjectOnly, RightNow)
+FishBoat.SetColor(White,ObjectOnly,rightnow)
+FishBoat.SetShininess(0.0,ObjectOnly,rightnow)
+FishBoat.SetHighLightColor(Black,ObjectOnly,rightnow)
+FishBoat.SetEmissiveColor(Black,ObjectOnly,rightnow)
+FishBoat.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+FishBoat.SetFillingStyle(Filled, ObjectOnly, RightNow)
+FishBoat.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+FishBoat.BecomeFirstClass(RightNow)
+FishBoat._SetLocalTransformation (((0.15000000596, 0.0, 0.0, 0.0), (0.0, 0.15000000596, 0.0, 0.0), (0.0, 0.0, 0.15000000596, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(FishBoat,"FishBoat.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass

@@ -1,0 +1,47 @@
+# Alice Model File Format 1.0
+# the python starts here
+from string import split
+def LoadGeometry(self, name):
+	try:
+		self._LoadVerticesAndFaces(name)
+	except:
+		ReportError(name+":  Mesh load failed.")
+
+def ReportError(sError):
+	global errorfile
+	try:
+		errorfile.write("Error:  " + sError + "\n")
+	except:
+		errorfile = open(Alice.HomeDir+"Errors.txt","w")
+		errorfile.write("Error:  " + sError + "\n")
+	print "Error:  " + sError + "\n"
+
+def _MakeObject (ConstructFunc, Parent, Name, StoringScene):
+	if StoringScene:
+		return ConstructFunc(Parent=Parent, Name=Name)
+	else:
+		if Parent:
+			EndOfName = "."+split(name,".")[-1]
+			return ConstructFunc(Parent=Parent, Name=EndOfName)
+		else:
+			return ConstructFunc(Name=Name)
+
+key = _MakeObject(MakeObject, None, "key", StoringScene=0)
+key.SetTexture("key.bmp", ObjectOnly, RightNow)
+key.SetColor(White,ObjectOnly,rightnow)
+key.SetShininess(0.0,ObjectOnly,rightnow)
+key.SetHighLightColor(Black,ObjectOnly,rightnow)
+key.SetEmissiveColor(Black,ObjectOnly,rightnow)
+key.SetLightingStyle(Unlit, ObjectOnly, RightNow)
+key.SetFillingStyle(Filled, ObjectOnly, RightNow)
+key.SetShadingStyle(Smooth, ObjectOnly, RightNow)
+key.BecomeFirstClass(RightNow)
+key._SetLocalTransformation (((0.0500000007451, 0.0, 0.0, 0.0), (0.0, 0.0500000007451, 0.0, 0.0), (0.0, 0.0, 0.0500000007451, 0.0), (0.0, 0.0, 0.0, 1.0)))
+LoadGeometry(key,"key.vfb")
+
+print "Finished Loading."
+try:
+	errorfile.close()
+	print "There were errors, see "+Alice.HomeDir+"Errors.txt"
+except:
+	pass
