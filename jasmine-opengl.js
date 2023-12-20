@@ -16,8 +16,11 @@
 
 // TODO
 // [ ] implement draw arrays
-// [ ] fix glBitmap
+// [ ] implement material + lighting
+// [ ] make glBitmap pixel-perfect
 // [ ] optimize list compilation glBegin/glEnd
+// [ ] emulate glLineWidth (WebGL usually only supports 1px lines)
+//     e.g. using https://wwwtyro.net/2019/11/18/instanced-lines.html
 
 // OpenGL constants (many missing in WebGL)
 var GL;
@@ -45,6 +48,7 @@ function OpenGL() {
     var HAS_TEXTURE    = 1 << 3;
     var HAS_LIGHTING   = 1 << 4;
     var HAS_ALPHA_TEST = 1 << 5;
+    var HAS_POINT_SIZE = 1 << 6;
 
     var gl;    // the emulated OpenGL state
     var webgl; // the actual WebGL context
@@ -204,10 +208,10 @@ function OpenGL() {
         glBindTexture: function(target, texture) {
             if (gl.listMode && this.addToList("glBindTexture", [target, texture])) return;
             DEBUG > 1 && console.log("glBindTexture", GL_Symbols[target], texture);
-            var texture = gl.textures[texture];
-            if (!texture) throw Error("OpenGL: texture not found");
-            webgl.bindTexture(target, texture);
-            gl.texture = texture;
+            var textureObj = gl.textures[texture];
+            if (!textureObj) throw Error("OpenGL: texture not found");
+            webgl.bindTexture(target, textureObj);
+            gl.texture = textureObj;
         },
 
         glBitmap: function(width, height, xorig, yorig, xmove, ymove, bitmap) {
@@ -246,8 +250,8 @@ function OpenGL() {
                 if (!texture) {
                     texture = gl.bitmapTexture = webgl.createTexture();
                     webgl.bindTexture(webgl.TEXTURE_2D, texture);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
                 } else {
@@ -654,9 +658,10 @@ function OpenGL() {
 
             // select shader
             var shaderFlags = primitive.vertexAttrs;
-            if (gl.textureEnabled) shaderFlags |= HAS_TEXTURE;
+            if (gl.textureEnabled && gl.texture) shaderFlags |= HAS_TEXTURE;
             if (gl.lighting) shaderFlags |= HAS_LIGHTING;
             if (gl.alphaTest) shaderFlags |= HAS_ALPHA_TEST;
+            if (primitive.mode === webgl.POINTS) shaderFlags |= HAS_POINT_SIZE;
 
             // debug output
             var flagString = "";
@@ -666,6 +671,7 @@ function OpenGL() {
             if (shaderFlags & HAS_TEXTURE) flagString += " TEXTURE";
             if (shaderFlags & HAS_LIGHTING) flagString += " LIGHTING";
             if (shaderFlags & HAS_ALPHA_TEST) flagString += " ALPHA_TEST";
+            if (shaderFlags & HAS_POINT_SIZE) flagString += " POINT_SIZE";
 
             if (!!(shaderFlags & HAS_TEXTURE) !== !!(shaderFlags & HAS_TEXCOORD)) {
                 shaderFlags &= ~(HAS_TEXTURE + HAS_TEXCOORD);
@@ -677,7 +683,7 @@ function OpenGL() {
                 flagString += " (UNIMPLEMENTED lighting)";
             }
 
-            if (shaderFlags & (~(HAS_TEXCOORD + HAS_TEXTURE + HAS_NORMAL + HAS_COLOR))) {
+            if (shaderFlags & (~(HAS_TEXCOORD + HAS_TEXTURE + HAS_NORMAL + HAS_COLOR + HAS_POINT_SIZE))) {
                 DEBUG > 0 && console.log("UNIMPLEMENTED glEnd " + GL_Symbols[primitive.mode] + ":" + flagString);
                 return;
             }
@@ -825,6 +831,10 @@ function OpenGL() {
                 webgl.activeTexture(webgl.TEXTURE0);
                 webgl.bindTexture(webgl.TEXTURE_2D, gl.texture);
                 webgl.uniform1i(loc['uSampler'], 0);
+            }
+            if (loc['uPointSize']) {
+                DEBUG > 1 && console.log("uPointSize", gl.pointSize);
+                webgl.uniform1f(loc['uPointSize'], gl.pointSize);
             }
 
             // draw
@@ -1012,6 +1022,12 @@ function OpenGL() {
             }
         },
 
+        glLineWidth: function(width) {
+            if (gl.listMode && this.addToList("glLineWidth", [width])) return;
+            DEBUG > 1 && console.log("glLineWidth", width);
+            webgl.lineWidth(width);
+        },
+
         glListBase: function(base) {
             DEBUG > 1 && console.log("glListBase", base);
             gl.listBase = base;
@@ -1154,6 +1170,12 @@ function OpenGL() {
             DEBUG > 1 && console.log("glPushMatrix", GL_Symbols[gl.matrixMode], "=>", Array.from(gl.matrix));
         },
 
+        glPointSize: function(size) {
+            if (gl.listMode && this.addToList("glPointSize", [size])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glPointSize", size);
+            gl.pointSize = size;
+        },
+
         glPopAttrib: function() {
             if (gl.listMode && this.addToList("glPopAttrib", [])) return;
             DEBUG > 0 && console.log("UNIMPLEMENTED glPopAttrib");
@@ -1217,7 +1239,7 @@ function OpenGL() {
 
         glShadeModel: function(mode) {
             if (gl.listMode && this.addToList("glShadeModel", [mode])) return;
-            DEBUG > 1 && console.log("UNIMPLEMENTED glShadeModel", GL_Symbols[mode]);
+            DEBUG > 0 && console.log("UNIMPLEMENTED glShadeModel", GL_Symbols[mode]);
         },
 
         glStencilFunc: function(func, ref, mask) {
@@ -1461,8 +1483,10 @@ function OpenGL() {
                 src.push("attribute vec2 aTexCoord;");
                 src.push("varying vec2 vTexCoord;");
             }
+            if (shaderFlags & HAS_POINT_SIZE) {
+                src.push("uniform float uPointSize;");
+            }
             src.push("void main(void) {");
-            src.push("  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);");
             if (shaderFlags & HAS_NORMAL) {
                 src.push("  vNormal = aNormal;");
             }
@@ -1472,6 +1496,10 @@ function OpenGL() {
             if (shaderFlags & HAS_TEXCOORD) {
                 src.push("  vTexCoord = aTexCoord;");
             }
+            if (shaderFlags & HAS_POINT_SIZE) {
+                src.push("  gl_PointSize = uPointSize;");
+            }
+            src.push("  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);");
             src.push("}");
             var src = src.join("\n");
             DEBUG > 1 && console.log(src);
@@ -1540,6 +1568,9 @@ function OpenGL() {
             }
             if (shaderFlags & HAS_TEXCOORD) {
                 locations.aTexCoord = webgl.getAttribLocation(program, "aTexCoord");
+            }
+            if (shaderFlags & HAS_POINT_SIZE) {
+                locations.uPointSize = webgl.getUniformLocation(program, "uPointSize");
             }
             DEBUG > 1 && console.log(locations);
             return locations;
