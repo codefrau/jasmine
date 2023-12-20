@@ -25,8 +25,16 @@
             Squeak.debugFiles = true;
             // pretend to be Unix so Croquet platform detection works
             Squeak.platformName = "unix";
-            // disable fsck (has trouble with templates)
-            Squeak.fsck = function() {};
+            // re-fetch content if needed (first version was missing some files)
+            if (!Squeak.Settings["squeak-template:/jasmine/Content/Alice/Animals"]) {
+                var all = Object.keys(Squeak.Settings);
+                for (var i = 0; i < all.length; i++) {
+                    var key = all[i];
+                    if (key.startsWith("squeak-template:/jasmine")) {
+                        delete Squeak.Settings[key];
+                    }
+                }
+            }
             // start SqueakJS
             SqueakJS.runSqueak("BridgeDemo.image", sqCanvas, {
                 appName: "Croquet Jasmine",
