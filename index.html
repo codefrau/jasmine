@@ -36,12 +36,15 @@
                 }
             }
             // start SqueakJS
-            SqueakJS.runSqueak("BridgeDemo.image", sqCanvas, {
+            const params = new URLSearchParams(window.location.search);
+            const image = params.get("image") || "BridgeDemo.image";
+            const changes = image.replace(".image", ".changes");
+            SqueakJS.runSqueak(image, sqCanvas, {
                 appName: "Croquet Jasmine",
                 fullscreen: true,
                 swapButtons: true,
                 spinner: sqSpinner,
-                files: ["BridgeDemo.changes", "JasmineV1.sources"],
+                files: [changes, "JasmineV1.sources"],
                 root: "/jasmine",
                 templates: {
                     "/jasmine/Content": "Content",

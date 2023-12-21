@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-19",               // Maybe replace at build time?
+        vmDate: "2023-12-20",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -38903,7 +38903,7 @@
                 } else if (line.match(/Host:/i)) {
                   var hostAndPort = line.substr(6).trim();
                   var host = hostAndPort.split(':')[0];
-                  var port = parseInt(hostAndPort.split(':')[1]) || 80;
+                  var port = parseInt(hostAndPort.split(':')[1]) || this.port;
                   if (this.host !== host) {
                     console.warn('Host for ' + this.hostAddress + ' was ' + this.host + ' but from HTTP request now ' + host);
                     this.host = host;
@@ -55756,19 +55756,20 @@
                 image, imageName = null;
             display.droppedFiles = [];
             files.forEach(function(f) {
-                display.droppedFiles.push(f.name);
+                var path = options.root + f.name;
+                display.droppedFiles.push(path);
                 var reader = new FileReader();
                 reader.onload = function () {
                     var buffer = this.result;
-                    Squeak.filePut(f.name, buffer);
-                    loaded.push(f.name);
-                    if (!image && /.*image$/.test(f.name) && (!display.vm || confirm("Run " + f.name + " now?\n(cancel to use as file)"))) {
+                    Squeak.filePut(path, buffer);
+                    loaded.push(path);
+                    if (!image && /.*image$/.test(path) && (!display.vm || confirm("Run " + f.name + " now?\n(cancel to use as file)"))) {
                         image = buffer;
-                        imageName = f.name;
+                        imageName = path;
                     }
                     if (loaded.length == files.length) {
                         if (image) {
-                            SqueakJS.appName = imageName.slice(0, -6);
+                            SqueakJS.appName = imageName.replace(/.*\//,'').replace(/\.image$/,'');
                             SqueakJS.runImage(image, imageName, display, options);
                         } else {
                             recordDragDropEvent(Squeak.EventDragDrop, evt, canvas, display);
