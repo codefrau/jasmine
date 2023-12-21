@@ -694,9 +694,12 @@ function OpenGL() {
                 shader = gl.shaders[shaderFlags] = {
                     program: webgl.createProgram(),
                     locations: null,
+                    vsource: null, // for debugging
+                    fsource: null, // for debugging
                 };
                 var vs = webgl.createShader(webgl.VERTEX_SHADER);
-                webgl.shaderSource(vs, this.vertexShaderSource(shaderFlags));
+                shader.vsource = this.vertexShaderSource(shaderFlags);
+                webgl.shaderSource(vs, shader.vsource);
                 webgl.compileShader(vs);
                 if (!webgl.getShaderParameter(vs, webgl.COMPILE_STATUS)) {
                     console.error("OpenGL: vertex shader compile error: " + webgl.getShaderInfoLog(vs));
@@ -704,7 +707,8 @@ function OpenGL() {
                     return;
                 }
                 var fs = webgl.createShader(webgl.FRAGMENT_SHADER);
-                webgl.shaderSource(fs, this.fragmentShaderSource(shaderFlags));
+                shader.fsource = this.fragmentShaderSource(shaderFlags);
+                webgl.shaderSource(fs, shader.fsource);
                 webgl.compileShader(fs);
                 if (!webgl.getShaderParameter(fs, webgl.COMPILE_STATUS)) {
                     console.error("OpenGL: fragment shader compile error: " + webgl.getShaderInfoLog(fs));
@@ -1309,12 +1313,35 @@ function OpenGL() {
             switch (type) {
                 case webgl.UNSIGNED_BYTE:
                     pixels = new Uint8Array(pixels);
+                    gl.texture.pixels = pixels; // for debugging
                     break;
                 default:
                     DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D type " + type);
                     return;
             }
             webgl.texImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+        },
+
+        debugTexture: function(texture) {
+            if (!texture) texture = gl.texture;
+            var pixels = texture.pixels;
+            var width = texture.width;
+            var height = texture.height;
+            var data = new Uint8Array(pixels);
+            var canvas = document.getElementById("texDebug");
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+                canvas.id = "texDebug";
+                canvas.style.position = "absolute";
+                canvas.style.zIndex = 1000;
+                document.body.appendChild(canvas);
+            }
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            var imageData = ctx.createImageData(width, height);
+            imageData.data.set(data);
+            ctx.putImageData(imageData, 0, 0);
         },
 
         glTexCoord2d: function(s, t) {
