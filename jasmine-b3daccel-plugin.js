@@ -464,6 +464,8 @@ function B3DAcceleratorPlugin() {
         b3dxSetViewport: function(renderer, x, y, w, h) {
             var canvas = renderer.canvas;
             var scale = this.primHandler.display.initialScale || 1;
+            canvas.width = w;
+            canvas.height = h;
             canvas.style.left = (x * scale) + "px";
             canvas.style.top = (y * scale) + "px";
             canvas.style.width = (w * scale) + "px";
