@@ -19,6 +19,8 @@
 // [ ] implement material + lighting
 // [ ] make glBitmap pixel-perfect
 // [ ] optimize list compilation glBegin/glEnd
+// [ ] implement light attenuation
+// [ ] implement spot lights
 // [ ] emulate glLineWidth (WebGL usually only supports 1px lines)
 //     e.g. using https://wwwtyro.net/2019/11/18/instanced-lines.html
 
@@ -26,6 +28,8 @@
 var GL;
 var GL_Symbols; // reverse mapping for debug printing
 initGLConstants();
+function GL_Symbol(constant) { return GL_Symbols[constant] || constant; }
+
 
 function OpenGL() {
     "use strict";
@@ -40,15 +44,20 @@ function OpenGL() {
     ]);
 
     // Primitive attributes for glBegin/glEnd
-    var HAS_NORMAL     = 1 << 0;
-    var HAS_COLOR      = 1 << 1;
-    var HAS_TEXCOORD   = 1 << 2;
+    var HAS_NORMAL      = 1 << 0;
+    var HAS_COLOR       = 1 << 1;
+    var HAS_TEXCOORD    = 1 << 2;
 
-    // more flags for selecting shader
-    var HAS_TEXTURE    = 1 << 3;
-    var HAS_LIGHTING   = 1 << 4;
-    var HAS_ALPHA_TEST = 1 << 5;
-    var HAS_POINT_SIZE = 1 << 6;
+    // additional flags for selecting shader
+    var USE_TEXTURE     = 1 << 3;
+    var USE_ALPHA_TEST  = 1 << 4;
+    var USE_POINT_SIZE  = 1 << 5;
+    var NUM_LIGHTS_MASK = (1 << 6)  // 3 bits for number of lights (0-7)
+                        + (1 << 7)
+                        + (1 << 8);
+    var NUM_LIGHTS_SHIFT = 6;
+    var ANY_LIGHTS = 0b111 << NUM_LIGHTS_SHIFT;
+    var MAX_LIGHTS = 8;
 
     var gl;    // the emulated OpenGL state
     var webgl; // the actual WebGL context
@@ -112,8 +121,9 @@ function OpenGL() {
                 matrixMode: 0, // current matrix mode
                 matrices: {}, // matrix stacks by mode
                 matrix: null, // current matrix (matrices[mode][0])
-                lighting: false,
+                lightingEnabled: false,
                 lights: [], // light states
+                lightModelAmbient: null, // scene ambient color
                 material: null, // material state
                 textureIdGen: 0, // texture id generator
                 textures: {}, // webgl texture objects by id
@@ -145,17 +155,16 @@ function OpenGL() {
             gl.matrixMode = GL.MODELVIEW;
             gl.matrix = gl.matrices[gl.matrixMode][0];
             gl.color.set([1, 1, 1, 1]);
-            for (var i = 0; i < 8; i++) {
+            for (var i = 0; i < MAX_LIGHTS; i++) {
                 gl.lights[i] = {
-                    index: i,
                     enabled: false,
                     ambient: new Float32Array([0, 0, 0, 1]),
                     diffuse: new Float32Array([0, 0, 0, 1]),
                     specular: new Float32Array([0, 0, 0, 1]),
                     position: new Float32Array([0, 0, 1, 0]),
-                    spotCutoff: 180,
                 };
             }
+            gl.lightModelAmbient = new Float32Array([0.2, 0.2, 0.2, 1]);
             gl.material = {
                 ambient: new Float32Array([0.2, 0.2, 0.2, 1]),
                 diffuse: new Float32Array([0.8, 0.8, 0.8, 1]),
@@ -560,7 +569,7 @@ function OpenGL() {
                     break;
                 case GL.LIGHTING:
                     DEBUG > 1 && console.log("glDisable GL_LIGHTING");
-                    gl.lighting = false;
+                    gl.lightingEnabled = false;
                     break;
                 case webgl.POLYGON_OFFSET_FILL:
                     DEBUG > 1 && console.log("glDisable GL_POLYGON_OFFSET_FILL");
@@ -624,7 +633,7 @@ function OpenGL() {
                     break;
                 case GL.LIGHTING:
                     DEBUG > 1 && console.log("glEnable GL_LIGHTING");
-                    gl.lighting = true;
+                    gl.lightingEnabled = true;
                     break;
                 case webgl.POLYGON_OFFSET_FILL:
                     DEBUG > 1 && console.log("glEnable GL_POLYGON_OFFSET_FILL");
@@ -657,33 +666,30 @@ function OpenGL() {
             gl.primitive = null;
 
             // select shader
+            var numLights = 0;
             var shaderFlags = primitive.vertexAttrs;
-            if (gl.textureEnabled && gl.texture) shaderFlags |= HAS_TEXTURE;
-            if (gl.lighting) shaderFlags |= HAS_LIGHTING;
-            if (gl.alphaTest) shaderFlags |= HAS_ALPHA_TEST;
-            if (primitive.mode === webgl.POINTS) shaderFlags |= HAS_POINT_SIZE;
+            if (gl.textureEnabled && gl.texture) shaderFlags |= USE_TEXTURE;
+            if (gl.lightingEnabled) {
+                for (var i = 0; i < MAX_LIGHTS; i++) {
+                    if (gl.lights[i].enabled) numLights++;
+                }
+                shaderFlags |= numLights << NUM_LIGHTS_SHIFT;
+            }
+            if (gl.alphaTest) shaderFlags |= USE_ALPHA_TEST;
+            if (primitive.mode === gl.POINTS) shaderFlags |= USE_POINT_SIZE;
 
             // debug output
-            var flagString = "";
-            if (shaderFlags & HAS_NORMAL) flagString += " NORMAL";
-            if (shaderFlags & HAS_COLOR) flagString += " COLOR";
-            if (shaderFlags & HAS_TEXCOORD) flagString += " TEXCOORD";
-            if (shaderFlags & HAS_TEXTURE) flagString += " TEXTURE";
-            if (shaderFlags & HAS_LIGHTING) flagString += " LIGHTING";
-            if (shaderFlags & HAS_ALPHA_TEST) flagString += " ALPHA_TEST";
-            if (shaderFlags & HAS_POINT_SIZE) flagString += " POINT_SIZE";
+            var flagString = "[POSITION";
+            if (shaderFlags & HAS_NORMAL) flagString += ", NORMAL";
+            if (shaderFlags & HAS_COLOR) flagString += ", COLOR";
+            if (shaderFlags & HAS_TEXCOORD) flagString += ", TEXCOORD";
+            flagString += "]";
+            if (shaderFlags & USE_TEXTURE) flagString += ", TEXTURE";
+            if (shaderFlags & ANY_LIGHTS) flagString += ", "+ numLights +" LIGHTS";
+            if (shaderFlags & USE_ALPHA_TEST) flagString += ", ALPHA_TEST";
+            if (shaderFlags & USE_POINT_SIZE) flagString += ", POINT_SIZE";
 
-            if (!!(shaderFlags & HAS_TEXTURE) !== !!(shaderFlags & HAS_TEXCOORD)) {
-                shaderFlags &= ~(HAS_TEXTURE + HAS_TEXCOORD);
-                flagString += " (disabling texture)";
-            }
-
-            if (shaderFlags & HAS_LIGHTING) {
-                shaderFlags &= ~(HAS_LIGHTING + HAS_NORMAL);
-                flagString += " (UNIMPLEMENTED lighting)";
-            }
-
-            if (shaderFlags & (~(HAS_TEXCOORD + HAS_TEXTURE + HAS_NORMAL + HAS_COLOR + HAS_POINT_SIZE))) {
+            if (shaderFlags & (~(HAS_TEXCOORD + HAS_NORMAL + HAS_COLOR + USE_TEXTURE + NUM_LIGHTS_MASK + USE_POINT_SIZE))) {
                 DEBUG > 0 && console.log("UNIMPLEMENTED glEnd " + GL_Symbols[primitive.mode] + ":" + flagString);
                 return;
             }
@@ -735,8 +741,11 @@ function OpenGL() {
                 data.set(vertices[i], offset);
             }
             var vertexBuffer = webgl.createBuffer();
+            if (webgl.getError()) debugger;
             webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
+            if (webgl.getError()) debugger;
             webgl.bufferData(webgl.ARRAY_BUFFER, data, webgl.DYNAMIC_DRAW);
+            if (webgl.getError()) debugger;
 
             // set drawMode depending on primitive mode
             // and create index buffer if needed
@@ -790,6 +799,7 @@ function OpenGL() {
             var indexBuffer;
             if (indices) {
                 indexBuffer = webgl.createBuffer();
+                if (webgl.getError()) debugger;
                 webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
                 webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, indices, webgl.DYNAMIC_DRAW);
             }
@@ -802,34 +812,37 @@ function OpenGL() {
             webgl.uniformMatrix4fv(loc['uModelView'], false, gl.matrices[GL.MODELVIEW][0]);
             DEBUG > 1 && console.log("uProjection", Array.from(gl.matrices[GL.PROJECTION][0]));
             webgl.uniformMatrix4fv(loc['uProjection'], false, gl.matrices[GL.PROJECTION][0]);
-            DEBUG > 1 && console.log("aPosition", size, stride, offset);
+            DEBUG > 1 && console.log("aPosition: @" + offset + "/" + stride);
             webgl.vertexAttribPointer(loc['aPosition'], 3, webgl.FLOAT, false, stride, offset);
             webgl.enableVertexAttribArray(loc['aPosition']);
             offset += 12;
             if (loc['aNormal'] >= 0) {
-                DEBUG > 1 && console.log("aNormal", size, stride, offset);
+                DEBUG > 1 && console.log("aNormal: @" + offset + "/" + stride);
                 webgl.vertexAttribPointer(loc['aNormal'], 3, webgl.FLOAT, false, stride, offset);
                 webgl.enableVertexAttribArray(loc['aNormal']);
-                offset += 12;
             } else if (loc['uNormal']) {
                 DEBUG > 1 && console.log("uNormal", Array.from(gl.normal));
                 webgl.uniform3fv(loc['uNormal'], gl.normal);
             }
+            if (shaderFlags & HAS_NORMAL) offset += 12;
             if (loc['aColor'] >= 0) {
-                DEBUG > 1 && console.log("aColor", size, stride, offset);
+                DEBUG > 1 && console.log("aColor: @" + offset + "/" + stride);
                 webgl.vertexAttribPointer(loc['aColor'], 4, webgl.FLOAT, false, stride, offset);
                 webgl.enableVertexAttribArray(loc['aColor']);
-                offset += 16;
             } else if (loc['uColor']) {
                 DEBUG > 1 && console.log("uColor", Array.from(gl.color));
                 webgl.uniform4fv(loc['uColor'], gl.color);
             }
+            if (shaderFlags & HAS_COLOR) offset += 16;
             if (loc['aTexCoord'] >= 0) {
-                DEBUG > 1 && console.log("aTexCoord", size, stride, offset);
+                DEBUG > 1 && console.log("aTexCoord: @" + offset + "/" + stride);
                 webgl.vertexAttribPointer(loc['aTexCoord'], 2, webgl.FLOAT, false, stride, offset);
                 webgl.enableVertexAttribArray(loc['aTexCoord']);
-                offset += 8;
+            } else if (loc['uTexCoord']) {
+                DEBUG > 1 && console.log("uTexCoord", Array.from(gl.texCoord));
+                webgl.uniform2fv(loc['uTexCoord'], gl.texCoord);
             }
+            if (shaderFlags & HAS_TEXCOORD) offset += 8;
             if (loc['uSampler']) {
                 DEBUG > 1 && console.log("uSampler", gl.texture);
                 webgl.activeTexture(webgl.TEXTURE0);
@@ -840,16 +853,53 @@ function OpenGL() {
                 DEBUG > 1 && console.log("uPointSize", gl.pointSize);
                 webgl.uniform1f(loc['uPointSize'], gl.pointSize);
             }
+            if (numLights) {
+                DEBUG > 1 && console.log("uLightModelAmbient", Array.from(gl.lightModelAmbient));
+                webgl.uniform4fv(loc['uLightModelAmbient'], gl.lightModelAmbient);
+                DEBUG > 1 && console.log("uMaterialAmbient", Array.from(gl.material.ambient));
+                webgl.uniform4fv(loc['uMaterialAmbient'], gl.material.ambient);
+                DEBUG > 1 && console.log("uMaterialDiffuse", Array.from(gl.material.diffuse));
+                webgl.uniform4fv(loc['uMaterialDiffuse'], gl.material.diffuse);
+                DEBUG > 1 && console.log("uMaterialSpecular", Array.from(gl.material.specular));
+                webgl.uniform4fv(loc['uMaterialSpecular'], gl.material.specular);
+                DEBUG > 1 && console.log("uMaterialEmission", Array.from(gl.material.emission));
+                webgl.uniform4fv(loc['uMaterialEmission'], gl.material.emission);
+                DEBUG > 1 && console.log("uMaterialShininess", gl.material.shininess);
+                webgl.uniform1f(loc['uMaterialShininess'], gl.material.shininess);
+                var index = 0;
+                for (var i = 0; i < MAX_LIGHTS; i++) {
+                    var light = gl.lights[i];
+                    if (!light.enabled) continue;
+                    DEBUG > 1 && console.log("uLights[" + index + "].ambient", Array.from(light.ambient));
+                    webgl.uniform4fv(loc['uLights'][index].ambient, light.ambient);
+                    DEBUG > 1 && console.log("uLights[" + index + "].diffuse", Array.from(light.diffuse));
+                    webgl.uniform4fv(loc['uLights'][index].diffuse, light.diffuse);
+                    DEBUG > 1 && console.log("uLights[" + index + "].specular", Array.from(light.specular));
+                    webgl.uniform4fv(loc['uLights'][index].specular, light.specular);
+                    DEBUG > 1 && console.log("uLights[" + index + "].position", Array.from(light.position));
+                    webgl.uniform4fv(loc['uLights'][index].position, light.position);
+                    index++;
+                }
+            }
 
             // draw
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
             if (indexBuffer) {
-                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
                 DEBUG > 1 && console.log("glDrawElements", GL_Symbols[drawMode], indices.length);
                 webgl.drawElements(drawMode, indices.length, vertices.length > 256 ? webgl.UNSIGNED_SHORT : webgl.UNSIGNED_BYTE, 0);
             } else {
                 DEBUG > 1 && console.log("glDrawArrays", GL_Symbols[drawMode], 0, vertices.length);
                 webgl.drawArrays(drawMode, 0, vertices.length);
+            }
+            webgl.useProgram(null);
+            webgl.disableVertexAttribArray(loc['aPosition']);
+            if (loc['aNormal'] >= 0) webgl.disableVertexAttribArray(loc['aNormal']);
+            if (loc['aColor'] >= 0) webgl.disableVertexAttribArray(loc['aColor']);
+            if (loc['aTexCoord'] >= 0) webgl.disableVertexAttribArray(loc['aTexCoord']);
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, null);
+            webgl.deleteBuffer(vertexBuffer);
+            if (indexBuffer) {
+                webgl.deleteBuffer(indexBuffer);
+                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, null);
             }
         },
 
@@ -950,7 +1000,7 @@ function OpenGL() {
         glGetString: function(name) {
             switch (name) {
                 case GL.EXTENSIONS:
-                    DEBUG > 0 && console.log("glGetString GL_EXTENSIONS");
+                    DEBUG > 1 && console.log("glGetString GL_EXTENSIONS");
                     return gl.extensions;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glGetString", name);
@@ -976,7 +1026,7 @@ function OpenGL() {
             switch (cap) {
                 case GL.LIGHTING:
                     DEBUG > 0 && console.log("glIsEnabled GL_LIGHTING");
-                    return gl.lighting;
+                    return gl.lightingEnabled;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glIsEnabled", cap);
             }
@@ -992,12 +1042,8 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glLightf", [light, pname, param])) return;
             var i = light - GL.LIGHT0;
             switch (pname) {
-                case GL.SPOT_CUTOFF:
-                    DEBUG > 1 && console.log("glLightf", i, "GL_SPOT_CUTOFF", param);
-                    gl.lights[i].spotCutoff = param;
-                    break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightf", i, pname, param);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightf", i, GL_Symbol(pname), param);
             }
         },
 
@@ -1023,6 +1069,18 @@ function OpenGL() {
                     break;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glLightfv", i, GL_Symbols[pname], Array.from(param));
+            }
+        },
+
+        glLightModelfv: function(pname, params) {
+            if (gl.listMode && this.addToList("glLightModelfv", [pname, params])) return;
+            switch (pname) {
+                case GL.LIGHT_MODEL_AMBIENT:
+                    DEBUG > 1 && console.log("glLightModelfv GL_LIGHT_MODEL_AMBIENT", Array.from(params));
+                    gl.lightModelAmbient = params;
+                    break;
+                default:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightModelfv", GL_Symbol(pname), Array.from(params));
             }
         },
 
@@ -1323,6 +1381,11 @@ function OpenGL() {
         },
 
         debugTexture: function(texture) {
+            if (texture === false) {
+                var canvas = document.getElementById("texDebug");
+                if (canvas) canvas.remove();
+                return;
+            }
             if (!texture) texture = gl.texture;
             var pixels = texture.pixels;
             var width = texture.width;
@@ -1498,35 +1561,88 @@ function OpenGL() {
             src.push("uniform mat4 uModelView;");
             src.push("uniform mat4 uProjection;");
             src.push("attribute vec3 aPosition;");
-            if (shaderFlags & HAS_NORMAL) {
-                src.push("attribute vec3 aNormal;");
-                src.push("varying vec3 vNormal;");
-            }
             if (shaderFlags & HAS_COLOR) {
-                src.push("attribute vec4 uColor;");
+                src.push("attribute vec4 aColor;");
+            } else if (shaderFlags & ANY_LIGHTS) {
+                src.push("uniform vec4 uColor;");
+            }
+            if (shaderFlags & (HAS_COLOR | ANY_LIGHTS)) {
                 src.push("varying vec4 vColor;");
             }
             if (shaderFlags & HAS_TEXCOORD) {
                 src.push("attribute vec2 aTexCoord;");
                 src.push("varying vec2 vTexCoord;");
             }
-            if (shaderFlags & HAS_POINT_SIZE) {
+            if (shaderFlags & USE_POINT_SIZE) {
                 src.push("uniform float uPointSize;");
             }
-            src.push("void main(void) {");
-            if (shaderFlags & HAS_NORMAL) {
-                src.push("  vNormal = aNormal;");
+            var numLights = (shaderFlags & NUM_LIGHTS_MASK) >> NUM_LIGHTS_SHIFT;
+            if (numLights > 0) {
+                if (shaderFlags & HAS_NORMAL) {
+                    src.push("varying vec3 vNormal;");
+                } else {
+                    src.push("uniform vec3 uNormal;");
+                }
+                src.push("uniform vec4 uLightModelAmbient;");
+                src.push("uniform vec4 uMaterialAmbient;");
+                src.push("uniform vec4 uMaterialDiffuse;");
+                src.push("uniform vec4 uMaterialSpecular;");
+                src.push("uniform vec4 uMaterialEmission;");
+                src.push("uniform float uMaterialShininess;");
+                src.push("struct Light {");
+                src.push("  vec4 position;");
+                src.push("  vec4 ambient;");
+                src.push("  vec4 diffuse;");
+                src.push("  vec4 specular;");
+                src.push("};");
+                src.push("uniform Light uLights[" + numLights + "];");
             }
+
+            src.push("void main(void) {");
             if (shaderFlags & HAS_COLOR) {
+                src.push("  vColor = aColor;");
+            } else if (shaderFlags & ANY_LIGHTS) {
                 src.push("  vColor = uColor;");
+            }
+            src.push("  vec4 position = uModelView * vec4(aPosition, 1.0);");
+            if (numLights > 0) {
+                if (shaderFlags & HAS_NORMAL) {
+                    src.push("  vec3 normal = normalize(vNormal);");
+                } else {
+                    src.push("  vec3 normal = normalize(uNormal);");
+                }
+                src.push("  vec4 lighting = uMaterialEmission;");
+                src.push("  lighting += uMaterialAmbient * uLightModelAmbient;");
+                src.push("  vec3 eyeDir = normalize(-position.xyz);");
+                src.push("  for (int i = 0; i < " + numLights + "; i++) {");
+                src.push("    Light light = uLights[i];");
+                src.push("    vec3 lightDir;");
+                src.push("    if (light.position.w == 0.0) {");
+                src.push("      lightDir = normalize(light.position.xyz);");
+                src.push("    } else {");
+                src.push("      lightDir = normalize(light.position.xyz - position.xyz);");
+                src.push("    }");
+                src.push("    float nDotL = max(dot(normal, lightDir), 0.0);");
+                src.push("    vec4 ambient = uMaterialAmbient * light.ambient;");
+                src.push("    vec4 diffuse = uMaterialDiffuse * light.diffuse * nDotL;");
+                src.push("    vec4 specular = vec4(0.0);");
+                src.push("    if (nDotL > 0.0) {");
+                src.push("      vec3 halfVector = normalize(lightDir + eyeDir);");
+                src.push("      float nDotHV = max(dot(normal, halfVector), 0.0);");
+                src.push("      specular = uMaterialSpecular * light.specular * pow(nDotHV, uMaterialShininess);");
+                src.push("    }");
+                src.push("    lighting += ambient + diffuse + specular;");
+                src.push("  }");
+                src.push("  vColor *= lighting;");
+                src.push("  vColor.a = uMaterialDiffuse.a;");
             }
             if (shaderFlags & HAS_TEXCOORD) {
                 src.push("  vTexCoord = aTexCoord;");
             }
-            if (shaderFlags & HAS_POINT_SIZE) {
+            if (shaderFlags & USE_POINT_SIZE) {
                 src.push("  gl_PointSize = uPointSize;");
             }
-            src.push("  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);");
+            src.push("  gl_Position = uProjection * position;");
             src.push("}");
             var src = src.join("\n");
             DEBUG > 1 && console.log(src);
@@ -1536,39 +1652,34 @@ function OpenGL() {
         fragmentShaderSource: function(shaderFlags) {
             var src = [];
             src.push("precision mediump float;");
-            if (shaderFlags & HAS_NORMAL) {
-                src.push("varying vec3 vNormal;");
-            }
-            if (shaderFlags & HAS_COLOR) {
+            if (shaderFlags & (HAS_COLOR | ANY_LIGHTS)) {
                 src.push("varying vec4 vColor;");
             } else {
                 src.push("uniform vec4 uColor;");
             }
-            if (shaderFlags & HAS_TEXCOORD) {
-                src.push("varying vec2 vTexCoord;");
-            }
-            if (shaderFlags & HAS_TEXTURE) {
+            if (shaderFlags & USE_TEXTURE) {
+                if (shaderFlags & HAS_TEXCOORD) {
+                    src.push("varying vec2 vTexCoord;");
+                } else {
+                    src.push("uniform vec2 uTexCoord;");
+                }
                 src.push("uniform sampler2D uSampler;");
             }
             src.push("void main(void) {");
-            if (shaderFlags & HAS_NORMAL) {
-                src.push("  vec3 normal = normalize(vNormal);");
-            }
-            if (shaderFlags & HAS_COLOR) {
+            if (shaderFlags & (HAS_COLOR | ANY_LIGHTS)) {
                 src.push("  vec4 color = vColor;");
             } else {
                 src.push("  vec4 color = uColor;");
             }
-            if ((shaderFlags & (HAS_TEXCOORD + HAS_TEXTURE)) === (HAS_TEXCOORD + HAS_TEXTURE)) {
-                src.push("  color *= texture2D(uSampler, vec2(vTexCoord.s, vTexCoord.t)).bgra;");
+            if (shaderFlags & USE_TEXTURE) {
+                if (shaderFlags & HAS_TEXCOORD) {
+                    src.push("  vec2 texCord = vTexCoord;");
+                } else {
+                    src.push("  vec2 texCord = uTexCoord;");
+                }
+                src.push("  color *= texture2D(uSampler, texCord).bgra;");
             }
-            if (shaderFlags & HAS_NORMAL) {
-                src.push("  float diffuse = max(dot(normal, vec3(0, 0, 1)), 0.0);");
-                src.push("  gl_FragColor = color * diffuse;");
-            } else {
-                src.push("  gl_FragColor = color;");
-                // src.push("  gl_FragColor = mix(color, vec4(1, 0, 1, 1), 0.5);");
-            }
+            src.push("  gl_FragColor = color;");
             src.push("}");
             var src = src.join("\n");
             DEBUG > 1 && console.log(src);
@@ -1577,28 +1688,49 @@ function OpenGL() {
 
         getLocations: function(program, shaderFlags) {
             var locations = {};
-            // uniforms
             locations.uModelView = webgl.getUniformLocation(program, "uModelView");
             locations.uProjection = webgl.getUniformLocation(program, "uProjection");
-            if (shaderFlags & HAS_TEXTURE) {
-                locations.uSampler = webgl.getUniformLocation(program, "uSampler");
-            }
-            // attributes
             locations.aPosition = webgl.getAttribLocation(program, "aPosition");
-            if (shaderFlags & HAS_NORMAL) {
-                locations.aNormal = webgl.getAttribLocation(program, "aNormal");
+            if (shaderFlags & USE_TEXTURE) {
+                if (shaderFlags & HAS_TEXCOORD) {
+                    locations.aTexCoord = webgl.getAttribLocation(program, "aTexCoord");
+                } else {
+                    locations.uTexCoord = webgl.getUniformLocation(program, "uTexCoord");
+                }
+                locations.uSampler = webgl.getUniformLocation(program, "uSampler");
             }
             if (shaderFlags & HAS_COLOR) {
                 locations.aColor = webgl.getAttribLocation(program, "aColor");
             } else {
                 locations.uColor = webgl.getUniformLocation(program, "uColor");
             }
-            if (shaderFlags & HAS_TEXCOORD) {
-                locations.aTexCoord = webgl.getAttribLocation(program, "aTexCoord");
-            }
-            if (shaderFlags & HAS_POINT_SIZE) {
+            if (shaderFlags & USE_POINT_SIZE) {
                 locations.uPointSize = webgl.getUniformLocation(program, "uPointSize");
             }
+            var numLights = (shaderFlags & NUM_LIGHTS_MASK) >> NUM_LIGHTS_SHIFT;
+            if (numLights > 0) {
+                if (shaderFlags & HAS_NORMAL) {
+                    locations.aNormal = webgl.getAttribLocation(program, "aNormal");
+                } else{
+                    locations.uNormal = webgl.getUniformLocation(program, "uNormal");
+                }
+                locations.uLightModelAmbient = webgl.getUniformLocation(program, "uLightModelAmbient");
+                locations.uMaterialAmbient = webgl.getUniformLocation(program, "uMaterialAmbient");
+                locations.uMaterialDiffuse = webgl.getUniformLocation(program, "uMaterialDiffuse");
+                locations.uMaterialSpecular = webgl.getUniformLocation(program, "uMaterialSpecular");
+                locations.uMaterialEmission = webgl.getUniformLocation(program, "uMaterialEmission");
+                locations.uMaterialShininess = webgl.getUniformLocation(program, "uMaterialShininess");
+                locations.uLights = [];
+                for (var i = 0; i < numLights; i++) {
+                    var light = {};
+                    light.position = webgl.getUniformLocation(program, "uLights[" + i + "].position");
+                    light.ambient = webgl.getUniformLocation(program, "uLights[" + i + "].ambient");
+                    light.diffuse = webgl.getUniformLocation(program, "uLights[" + i + "].diffuse");
+                    light.specular = webgl.getUniformLocation(program, "uLights[" + i + "].specular");
+                    locations.uLights.push(light);
+                }
+            }
+
             DEBUG > 1 && console.log(locations);
             return locations;
         },
@@ -1940,11 +2072,6 @@ function initGLConstants() {
         var value = GL[name];
         GL_Symbols[value] = name;
     }
-}
-
-function GL_Symbol(constant) {
-    if (typeof GL === "undefined") initGLConstants();
-    return GL_Symbols[constant] || constant;
 }
 
 function registerOpenGL() {

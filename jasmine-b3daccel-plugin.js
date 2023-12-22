@@ -1,7 +1,7 @@
 function B3DAcceleratorPlugin() {
     "use strict";
 
-    var DEBUG = 1; // 0 = off, 1 = some, 2 = lots
+    var DEBUG = 0; // 0 = off, 1 = some, 2 = lots
     var DEBUG_WAIT = false; // wait after each frame
 
     var rendererId = 0;  // unique id for each renderer
