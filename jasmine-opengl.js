@@ -19,6 +19,7 @@
 // [X] implement draw elements
 // [ ] implement vertex buffer objects
 // [X] implement material + lighting
+// [X] implement clip planes
 // [ ] make glBitmap pixel-perfect
 // [ ] optimize list compilation glBegin/glEnd
 // [ ] implement light attenuation
@@ -42,20 +43,33 @@ function OpenGL() {
     ]);
 
     // Primitive attributes for glBegin/glEnd
-    var HAS_NORMAL      = 1 << 0;
-    var HAS_COLOR       = 1 << 1;
-    var HAS_TEXCOORD    = 1 << 2;
+    var flagCounter = 0;
+    var HAS_NORMAL =            1 << flagCounter++;
+    var HAS_COLOR =             1 << flagCounter++;
+    var HAS_TEXCOORD =          1 << flagCounter++;
 
     // additional flags for selecting shader
-    var USE_TEXTURE     = 1 << 3;
-    var USE_ALPHA_TEST  = 1 << 4;
-    var USE_POINT_SIZE  = 1 << 5;
-    var NUM_LIGHTS_MASK = (1 << 6)  // 3 bits for number of lights (0-7)
-                        + (1 << 7)
-                        + (1 << 8);
-    var NUM_LIGHTS_SHIFT = 6;
-    var ANY_LIGHTS = 0b111 << NUM_LIGHTS_SHIFT;
-    var MAX_LIGHTS = 8;
+    var USE_TEXTURE =           1 << flagCounter++;
+    var USE_ALPHA_TEST =        1 << flagCounter++;
+    var USE_POINT_SIZE =        1 << flagCounter++;
+    var NUM_LIGHTS_MASK =      (1 << flagCounter++)  // 3 bits for number of lights (0-7)
+                             + (1 << flagCounter++)
+                             + (1 << flagCounter++);
+    var NUM_CLIP_PLANES_MASK = (1 << flagCounter++)  // 3 bits for number of clip planes (0-5)
+                             + (1 << flagCounter++)
+                             + (1 << flagCounter++);
+    var USE_FOG =               1 << flagCounter++;
+
+    // this math is silly but fun ...
+    var NUM_LIGHTS_SHIFT = Math.floor(Math.log2(NUM_LIGHTS_MASK)) - 2;
+    var MAX_LIGHTS = (NUM_LIGHTS_MASK >> NUM_LIGHTS_SHIFT) + 1;
+    var ANY_LIGHTS = (MAX_LIGHTS-1) << NUM_LIGHTS_SHIFT;
+    if (ANY_LIGHTS !== NUM_LIGHTS_MASK) throw Error("OpenGL: bad NUM_LIGHTS_MASK");
+
+    var NUM_CLIP_PLANES_SHIFT = Math.floor(Math.log2(NUM_CLIP_PLANES_MASK)) - 2;
+    var MAX_CLIP_PLANES = (NUM_CLIP_PLANES_MASK >> NUM_CLIP_PLANES_SHIFT) + 1;
+    var ANY_CLIP_PLANES = (MAX_CLIP_PLANES-1) << NUM_CLIP_PLANES_SHIFT;
+    if (ANY_CLIP_PLANES !== NUM_CLIP_PLANES_MASK) throw Error("OpenGL: bad NUM_CLIP_PLANES_MASK");
 
     var gl;    // the emulated OpenGL state
     var webgl; // the actual WebGL context
@@ -79,6 +93,7 @@ function OpenGL() {
             var modules = SqueakJS.vm.primHandler.loadedModules;
             var B3DAcceleratorPlugin = modules['B3DAcceleratorPlugin'];
             if (!B3DAcceleratorPlugin) throw Error("OpenGL: B3DAcceleratorPlugin not loaded");
+            this.GL = GL;
             B3DAcceleratorPlugin.setOpenGL(this); // will call makeCurrent()
         },
 
@@ -114,6 +129,7 @@ function OpenGL() {
                 texCoord: new Float32Array(2),
                 primitive: null, // for glBegin/glEnd
                 primitiveAttrs: 0, // for glVertex
+                clipPlanes: [], // clip plane equations
                 clientState: {}, // enabled arrays by attr
                 shaders: {}, // shader programs by attr/flags
                 matrixMode: 0, // current matrix mode
@@ -153,6 +169,12 @@ function OpenGL() {
             gl.matrixMode = GL.MODELVIEW;
             gl.matrix = gl.matrices[gl.matrixMode][0];
             gl.color.set([1, 1, 1, 1]);
+            for (var i = 0; i < MAX_CLIP_PLANES; i++) {
+                gl.clipPlanes[i] = {
+                    enabled: false,
+                    equation: new Float32Array([0, 0, 0, 0]),
+                };
+            }
             for (var i = 0; i < MAX_LIGHTS; i++) {
                 gl.lights[i] = {
                     enabled: false,
@@ -515,7 +537,9 @@ function OpenGL() {
 
         glClipPlane: function(plane, equation) {
             if (gl.listMode && this.addToList("glClipPlane", [plane, equation])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glClipPlane", GL_Symbol(plane), Array.from(equation));
+            DEBUG > 1 && console.log("glClipPlane", GL_Symbol(plane), Array.from(equation));
+            var clipPlane = gl.clipPlanes[plane - GL.CLIP_PLANE0];
+            clipPlane.equation.set(equation);
         },
 
         glDeleteLists: function(list, range) {
@@ -566,6 +590,15 @@ function OpenGL() {
                 case webgl.BLEND:
                     DEBUG > 1 && console.log("glDisable GL_BLEND");
                     webgl.disable(webgl.BLEND);
+                    break;
+                case GL.CLIP_PLANE0:
+                case GL.CLIP_PLANE1:
+                case GL.CLIP_PLANE2:
+                case GL.CLIP_PLANE3:
+                case GL.CLIP_PLANE4:
+                case GL.CLIP_PLANE5:
+                    DEBUG > 1 && console.log("glDisable GL_CLIP_PLANE" + (cap - GL.CLIP_PLANE0));
+                    gl.clipPlanes[cap - GL.CLIP_PLANE0].enabled = false;
                     break;
                 case webgl.CULL_FACE:
                     DEBUG > 1 && console.log("glDisable GL.CULL_FACE");
@@ -759,6 +792,15 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glEnable GL_BLEND");
                     webgl.enable(webgl.BLEND);
                     break;
+                case GL.CLIP_PLANE0:
+                case GL.CLIP_PLANE1:
+                case GL.CLIP_PLANE2:
+                case GL.CLIP_PLANE3:
+                case GL.CLIP_PLANE4:
+                case GL.CLIP_PLANE5:
+                    DEBUG > 1 && console.log("glEnable GL_CLIP_PLANE" + (cap - GL.CLIP_PLANE0));
+                    gl.clipPlanes[cap - GL.CLIP_PLANE0].enabled = true;
+                    break;
                 case webgl.CULL_FACE:
                     DEBUG > 1 && console.log("glEnable GL_CULL_FACE");
                     webgl.enable(webgl.CULL_FACE);
@@ -826,21 +868,28 @@ function OpenGL() {
         getShader: function(geometryFlags) {
             // geometryFlags: HAS_TEXCOORD, HAS_NORMAL, HAS_COLOR, USE_POINT_SIZE
 
-            var numLights = 0;
             var shaderFlags = geometryFlags;
             if (gl.textureEnabled && gl.texture) shaderFlags |= USE_TEXTURE;
             if (gl.alphaTest) shaderFlags |= USE_ALPHA_TEST; // UNIMPLEMENTED
+            var numLights = 0;
             if (gl.lightingEnabled) {
                 for (var i = 0; i < MAX_LIGHTS; i++) {
                     if (gl.lights[i].enabled) numLights++;
                 }
                 shaderFlags |= numLights << NUM_LIGHTS_SHIFT;
             }
+            var numClipPlanes = 0;
+            for (var i = 0; i < MAX_CLIP_PLANES; i++) {
+                if (gl.clipPlanes[i].enabled) {
+                    numClipPlanes++;
+                }
+            }
+            shaderFlags |= numClipPlanes << NUM_CLIP_PLANES_SHIFT;
 
             // create shader program
             var shader = gl.shaders[shaderFlags];
             if (!shader) {
-                var implemented = HAS_TEXCOORD + HAS_NORMAL + HAS_COLOR + USE_TEXTURE + NUM_LIGHTS_MASK + USE_POINT_SIZE;
+                var implemented = HAS_TEXCOORD | HAS_NORMAL | HAS_COLOR | USE_TEXTURE | NUM_LIGHTS_MASK | NUM_CLIP_PLANES_MASK | USE_POINT_SIZE;
                 if (shaderFlags & ~implemented) return null;
 
                 var flagString = "[POSITION";
@@ -849,7 +898,8 @@ function OpenGL() {
                 if (shaderFlags & HAS_TEXCOORD) flagString += ", TEXCOORD";
                 flagString += "]";
                 if (shaderFlags & USE_TEXTURE) flagString += ", TEXTURE";
-                if (shaderFlags & ANY_LIGHTS) flagString += ", "+ numLights +" LIGHTS";
+                if (shaderFlags & ANY_LIGHTS) flagString += ", "+ numLights +" LIGHT"; if (numLights > 1) flagString += "S";
+                if (shaderFlags & ANY_CLIP_PLANES) flagString += ", "+ numClipPlanes +" CLIP_PLANE"; if (numClipPlanes > 1) flagString += "S";
                 if (shaderFlags & USE_ALPHA_TEST) flagString += ", ALPHA_TEST";
                 if (shaderFlags & USE_POINT_SIZE) flagString += ", POINT_SIZE";
 
@@ -946,6 +996,17 @@ function OpenGL() {
                     webgl.uniform4fv(loc['uLights'][index].specular, light.specular);
                     DEBUG > 1 && console.log("uLights[" + index + "].position", Array.from(light.position));
                     webgl.uniform4fv(loc['uLights'][index].position, light.position);
+                    index++;
+                }
+            }
+            var numClipPlanes = (shader.flags & NUM_CLIP_PLANES_MASK) >> NUM_CLIP_PLANES_SHIFT;
+            if (numClipPlanes > 0) {
+                var index = 0;
+                for (var i = 0; i < MAX_CLIP_PLANES; i++) {
+                    var clipPlane = gl.clipPlanes[i];
+                    if (!clipPlane.enabled) continue;
+                    DEBUG > 1 && console.log("uClipPlanes[" + index + "].equation", Array.from(clipPlane.equation));
+                    webgl.uniform4fv(loc['uClipPlanes'][index], clipPlane.equation);
                     index++;
                 }
             }
@@ -1816,6 +1877,11 @@ function OpenGL() {
                 src.push("};");
                 src.push("uniform Light uLights[" + numLights + "];");
             }
+            var numClipPlanes = (shaderFlags & NUM_CLIP_PLANES_MASK) >> NUM_CLIP_PLANES_SHIFT;
+            if (numClipPlanes > 0) {
+                src.push("uniform vec4 uClipPlanes[" + numClipPlanes + "];");
+                src.push("varying float vClipDist[" + numClipPlanes + "];");
+            }
 
             src.push("void main(void) {");
             if (shaderFlags & HAS_COLOR) {
@@ -1855,6 +1921,11 @@ function OpenGL() {
                 src.push("  vColor *= lighting;");
                 src.push("  vColor.a = uMaterialDiffuse.a;");
             }
+            if (numClipPlanes > 0) {
+                src.push("  for (int i = 0; i < " + numClipPlanes + "; i++) {");
+                src.push("    vClipDist[i] = dot(position, uClipPlanes[i]);");
+                src.push("  }");
+            }
             if (shaderFlags & HAS_TEXCOORD) {
                 src.push("  vTexCoord = aTexCoord;");
             }
@@ -1871,6 +1942,10 @@ function OpenGL() {
         fragmentShaderSource: function(shaderFlags) {
             var src = [];
             src.push("precision mediump float;");
+            var numClipPlanes = (shaderFlags & NUM_CLIP_PLANES_MASK) >> NUM_CLIP_PLANES_SHIFT;
+            if (numClipPlanes > 0) {
+                src.push("varying float vClipDist[" + numClipPlanes + "];");
+            }
             if (shaderFlags & (HAS_COLOR | ANY_LIGHTS)) {
                 src.push("varying vec4 vColor;");
             } else {
@@ -1885,6 +1960,13 @@ function OpenGL() {
                 src.push("uniform sampler2D uSampler;");
             }
             src.push("void main(void) {");
+            if (numClipPlanes > 0) {
+                src.push("  bool clipped = false;");
+                src.push("  for (int i = 0; i < " + numClipPlanes + "; i++) {");
+                src.push("    if (vClipDist[i] > 0.0) clipped = true;");
+                src.push("  }");
+                src.push("  if (clipped) discard;");
+            }
             if (shaderFlags & (HAS_COLOR | ANY_LIGHTS)) {
                 src.push("  vec4 color = vColor;");
             } else {
@@ -1947,6 +2029,13 @@ function OpenGL() {
                     light.diffuse = webgl.getUniformLocation(program, "uLights[" + i + "].diffuse");
                     light.specular = webgl.getUniformLocation(program, "uLights[" + i + "].specular");
                     locations.uLights.push(light);
+                }
+            }
+            var numClipPlanes = (shaderFlags & NUM_CLIP_PLANES_MASK) >> NUM_CLIP_PLANES_SHIFT;
+            if (numClipPlanes > 0) {
+                locations.uClipPlanes = [];
+                for (var i = 0; i < numClipPlanes; i++) {
+                    locations.uClipPlanes.push(webgl.getUniformLocation(program, "uClipPlanes[" + i + "]"));
                 }
             }
 
