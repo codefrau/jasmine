@@ -9,14 +9,16 @@
 // and Smalltalk.
 
 // The OpenGL context is global and created by B3DAcceleratorPlugin.
-// We currently do not support multiple contexts.
+// Context switching is done by B3DAcceleratorPlugin.makeCurrent().
 
 // helpful constant lookup:
 // https://javagl.github.io/GLConstantsTranslator/GLConstantsTranslator.html
 
 // TODO
 // [ ] implement draw arrays
-// [ ] implement material + lighting
+// [X] implement draw elements
+// [ ] implement vertex buffer objects
+// [X] implement material + lighting
 // [ ] make glBitmap pixel-perfect
 // [ ] optimize list compilation glBegin/glEnd
 // [ ] implement light attenuation
@@ -117,6 +119,7 @@ function OpenGL() {
                 texCoord: new Float32Array(2),
                 primitive: null, // for glBegin/glEnd
                 primitiveAttrs: 0, // for glVertex
+                clientState: {}, // enabled arrays by attr
                 shaders: {}, // shader programs by attr/flags
                 matrixMode: 0, // current matrix mode
                 matrices: {}, // matrix stacks by mode
@@ -172,6 +175,18 @@ function OpenGL() {
                 emission: new Float32Array([0, 0, 0, 1]),
                 shininess: 0,
             };
+            var clientStates = ["vertexArray", "normalArray", "colorArray", "textureCoordArray"];
+            for (var i = 0; i < clientStates.length; i++) {
+                var attr = clientStates[i];
+                gl.clientState[attr] = {
+                    enabled: false,
+                    size: 0,
+                    type: GL.FLOAT,
+                    stride: 0,
+                    pointer: null,
+                    // binding: null, TODO: support VBOs
+                }
+            }
             return gl;
         },
 
@@ -488,6 +503,15 @@ function OpenGL() {
             gl.primitiveAttrs |= HAS_COLOR;
         },
 
+        glColorPointer: function(size, type, stride, pointer) {
+            if (gl.listMode && this.addToList("glColorPointer", [size, type, stride, pointer])) return;
+            DEBUG > 1 && console.log("glColorPointer", size, GL_Symbols[type], stride, pointer);
+            gl.clientState.colorArray.size = size;
+            gl.clientState.colorArray.type = type;
+            gl.clientState.colorArray.stride = stride;
+            gl.clientState.colorArray.pointer = pointer;
+        },
+
         glColorMask: function(red, green, blue, alpha) {
             if (gl.listMode && this.addToList("glColorMask", [red, green, blue, alpha])) return;
             DEBUG > 1 && console.log("glColorMask", red, green, blue, alpha);
@@ -591,14 +615,142 @@ function OpenGL() {
         glDisableClientState: function(cap) {
             if (gl.listMode && this.addToList("glDisableClientState", [cap])) return;
             switch (cap) {
+                case GL.VERTEX_ARRAY:
+                    DEBUG > 1 && console.log("glDisableClientState GL_VERTEX_ARRAY");
+                    gl.clientState.vertexArray.enabled = false;
+                    return;
+                case GL.NORMAL_ARRAY:
+                    DEBUG > 1 && console.log("glDisableClientState GL_NORMAL_ARRAY");
+                    gl.clientState.normalArray.enabled = false;
+                    return;
+                case GL.COLOR_ARRAY:
+                    DEBUG > 1 && console.log("glDisableClientState GL_COLOR_ARRAY");
+                    gl.clientState.colorArray.enabled = false;
+                    return;
+                case GL.TEXTURE_COORD_ARRAY:
+                    DEBUG > 1 && console.log("glDisableClientState GL_TEXTURE_COORD_ARRAY");
+                    gl.clientState.textureCoordArray.enabled = false;
+                    return;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisableClientState", GL_Symbols[cap] || cap);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisableClientState", GL_Symbol(cap));
             }
         },
 
-        glDrawElements: function(mode, count, type, indices) {
-            if (gl.listMode && this.addToList("glDrawElements", [mode, count, type, indices])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glDrawElements", GL_Symbols[mode], count, GL_Symbols[type], indices);
+        glDrawElements: function(mode, count, type, indicesPtr) {
+            if (gl.listMode && this.addToList("glDrawElements", [mode, count, type, indicesPtr])) return;
+            var indices;
+            switch (type) {
+                case GL.UNSIGNED_BYTE:
+                    indices = new Uint8Array(indicesPtr);
+                    break;
+                case GL.UNSIGNED_SHORT:
+                    indices = new Uint16Array(indicesPtr);
+                    break;
+                case GL.UNSIGNED_INT:
+                    // not directly supported by WebGL without OES_element_index_uint
+                    var indices32 = new Uint32Array(indicesPtr);
+                    var max = Math.max.apply(null, indices32);
+                    if (max > 0xFFFF) console.warn("OpenGL: glDrawElements with indices > 65535 not supported, truncating", max);
+                    if (max <= 0xFF) {
+                        indices = new Uint8Array(indices32.length);
+                        type = GL.UNSIGNED_BYTE;
+                    } else {
+                        indices = new Uint16Array(indices32.length);
+                        type = GL.UNSIGNED_SHORT;
+                    }
+                    for (var i = 0; i < count; i++) indices[i] = indices32[i];
+                    break;
+                default:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glDrawElements type", GL_Symbols[type]);
+                    return;
+            }
+
+            var geometryFlags = 0;
+            if (gl.clientState.normalArray.enabled) geometryFlags |= HAS_NORMAL;
+            if (gl.clientState.colorArray.enabled) geometryFlags |= HAS_COLOR;
+            if (gl.clientState.textureCoordArray.enabled) geometryFlags |= HAS_TEXCOORD;
+            if (mode === gl.POINTS) geometryFlags |= USE_POINT_SIZE;
+
+            var shader = this.getShader(geometryFlags);
+            if (!shader) {
+                DEBUG > 0 && console.warn("UNIMPLEMENTED glDrawElements " + GL_Symbol(mode) + ":" + shader.label);
+                return;
+            }
+
+            var vertexArray = gl.clientState.vertexArray;
+            if (!vertexArray.enabled || !vertexArray.pointer) {
+                DEBUG > 0 && console.log("glDrawElements: GL_VERTEX_ARRAY incomplete, skipping");
+                return;
+            }
+
+            DEBUG > 1 && console.log("glDrawElements", GL_Symbols[mode], count, GL_Symbols[type], shader.label, Array.from(indices));
+
+            webgl.useProgram(shader.program);
+            this.setShaderUniforms(shader);
+            var loc = shader.locations;
+
+            var vertexBuffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
+            webgl.bufferData(webgl.ARRAY_BUFFER, vertexArray.pointer, webgl.DYNAMIC_DRAW);
+            webgl.vertexAttribPointer(loc['aPosition'], vertexArray.size, vertexArray.type, false, vertexArray.stride, 0);
+            webgl.enableVertexAttribArray(loc['aPosition']);
+
+            var normalBuffer;
+            if (loc['aNormal'] >= 0) {
+                var normalArray = gl.clientState.normalArray;
+                normalBuffer = webgl.createBuffer();
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, normalBuffer);
+                webgl.bufferData(webgl.ARRAY_BUFFER, normalArray.pointer, webgl.DYNAMIC_DRAW);
+                webgl.vertexAttribPointer(loc['aNormal'], normalArray.size, normalArray.type, false, normalArray.stride, 0);
+                webgl.enableVertexAttribArray(loc['aNormal']);
+            }
+
+            var colorBuffer;
+            if (loc['aColor'] >= 0) {
+                var colorArray = gl.clientState.colorArray;
+                colorBuffer = webgl.createBuffer();
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, colorBuffer);
+                webgl.bufferData(webgl.ARRAY_BUFFER, colorArray.pointer, webgl.DYNAMIC_DRAW);
+                webgl.vertexAttribPointer(loc['aColor'], colorArray.size, colorArray.type, false, colorArray.stride, 0);
+                webgl.enableVertexAttribArray(loc['aColor']);
+            }
+
+            var texCoordBuffer;
+            if (loc['aTexCoord'] >= 0) {
+                var texCoordArray = gl.clientState.textureCoordArray;
+                texCoordBuffer = webgl.createBuffer();
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, texCoordBuffer);
+                webgl.bufferData(webgl.ARRAY_BUFFER, texCoordArray.pointer, webgl.DYNAMIC_DRAW);
+                webgl.vertexAttribPointer(loc['aTexCoord'], texCoordArray.size, texCoordArray.type, false, texCoordArray.stride, 0);
+                webgl.enableVertexAttribArray(loc['aTexCoord']);
+            }
+
+            var indexBuffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+            webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, indices, webgl.DYNAMIC_DRAW);
+
+            webgl.drawElements(mode, indices.length, type, 0);
+
+            webgl.useProgram(null);
+
+            webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, null);
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, null);
+
+            webgl.deleteBuffer(indexBuffer);
+            webgl.disableVertexAttribArray(loc['aPosition']);
+            webgl.deleteBuffer(vertexBuffer);
+            if (normalBuffer) {
+                webgl.disableVertexAttribArray(loc['aNormal']);
+                webgl.deleteBuffer(normalBuffer);
+            }
+            if (colorBuffer) {
+                webgl.disableVertexAttribArray(loc['aColor']);
+                webgl.deleteBuffer(colorBuffer);
+            }
+            if (texCoordBuffer) {
+                webgl.disableVertexAttribArray(loc['aTexCoord']);
+                webgl.deleteBuffer(texCoordBuffer);
+            }
         },
 
         glEnable: function(cap) {
@@ -655,49 +807,60 @@ function OpenGL() {
         glEnableClientState: function(cap) {
             if (gl.listMode && this.addToList("glEnableClientState", [cap])) return;
             switch (cap) {
+                case GL.VERTEX_ARRAY:
+                    DEBUG > 1 && console.log("glEnableClientState GL_VERTEX_ARRAY");
+                    gl.clientState.vertexArray.enabled = true;
+                    return;
+                case GL.NORMAL_ARRAY:
+                    DEBUG > 1 && console.log("glEnableClientState GL_NORMAL_ARRAY");
+                    gl.clientState.normalArray.enabled = true;
+                    return;
+                case GL.COLOR_ARRAY:
+                    DEBUG > 1 && console.log("glEnableClientState GL_COLOR_ARRAY");
+                    gl.clientState.colorArray.enabled = true;
+                    return;
+                case GL.TEXTURE_COORD_ARRAY:
+                    DEBUG > 1 && console.log("glEnableClientState GL_TEXTURE_COORD_ARRAY");
+                    gl.clientState.textureCoordArray.enabled = true;
+                    return;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnableClientState", GL_Symbols[cap] || cap);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnableClientState", GL_Symbol(cap));
             }
         },
 
-        glEnd: function() {
-            if (gl.listMode && this.addToList("glEnd", [])) return;
-            var primitive = gl.primitive;
-            gl.primitive = null;
+        getShader: function(geometryFlags) {
+            // geometryFlags: HAS_TEXCOORD, HAS_NORMAL, HAS_COLOR, USE_POINT_SIZE
 
-            // select shader
             var numLights = 0;
-            var shaderFlags = primitive.vertexAttrs;
+            var shaderFlags = geometryFlags;
             if (gl.textureEnabled && gl.texture) shaderFlags |= USE_TEXTURE;
+            if (gl.alphaTest) shaderFlags |= USE_ALPHA_TEST; // UNIMPLEMENTED
             if (gl.lightingEnabled) {
                 for (var i = 0; i < MAX_LIGHTS; i++) {
                     if (gl.lights[i].enabled) numLights++;
                 }
                 shaderFlags |= numLights << NUM_LIGHTS_SHIFT;
             }
-            if (gl.alphaTest) shaderFlags |= USE_ALPHA_TEST;
-            if (primitive.mode === gl.POINTS) shaderFlags |= USE_POINT_SIZE;
-
-            // debug output
-            var flagString = "[POSITION";
-            if (shaderFlags & HAS_NORMAL) flagString += ", NORMAL";
-            if (shaderFlags & HAS_COLOR) flagString += ", COLOR";
-            if (shaderFlags & HAS_TEXCOORD) flagString += ", TEXCOORD";
-            flagString += "]";
-            if (shaderFlags & USE_TEXTURE) flagString += ", TEXTURE";
-            if (shaderFlags & ANY_LIGHTS) flagString += ", "+ numLights +" LIGHTS";
-            if (shaderFlags & USE_ALPHA_TEST) flagString += ", ALPHA_TEST";
-            if (shaderFlags & USE_POINT_SIZE) flagString += ", POINT_SIZE";
-
-            if (shaderFlags & (~(HAS_TEXCOORD + HAS_NORMAL + HAS_COLOR + USE_TEXTURE + NUM_LIGHTS_MASK + USE_POINT_SIZE))) {
-                DEBUG > 0 && console.log("UNIMPLEMENTED glEnd " + GL_Symbols[primitive.mode] + ":" + flagString);
-                return;
-            }
 
             // create shader program
             var shader = gl.shaders[shaderFlags];
             if (!shader) {
+                var implemented = HAS_TEXCOORD + HAS_NORMAL + HAS_COLOR + USE_TEXTURE + NUM_LIGHTS_MASK + USE_POINT_SIZE;
+                if (shaderFlags & ~implemented) return null;
+
+                var flagString = "[POSITION";
+                if (shaderFlags & HAS_NORMAL) flagString += ", NORMAL";
+                if (shaderFlags & HAS_COLOR) flagString += ", COLOR";
+                if (shaderFlags & HAS_TEXCOORD) flagString += ", TEXCOORD";
+                flagString += "]";
+                if (shaderFlags & USE_TEXTURE) flagString += ", TEXTURE";
+                if (shaderFlags & ANY_LIGHTS) flagString += ", "+ numLights +" LIGHTS";
+                if (shaderFlags & USE_ALPHA_TEST) flagString += ", ALPHA_TEST";
+                if (shaderFlags & USE_POINT_SIZE) flagString += ", POINT_SIZE";
+
                 shader = gl.shaders[shaderFlags] = {
+                    flags: shaderFlags,
+                    label: flagString,
                     program: webgl.createProgram(),
                     locations: null,
                     vsource: null, // for debugging
@@ -731,118 +894,27 @@ function OpenGL() {
                 }
                 shader.locations = this.getLocations(shader.program, shaderFlags);
             }
-            webgl.useProgram(shader.program);
+            return shader;
+        },
 
-            // create interleaved vertex buffer
-            var vertices = primitive.vertices;
-            var size = primitive.vertexSize;
-            var data = new Float32Array(vertices.length * size);
-            for (var i = 0, offset = 0; i < vertices.length; i++, offset += size) {
-                data.set(vertices[i], offset);
-            }
-            var vertexBuffer = webgl.createBuffer();
-            if (webgl.getError()) debugger;
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
-            if (webgl.getError()) debugger;
-            webgl.bufferData(webgl.ARRAY_BUFFER, data, webgl.DYNAMIC_DRAW);
-            if (webgl.getError()) debugger;
-
-            // set drawMode depending on primitive mode
-            // and create index buffer if needed
-            var drawMode;
-            var indices;
-
-            switch (primitive.mode) {
-                // supported by WebGL, no index buffer needed
-                case webgl.POINTS:
-                case webgl.LINES:
-                case webgl.LINE_LOOP:
-                case webgl.LINE_STRIP:
-                case webgl.TRIANGLES:
-                case webgl.TRIANGLE_STRIP:
-                case webgl.TRIANGLE_FAN:
-                    DEBUG > 1 && console.log("glEnd " + GL_Symbols[primitive.mode] + ":" + flagString);
-                    drawMode = primitive.mode;
-                    break;
-                // not supported by WebGL, emulate
-                case GL.QUADS:
-                    // use triangles and an index buffer to
-                    // duplicate vertices as v0-v1-v2, v2-v1-v3
-                    // we assume that all attributes are floats
-                    DEBUG > 1 && console.log("glEnd GL_QUADS:" + flagString);
-                    indices = vertices.length > 256
-                        ? new Uint16Array(vertices.length * 3 / 2)
-                        : new Uint8Array(vertices.length * 3 / 2);
-                    var offset = 0;
-                    for (var i = 0; i < vertices.length; i += 4) {
-                        indices[offset++] = i;
-                        indices[offset++] = i+1;
-                        indices[offset++] = i+2;
-                        indices[offset++] = i;
-                        indices[offset++] = i+2;
-                        indices[offset++] = i+3;
-                    }
-                    drawMode = webgl.TRIANGLES;
-                    break;
-                case GL.QUAD_STRIP:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnd GL_QUAD_STRIP:" + flagString);
-                    return;
-                case GL.POLYGON:
-                    // use triangle fan, which works for convex polygons
-                    DEBUG > 1 && console.log("glEnd GL_POLYGON:" + flagString);
-                    drawMode = webgl.TRIANGLE_FAN;
-                    break;
-                default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnd", primitive.mode, flagString);
-                    return;
-            }
-            var indexBuffer;
-            if (indices) {
-                indexBuffer = webgl.createBuffer();
-                if (webgl.getError()) debugger;
-                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, indices, webgl.DYNAMIC_DRAW);
-            }
-
-            // set up uniforms and vertex attributes
-            var stride = size * 4;
-            var offset = 0;
-            var loc = gl.shaders[shaderFlags].locations;
+        setShaderUniforms: function(shader) {
+            var loc = shader.locations;
             DEBUG > 1 && console.log("uModelView", Array.from(gl.matrices[GL.MODELVIEW][0]));
             webgl.uniformMatrix4fv(loc['uModelView'], false, gl.matrices[GL.MODELVIEW][0]);
             DEBUG > 1 && console.log("uProjection", Array.from(gl.matrices[GL.PROJECTION][0]));
             webgl.uniformMatrix4fv(loc['uProjection'], false, gl.matrices[GL.PROJECTION][0]);
-            DEBUG > 1 && console.log("aPosition: @" + offset + "/" + stride);
-            webgl.vertexAttribPointer(loc['aPosition'], 3, webgl.FLOAT, false, stride, offset);
-            webgl.enableVertexAttribArray(loc['aPosition']);
-            offset += 12;
-            if (loc['aNormal'] >= 0) {
-                DEBUG > 1 && console.log("aNormal: @" + offset + "/" + stride);
-                webgl.vertexAttribPointer(loc['aNormal'], 3, webgl.FLOAT, false, stride, offset);
-                webgl.enableVertexAttribArray(loc['aNormal']);
-            } else if (loc['uNormal']) {
+            if (loc['uNormal']) {
                 DEBUG > 1 && console.log("uNormal", Array.from(gl.normal));
                 webgl.uniform3fv(loc['uNormal'], gl.normal);
             }
-            if (shaderFlags & HAS_NORMAL) offset += 12;
-            if (loc['aColor'] >= 0) {
-                DEBUG > 1 && console.log("aColor: @" + offset + "/" + stride);
-                webgl.vertexAttribPointer(loc['aColor'], 4, webgl.FLOAT, false, stride, offset);
-                webgl.enableVertexAttribArray(loc['aColor']);
-            } else if (loc['uColor']) {
+            if (loc['uColor']) {
                 DEBUG > 1 && console.log("uColor", Array.from(gl.color));
                 webgl.uniform4fv(loc['uColor'], gl.color);
             }
-            if (shaderFlags & HAS_COLOR) offset += 16;
-            if (loc['aTexCoord'] >= 0) {
-                DEBUG > 1 && console.log("aTexCoord: @" + offset + "/" + stride);
-                webgl.vertexAttribPointer(loc['aTexCoord'], 2, webgl.FLOAT, false, stride, offset);
-                webgl.enableVertexAttribArray(loc['aTexCoord']);
-            } else if (loc['uTexCoord']) {
+            if (loc['uTexCoord']) {
                 DEBUG > 1 && console.log("uTexCoord", Array.from(gl.texCoord));
                 webgl.uniform2fv(loc['uTexCoord'], gl.texCoord);
             }
-            if (shaderFlags & HAS_TEXCOORD) offset += 8;
             if (loc['uSampler']) {
                 DEBUG > 1 && console.log("uSampler", gl.texture);
                 webgl.activeTexture(webgl.TEXTURE0);
@@ -853,7 +925,8 @@ function OpenGL() {
                 DEBUG > 1 && console.log("uPointSize", gl.pointSize);
                 webgl.uniform1f(loc['uPointSize'], gl.pointSize);
             }
-            if (numLights) {
+            var numLights = (shader.flags & NUM_LIGHTS_MASK) >> NUM_LIGHTS_SHIFT;
+            if (numLights > 0) {
                 DEBUG > 1 && console.log("uLightModelAmbient", Array.from(gl.lightModelAmbient));
                 webgl.uniform4fv(loc['uLightModelAmbient'], gl.lightModelAmbient);
                 DEBUG > 1 && console.log("uMaterialAmbient", Array.from(gl.material.ambient));
@@ -881,13 +954,126 @@ function OpenGL() {
                     index++;
                 }
             }
+        },
+
+        glEnd: function() {
+            if (gl.listMode && this.addToList("glEnd", [])) return;
+            var primitive = gl.primitive;
+            gl.primitive = null;
+
+            // select shader
+            var geometryFlags = primitive.vertexAttrs;
+            if (primitive.mode === gl.POINTS) geometryFlags |= USE_POINT_SIZE;
+
+            var shader = this.getShader(geometryFlags);
+            if (!shader) {
+                DEBUG > 0 && console.warn("UNIMPLEMENTED glEnd" + GL_Symbol(primitive.mode) + ":" + shader.label);
+                return;
+            }
+
+            // create interleaved vertex buffer
+            var vertices = primitive.vertices;
+            var size = primitive.vertexSize;
+            var data = new Float32Array(vertices.length * size);
+            for (var i = 0, offset = 0; i < vertices.length; i++, offset += size) {
+                data.set(vertices[i], offset);
+            }
+            var vertexBuffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
+            webgl.bufferData(webgl.ARRAY_BUFFER, data, webgl.DYNAMIC_DRAW);
+
+            // set drawMode depending on primitive mode
+            // and create index buffer if needed
+            var drawMode;
+            var indices;
+
+            switch (primitive.mode) {
+                // supported by WebGL, no index buffer needed
+                case webgl.POINTS:
+                case webgl.LINES:
+                case webgl.LINE_LOOP:
+                case webgl.LINE_STRIP:
+                case webgl.TRIANGLES:
+                case webgl.TRIANGLE_STRIP:
+                case webgl.TRIANGLE_FAN:
+                    DEBUG > 1 && console.log("glEnd " + GL_Symbols[primitive.mode] + ":" + shader.label);
+                    drawMode = primitive.mode;
+                    break;
+                // not supported by WebGL, emulate
+                case GL.QUADS:
+                    // use triangles and an index buffer to
+                    // duplicate vertices as v0-v1-v2, v2-v1-v3
+                    // we assume that all attributes are floats
+                    DEBUG > 1 && console.log("glEnd GL_QUADS:" + shader.label);
+                    indices = vertices.length > 256
+                        ? new Uint16Array(vertices.length * 3 / 2)
+                        : new Uint8Array(vertices.length * 3 / 2);
+                    var offset = 0;
+                    for (var i = 0; i < vertices.length; i += 4) {
+                        indices[offset++] = i;
+                        indices[offset++] = i+1;
+                        indices[offset++] = i+2;
+                        indices[offset++] = i;
+                        indices[offset++] = i+2;
+                        indices[offset++] = i+3;
+                    }
+                    drawMode = webgl.TRIANGLES;
+                    break;
+                case GL.QUAD_STRIP:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnd GL_QUAD_STRIP:" + shader.label);
+                    return;
+                case GL.POLYGON:
+                    // use triangle fan, which works for convex polygons
+                    DEBUG > 1 && console.log("glEnd GL_POLYGON:" + shader.label);
+                    drawMode = webgl.TRIANGLE_FAN;
+                    break;
+                default:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnd", primitive.mode, shader.label);
+                    return;
+            }
+            var indexBuffer;
+            if (indices) {
+                indexBuffer = webgl.createBuffer();
+                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, indices, webgl.DYNAMIC_DRAW);
+            }
+
+            // set up uniforms and vertex attributes
+            var stride = size * 4;
+            var offset = 0;
+
+            webgl.useProgram(shader.program);
+            this.setShaderUniforms(shader);
+            var loc = shader.locations;
+            DEBUG > 1 && console.log("aPosition: @" + offset + "/" + stride);
+            webgl.vertexAttribPointer(loc['aPosition'], 3, webgl.FLOAT, false, stride, offset);
+            webgl.enableVertexAttribArray(loc['aPosition']);
+            offset += 12;
+            if (loc['aNormal'] >= 0) {
+                DEBUG > 1 && console.log("aNormal: @" + offset + "/" + stride);
+                webgl.vertexAttribPointer(loc['aNormal'], 3, webgl.FLOAT, false, stride, offset);
+                webgl.enableVertexAttribArray(loc['aNormal']);
+            }
+            if (geometryFlags & HAS_NORMAL) offset += 12;
+            if (loc['aColor'] >= 0) {
+                DEBUG > 1 && console.log("aColor: @" + offset + "/" + stride);
+                webgl.vertexAttribPointer(loc['aColor'], 4, webgl.FLOAT, false, stride, offset);
+                webgl.enableVertexAttribArray(loc['aColor']);
+            }
+            if (geometryFlags & HAS_COLOR) offset += 16;
+            if (loc['aTexCoord'] >= 0) {
+                DEBUG > 1 && console.log("aTexCoord: @" + offset + "/" + stride);
+                webgl.vertexAttribPointer(loc['aTexCoord'], 2, webgl.FLOAT, false, stride, offset);
+                webgl.enableVertexAttribArray(loc['aTexCoord']);
+            }
+            if (geometryFlags & HAS_TEXCOORD) offset += 8;
 
             // draw
             if (indexBuffer) {
-                DEBUG > 1 && console.log("glDrawElements", GL_Symbols[drawMode], indices.length);
+                DEBUG > 1 && console.log("Draw indexed vertices", GL_Symbols[drawMode], Array.from(indices), vertices.map(function(v) { return ""+v; }));
                 webgl.drawElements(drawMode, indices.length, vertices.length > 256 ? webgl.UNSIGNED_SHORT : webgl.UNSIGNED_BYTE, 0);
             } else {
-                DEBUG > 1 && console.log("glDrawArrays", GL_Symbols[drawMode], 0, vertices.length);
+                DEBUG > 1 && console.log("Draw vertices", GL_Symbols[drawMode], 0, vertices.map(function(v) { return ""+v; }));
                 webgl.drawArrays(drawMode, 0, vertices.length);
             }
             webgl.useProgram(null);
@@ -1185,7 +1371,11 @@ function OpenGL() {
 
         glNormalPointer: function(type, stride, pointer) {
             if (gl.listMode && this.addToList("glNormalPointer", [type, stride, pointer])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glNormalPointer", GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glNormalPointer", GL_Symbols[type], stride, pointer);
+            gl.clientState.normalArray.size = 3;
+            gl.clientState.normalArray.type = type;
+            gl.clientState.normalArray.stride = stride;
+            gl.clientState.normalArray.pointer = pointer;
         },
 
         glPixelStorei: function(pname, param) {
@@ -1432,7 +1622,11 @@ function OpenGL() {
 
         glTexCoordPointer: function(size, type, stride, pointer) {
             if (gl.listMode && this.addToList("glTexCoordPointer", [size, type, stride, pointer])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glTexCoordPointer", size, GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glTexCoordPointer", size, GL_Symbols[type], stride, pointer);
+            gl.clientState.textureCoordArray.size = size;
+            gl.clientState.textureCoordArray.type = type;
+            gl.clientState.textureCoordArray.stride = stride;
+            gl.clientState.textureCoordArray.pointer = pointer;
         },
 
         glTexParameteri: function(target, pname, param) {
@@ -1516,7 +1710,11 @@ function OpenGL() {
 
         glVertexPointer: function(size, type, stride, pointer) {
             if (gl.listMode && this.addToList("glVertexPointer", [size, type, stride, pointer])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glVertexPointer", size, GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glVertexPointer", size, GL_Symbols[type], stride, pointer);
+            gl.clientState.vertexArray.size = size;
+            gl.clientState.vertexArray.type = type;
+            gl.clientState.vertexArray.stride = stride;
+            gl.clientState.vertexArray.pointer = pointer;
         },
 
         glViewport: function(x, y, width, height) {
@@ -2076,7 +2274,7 @@ function initGLConstants() {
 
 function registerOpenGL() {
     if (typeof Squeak === "object" && Squeak.registerExternalModule) {
-        Squeak.registerExternalModule('GL', OpenGL());
+        Squeak.registerExternalModule('libGL.so', OpenGL());
     } else self.setTimeout(registerOpenGL, 100);
 };
 
