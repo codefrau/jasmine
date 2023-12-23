@@ -28,19 +28,6 @@
 
 // OpenGL constants (many missing in WebGL)
 var GL;
-var GL_Symbols; // reverse mapping for debug printing
-initGLConstants();
-function GL_Symbol(constant, rangeStart) {
-    if (constant === undefined) { debugger; return /* should not happen */}
-    if (rangeStart !== undefined) {
-        // rangeStart is e.g. "FALSE" or "POINTS" which are both 0
-        var all = Object.keys(GL); // we're relying on insertion order here
-        var start = all.indexOf(rangeStart);
-        return all[start + constant - GL[rangeStart]];
-    }
-    else return GL_Symbols[constant] || constant;
-}
-
 
 function OpenGL() {
     "use strict";
@@ -87,12 +74,11 @@ function OpenGL() {
 
         initialiseModule: function() {
             DEBUG > 1 && console.log("OpenGL: initialiseModule");
+            if (!GL) initGLConstants();
             // connect to B3DAcceleratorPlugin to get WebGL context
             var modules = SqueakJS.vm.primHandler.loadedModules;
             var B3DAcceleratorPlugin = modules['B3DAcceleratorPlugin'];
             if (!B3DAcceleratorPlugin) throw Error("OpenGL: B3DAcceleratorPlugin not loaded");
-            this.GL = GL; // export constants
-            this.GL_Symbol = GL_Symbol;
             B3DAcceleratorPlugin.setOpenGL(this); // will call makeCurrent()
         },
 
@@ -2078,6 +2064,18 @@ function scaleMatrix(m, x, y, z) {
     m[0] *= x; m[1] *= x; m[2] *= x; m[3] *= x;
     m[4] *= y; m[5] *= y; m[6] *= y; m[7] *= y;
     m[8] *= z; m[9] *= z; m[10] *= z; m[11] *= z;
+}
+
+var GL_Symbols; // reverse mapping for debug printing
+function GL_Symbol(constant, rangeStart) {
+    if (constant === undefined) { debugger; return /* should not happen */}
+    if (rangeStart !== undefined) {
+        // rangeStart is e.g. "FALSE" or "POINTS" which are both 0
+        var all = Object.keys(GL); // we're relying on insertion order here
+        var start = all.indexOf(rangeStart);
+        return all[start + constant - GL[rangeStart]];
+    }
+    else return GL_Symbols[constant] || constant;
 }
 
 function initGLConstants() {
