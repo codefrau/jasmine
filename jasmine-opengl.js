@@ -34,7 +34,7 @@ function GL_Symbol(constant) { return GL_Symbols[constant] || constant; }
 function OpenGL() {
     "use strict";
 
-    var DEBUG = 0; // 0 = off, 1 = some, 2 = lots
+    var DEBUG = 1; // 0 = off, 1 = some, 2 = lots
 
     var identity = new Float32Array([
         1, 0, 0, 0,
@@ -1579,7 +1579,7 @@ function OpenGL() {
             var numLights = (shaderFlags & NUM_LIGHTS_MASK) >> NUM_LIGHTS_SHIFT;
             if (numLights > 0) {
                 if (shaderFlags & HAS_NORMAL) {
-                    src.push("varying vec3 vNormal;");
+                    src.push("attribute vec3 aNormal;");
                 } else {
                     src.push("uniform vec3 uNormal;");
                 }
@@ -1607,7 +1607,7 @@ function OpenGL() {
             src.push("  vec4 position = uModelView * vec4(aPosition, 1.0);");
             if (numLights > 0) {
                 if (shaderFlags & HAS_NORMAL) {
-                    src.push("  vec3 normal = normalize(vNormal);");
+                    src.push("  vec3 normal = normalize(aNormal);");
                 } else {
                     src.push("  vec3 normal = normalize(uNormal);");
                 }
