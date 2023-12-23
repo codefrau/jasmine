@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-22",               // Maybe replace at build time?
+        vmDate: "2023-12-23",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -9451,7 +9451,7 @@
                 rq.open('GET', index, true);
                 rq.onload = function(e) {
                     if (rq.status == 200) {
-                        console.log("adding template " + path);
+                        console.log("adding template dir " + path);
                         ensureTemplateParent(path);
                         var entries = JSON.parse(rq.response),
                             template = {url: url, entries: {}};
@@ -10689,7 +10689,7 @@
             this.success = Squeak.dirCreate(dirName);
             if (!this.success) {
                 var path = Squeak.splitFilePath(dirName);
-                console.log("Directory not created: " + path.fullname);
+                if (Squeak.debugFiles) console.warn("Directory not created: " + path.fullname);
             }
             return this.popNIfOK(argCount);
         },
@@ -10715,7 +10715,7 @@
             var entries = Squeak.dirList(dirName, true);
             if (!entries) {
                 var path = Squeak.splitFilePath(dirName);
-                console.log("Directory not found: " + path.fullname);
+                if (Squeak.debugFiles) console.log("Directory not found: " + path.fullname);
                 return false;
             }
             var entry = fileName === "." ? [".", 0, 0, true, 0] : entries[fileName];
@@ -10731,7 +10731,7 @@
             var entries = Squeak.dirList(dirName, true);
             if (!entries) {
                 var path = Squeak.splitFilePath(dirName);
-                console.log("Directory not found: " + path.fullname);
+                if (Squeak.debugFiles) console.log("Directory not found: " + path.fullname);
                 return false;
             }
             if (Squeak.debugFiles && index === 1) {
@@ -10950,13 +10950,13 @@
                 }
             } else {
                 if (!writeFlag) {
-                    console.log("File not found: " + path.fullname);
+                    if (Squeak.debugFiles) console.log("File not found: " + path.fullname);
                     return null;
                 }
                 contents = new Uint8Array();
                 entry = Squeak.filePut(path.fullname, contents.buffer);
                 if (!entry) {
-                    console.log("Cannot create file: " + path.fullname);
+                    if (Squeak.debugFiles) console.log("Cannot create file: " + path.fullname);
                     return null;
                 }
             }
@@ -10984,7 +10984,7 @@
                     return false;
                 this.vm.freeze(function(unfreeze) {
                     var error = (function(msg) {
-                        console.log("File get failed: " + msg);
+                        console.warn("File get failed: " + msg);
                         file.contents = false;
                         unfreeze();
                         func(file);
@@ -56025,6 +56025,7 @@
                 var dir = path[0] == "/" ? path : options.root + path,
                     baseUrl = new URL(options.url, document.baseURI).href,
                     url = Squeak.splitUrl(options.templates[path], baseUrl).full;
+                if (url.endsWith("/.")) url = url.slice(0,-2);
                 Squeak.fetchTemplateDir(dir, url);
             }
         }
