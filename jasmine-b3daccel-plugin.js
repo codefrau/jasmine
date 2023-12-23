@@ -98,7 +98,7 @@ function B3DAcceleratorPlugin() {
             OpenGL.glTexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_S, GL.REPEAT);
             OpenGL.glTexParameteri(GL.TEXTURE_2D, GL.TEXTURE_WRAP_T, GL.REPEAT);
             OpenGL.glTexEnvi(GL.TEXTURE_ENV, GL.TEXTURE_ENV_MODE, GL.MODULATE);
-            OpenGL.glTexImage2D(GL.TEXTURE_2D, 0, GL.RGBA, w, h, 0, GL.RGBA, GL.UNSIGNED_BYTE, null);
+            OpenGL.glTexImage2D(GL.TEXTURE_2D, 0, GL.RGBA, w, h, 0, GL.BGRA, GL.UNSIGNED_BYTE, null);
             return this.primHandler.popNandPushIfOK(argCount + 1, texture);
         },
 
@@ -419,18 +419,18 @@ function B3DAcceleratorPlugin() {
             OpenGL.glScaled(2.0/width, -2.0/height, 1.0);
             OpenGL.glTranslated(width*-0.5, height*-0.5, 0.0);
 
-            OpenGL.glPushAttrib(GL.ALL_ATTRIB_BITS);
-            OpenGL.glShadeModel(GL.FLAT);
+            //We haven't implemented glPushAttrib and glPopAttrib yet
+            //OpenGL.glPushAttrib(GL.ALL_ATTRIB_BITS);
+            // OpenGL.glShadeModel(GL.FLAT); // not implemented
             OpenGL.glEnable(GL.TEXTURE_2D);
-            OpenGL.glDisable(GL.COLOR_MATERIAL);
-            OpenGL.glDisable(GL.DITHER);
+            // OpenGL.glDisable(GL.COLOR_MATERIAL); // not implemented
+            // OpenGL.glDisable(GL.DITHER); //
             OpenGL.glDisable(GL.LIGHTING);
             OpenGL.glDisable(GL.DEPTH_TEST);
             OpenGL.glDisable(GL.BLEND);
             OpenGL.glDisable(GL.CULL_FACE);
             OpenGL.glDepthMask(GL.FALSE);
             OpenGL.glColor4d(1.0, 1.0, 1.0, 1.0);
-            OpenGL.glHint(GL.PERSPECTIVE_CORRECTION_HINT, GL.FASTEST);
 
             if (translucent) {
                 OpenGL.glEnable(GL.BLEND);
@@ -452,8 +452,18 @@ function B3DAcceleratorPlugin() {
                 OpenGL.glVertex2i(x, y+h);
             OpenGL.glEnd();
 
-            OpenGL.glPopAttrib();
-            OpenGL.glShadeModel(GL.SMOOTH);
+            // instead of this ...
+            // OpenGL.glPopAttrib();
+            // we do this:
+            OpenGL.glDepthMask(GL.TRUE);
+            OpenGL.glEnable(GL.DEPTH_TEST);
+            OpenGL.glEnable(GL.CULL_FACE);
+            OpenGL.glDisable(GL.BLEND);
+            // OpenGL.glEnable(GL.COLOR_MATERIAL); // not implemented
+            // OpenGL.glEnable(GL.DITHER); // not implemented
+            OpenGL.glDisable(GL.TEXTURE_2D);
+            // OpenGL.glShadeModel(GL.SMOOTH); // not implemented
+
             OpenGL.glPopMatrix();
             OpenGL.glMatrixMode(GL.MODELVIEW);
             OpenGL.glPopMatrix();

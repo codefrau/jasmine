@@ -30,7 +30,16 @@
 var GL;
 var GL_Symbols; // reverse mapping for debug printing
 initGLConstants();
-function GL_Symbol(constant) { return GL_Symbols[constant] || constant; }
+function GL_Symbol(constant, rangeStart) {
+    if (constant === undefined) { debugger; return /* should not happen */}
+    if (rangeStart !== undefined) {
+        // rangeStart is e.g. "FALSE" or "POINTS" which are both 0
+        var all = Object.keys(GL); // we're relying on insertion order here
+        var start = all.indexOf(rangeStart);
+        return all[start + constant - GL[rangeStart]];
+    }
+    else return GL_Symbols[constant] || constant;
+}
 
 
 function OpenGL() {
@@ -204,7 +213,7 @@ function OpenGL() {
             if (!gl.list) return false;
             gl.list.commands.push({name: name, args: args});
             if (gl.listMode === GL.COMPILE) {
-                DEBUG > 0 && console.log("[COMPILE]", name, args);
+                DEBUG > 1 && console.log("[COMPILE]", name, args);
                 return true;
             }
             return false;
@@ -212,14 +221,14 @@ function OpenGL() {
 
         glAlphaFunc: function(func, ref) {
             if (gl.listMode && this.addToList("glAlphaFunc", [func, ref])) return;
-            DEBUG > 0 && console.log("glAlphaFunc", GL_Symbols[func], ref);
+            DEBUG > 1 && console.log("glAlphaFunc", GL_Symbol(func), ref);
             gl.alphaFunc = func;
             gl.alphaRef = ref;
         },
 
         glBegin: function(mode) {
             if (gl.listMode && this.addToList("glBegin", [mode])) return;
-            DEBUG > 1 && console.log("glBegin", GL_Symbols[mode]);
+            DEBUG > 1 && console.log("glBegin", GL_Symbol(mode, 'POINTS'));
             gl.primitive = {
                 mode: mode,
                 vertices: [],
@@ -231,7 +240,7 @@ function OpenGL() {
 
         glBindTexture: function(target, texture) {
             if (gl.listMode && this.addToList("glBindTexture", [target, texture])) return;
-            DEBUG > 1 && console.log("glBindTexture", GL_Symbols[target], texture);
+            DEBUG > 1 && console.log("glBindTexture", GL_Symbol(target), texture);
             var textureObj = gl.textures[texture];
             if (!textureObj) throw Error("OpenGL: texture not found");
             webgl.bindTexture(target, textureObj);
@@ -397,7 +406,7 @@ function OpenGL() {
 
         glBlendFunc: function(sfactor, dfactor) {
             if (gl.listMode && this.addToList("glBlendFunc", [sfactor, dfactor])) return;
-            DEBUG > 1 && console.log("glBlendFunc", GL_Symbols[sfactor], GL_Symbols[dfactor]);
+            DEBUG > 1 && console.log("glBlendFunc", GL_Symbol(sfactor), GL_Symbol(dfactor));
             webgl.blendFunc(sfactor, dfactor);
         },
 
@@ -410,7 +419,7 @@ function OpenGL() {
 
         glCallLists: function(n, type, lists) {
             if (gl.listMode && this.addToList("glCallLists", [n, type, lists])) return;
-            DEBUG > 1 && console.log("glCallLists", n, GL_Symbols[type], lists);
+            DEBUG > 1 && console.log("glCallLists", n, GL_Symbol(type), lists);
             var array;
             switch (type) {
                 case GL.BYTE:
@@ -426,7 +435,7 @@ function OpenGL() {
                     array = new Uint32Array(lists);
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glCallLists type", GL_Symbols[type]);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glCallLists type", GL_Symbol(type));
                     return;
             }
             for (var i = 0; i < n; i++) {
@@ -505,7 +514,7 @@ function OpenGL() {
 
         glColorPointer: function(size, type, stride, pointer) {
             if (gl.listMode && this.addToList("glColorPointer", [size, type, stride, pointer])) return;
-            DEBUG > 1 && console.log("glColorPointer", size, GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glColorPointer", size, GL_Symbol(type), stride, pointer);
             gl.clientState.colorArray.size = size;
             gl.clientState.colorArray.type = type;
             gl.clientState.colorArray.stride = stride;
@@ -520,18 +529,18 @@ function OpenGL() {
 
         glClipPlane: function(plane, equation) {
             if (gl.listMode && this.addToList("glClipPlane", [plane, equation])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glClipPlane", GL_Symbols[plane], Array.from(equation));
+            DEBUG > 0 && console.log("UNIMPLEMENTED glClipPlane", GL_Symbol(plane), Array.from(equation));
         },
 
         glDeleteLists: function(list, range) {
-            DEBUG > 0 && console.log("glDeleteLists", list, range);
+            DEBUG > 1 && console.log("glDeleteLists", list, range);
             for (var i = 0; i < range; i++) {
                 delete gl.lists[list + i];
             }
         },
 
         glDeleteTextures: function(n, textures) {
-            DEBUG > 0 && console.log("glDeleteTextures", n, Array.from(textures));
+            DEBUG > 1 && console.log("glDeleteTextures", n, Array.from(textures));
             for (var i = 0; i < n; i++) {
                 var id = textures[i];
                 var texture = gl.textures[id];
@@ -545,7 +554,7 @@ function OpenGL() {
 
         glDepthFunc: function(func) {
             if (gl.listMode && this.addToList("glDepthFunc", [func])) return;
-            DEBUG > 0 && console.log("glDepthFunc", GL_Symbols[func]);
+            DEBUG > 1 && console.log("glDepthFunc", GL_Symbol(func));
             webgl.depthFunc(func);
         },
 
@@ -608,7 +617,7 @@ function OpenGL() {
                     gl.textureEnabled = false;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisable", GL_Symbols[cap] || cap);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisable", GL_Symbol(cap));
             }
         },
 
@@ -661,7 +670,7 @@ function OpenGL() {
                     for (var i = 0; i < count; i++) indices[i] = indices32[i];
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDrawElements type", GL_Symbols[type]);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glDrawElements type", GL_Symbol(type));
                     return;
             }
 
@@ -669,7 +678,7 @@ function OpenGL() {
             if (gl.clientState.normalArray.enabled) geometryFlags |= HAS_NORMAL;
             if (gl.clientState.colorArray.enabled) geometryFlags |= HAS_COLOR;
             if (gl.clientState.textureCoordArray.enabled) geometryFlags |= HAS_TEXCOORD;
-            if (mode === gl.POINTS) geometryFlags |= USE_POINT_SIZE;
+            if (mode === GL.POINTS) geometryFlags |= USE_POINT_SIZE;
 
             var shader = this.getShader(geometryFlags);
             if (!shader) {
@@ -683,7 +692,7 @@ function OpenGL() {
                 return;
             }
 
-            DEBUG > 1 && console.log("glDrawElements", GL_Symbols[mode], count, GL_Symbols[type], shader.label, Array.from(indices));
+            DEBUG > 1 && console.log("glDrawElements", GL_Symbol(mode, 'POINTS'), count, GL_Symbol(type), shader.label, Array.from(indices));
 
             webgl.useProgram(shader.program);
             this.setShaderUniforms(shader);
@@ -800,7 +809,7 @@ function OpenGL() {
                     gl.textureEnabled = true;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnable", GL_Symbols[cap] || cap);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnable", GL_Symbol(cap));
             }
         },
 
@@ -963,7 +972,7 @@ function OpenGL() {
 
             // select shader
             var geometryFlags = primitive.vertexAttrs;
-            if (primitive.mode === gl.POINTS) geometryFlags |= USE_POINT_SIZE;
+            if (primitive.mode === GL.POINTS) geometryFlags |= USE_POINT_SIZE;
 
             var shader = this.getShader(geometryFlags);
             if (!shader) {
@@ -1070,10 +1079,10 @@ function OpenGL() {
 
             // draw
             if (indexBuffer) {
-                DEBUG > 1 && console.log("Draw indexed vertices", GL_Symbols[drawMode], Array.from(indices), vertices.map(function(v) { return ""+v; }));
+                DEBUG > 1 && console.log("Draw indexed vertices", GL_Symbol(drawMode), Array.from(indices), vertices.map(function(v) { return ""+v; }));
                 webgl.drawElements(drawMode, indices.length, vertices.length > 256 ? webgl.UNSIGNED_SHORT : webgl.UNSIGNED_BYTE, 0);
             } else {
-                DEBUG > 1 && console.log("Draw vertices", GL_Symbols[drawMode], 0, vertices.map(function(v) { return ""+v; }));
+                DEBUG > 1 && console.log("Draw vertices", GL_Symbol(drawMode), 0, vertices.map(function(v) { return ""+v; }));
                 webgl.drawArrays(drawMode, 0, vertices.length);
             }
             webgl.useProgram(null);
@@ -1109,7 +1118,7 @@ function OpenGL() {
 
         glFrontFace: function(mode) {
             if (gl.listMode && this.addToList("glFrontFace", [mode])) return;
-            DEBUG > 1 && console.log("glFrontFace", GL_Symbols[mode]);
+            DEBUG > 1 && console.log("glFrontFace", GL_Symbol(mode));
             webgl.frontFace(mode);
         },
 
@@ -1168,7 +1177,7 @@ function OpenGL() {
                     params.set(gl.matrices[GL.PROJECTION][0]);
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetFloatv", GL_Symbols[pname] || pname);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetFloatv", GL_Symbol(pname));
             }
         },
 
@@ -1179,7 +1188,7 @@ function OpenGL() {
                     params[0] = gl.list ? gl.list.id : 0;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetIntegerv", GL_Symbols[name] || name);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetIntegerv", GL_Symbol(name));
             }
         },
 
@@ -1205,13 +1214,13 @@ function OpenGL() {
 
         glHint: function(target, mode) {
             if (gl.listMode && this.addToList("glHint", [target, mode])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glHint", GL_Symbols[target], GL_Symbols[mode]);
+            DEBUG > 0 && console.log("UNIMPLEMENTED glHint", GL_Symbol(target), GL_Symbol(mode));
         },
 
         glIsEnabled: function(cap) {
             switch (cap) {
                 case GL.LIGHTING:
-                    DEBUG > 0 && console.log("glIsEnabled GL_LIGHTING");
+                    DEBUG > 1 && console.log("glIsEnabled GL_LIGHTING");
                     return gl.lightingEnabled;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glIsEnabled", cap);
@@ -1228,6 +1237,12 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glLightf", [light, pname, param])) return;
             var i = light - GL.LIGHT0;
             switch (pname) {
+                case GL.SPOT_CUTOFF:
+                    if (param === 180) {
+                        DEBUG > 1 && console.log("glLightf", i, "GL_SPOT_CUTOFF", param);
+                        return;
+                    }
+                    // fall through if not default
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glLightf", i, GL_Symbol(pname), param);
             }
@@ -1254,7 +1269,7 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glLightfv", i, "GL_POSITION", param, "=>", Array.from(gl.lights[i].position));
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightfv", i, GL_Symbols[pname], Array.from(param));
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightfv", i, GL_Symbol(pname), Array.from(param));
             }
         },
 
@@ -1322,16 +1337,16 @@ function OpenGL() {
                     gl.material.diffuse = param;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glMaterialfv", GL_Symbols[pname], Array.from(param));
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glMaterialfv", GL_Symbol(pname), Array.from(param));
             }
         },
 
         glMatrixMode: function(mode) {
             if (gl.listMode && this.addToList("glMatrixMode", [mode])) return;
             if (mode !== GL.MODELVIEW && mode !== GL.PROJECTION)
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glMatrixMode", GL_Symbols[mode]);
+                DEBUG > 0 && console.warn("UNIMPLEMENTED glMatrixMode", GL_Symbol(mode));
             else
-                DEBUG > 1 && console.log("glMatrixMode", GL_Symbols[mode]);
+                DEBUG > 1 && console.log("glMatrixMode", GL_Symbol(mode));
             gl.matrixMode = mode;
             if (!gl.matrices[mode]) gl.matrices[mode] = [new Float32Array(identity)];
             gl.matrix = gl.matrices[mode][0];
@@ -1344,7 +1359,7 @@ function OpenGL() {
         },
 
         glNewList: function(list, mode) {
-            DEBUG > 1 && console.log("glNewList", list, GL_Symbols[mode]);
+            DEBUG > 1 && console.log("glNewList", list, GL_Symbol(mode));
             var newList = {
                 id: list,
                 commands: [],
@@ -1371,7 +1386,7 @@ function OpenGL() {
 
         glNormalPointer: function(type, stride, pointer) {
             if (gl.listMode && this.addToList("glNormalPointer", [type, stride, pointer])) return;
-            DEBUG > 1 && console.log("glNormalPointer", GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glNormalPointer", GL_Symbol(type), stride, pointer);
             gl.clientState.normalArray.size = 3;
             gl.clientState.normalArray.type = type;
             gl.clientState.normalArray.stride = stride;
@@ -1412,7 +1427,24 @@ function OpenGL() {
 
         glPushAttrib: function(mask) {
             if (gl.listMode && this.addToList("glPushAttrib", [mask])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glPushAttrib", mask);
+            if (DEBUG > 0) {
+                var maskString = '';
+                if (mask === GL.ALL_ATTRIB_BITS) {
+                    maskString = 'GL_ALL_ATTRIB_BITS';
+                } else {
+                    if (mask & GL.CURRENT_BIT) { maskString += 'GL_CURRENT_BIT '; mask &= ~GL.CURRENT_BIT; }
+                    if (mask & GL.ENABLE_BIT) { maskString += 'GL_ENABLE_BIT '; mask &= ~GL.ENABLE_BIT; }
+                    if (mask & GL.LIGHTING_BIT) { maskString += 'GL_LIGHTING_BIT '; mask &= ~GL.LIGHTING_BIT; }
+                    if (mask & GL.COLOR_BUFFER_BIT) { maskString += 'GL_COLOR_BUFFER_BIT '; mask &= ~GL.COLOR_BUFFER_BIT; }
+                    if (mask & GL.DEPTH_BUFFER_BIT) { maskString += 'GL_DEPTH_BUFFER_BIT '; mask &= ~GL.DEPTH_BUFFER_BIT; }
+                    if (mask & GL.POLYGON_BIT) { maskString += 'GL_POLYGON_BIT '; mask &= ~GL.POLYGON_BIT; }
+                    if (mask & GL.TEXTURE_BIT) { maskString += 'GL_TEXTURE_BIT '; mask &= ~GL.TEXTURE_BIT; }
+                    if (mask) for (var i = 0; i < 32; i++) {
+                        if (mask & (1 << i)) maskString += " " + (1 << i);
+                    }
+                }
+                console.log("UNIMPLEMENTED glPushAttrib", maskString);
+            }
         },
 
         glPushMatrix: function() {
@@ -1444,7 +1476,7 @@ function OpenGL() {
 
         glRasterPos3f: function(x, y, z) {
             if (gl.listMode && this.addToList("glRasterPos3f", [x, y, z])) return;
-            DEBUG > 0 && console.log("glRasterPos3f", x, y, z);
+            DEBUG > 1 && console.log("glRasterPos3f", x, y, z);
             gl.rasterPos[0] = x;
             gl.rasterPos[1] = y;
             gl.rasterPos[2] = z;
@@ -1480,29 +1512,32 @@ function OpenGL() {
             DEBUG > 1 && console.log("glRotatef", GL_Symbols[gl.matrixMode], angle, x, y, z, "=>", Array.from(gl.matrix));
         },
 
+        glScalef: function(x, y, z) {
+            if (gl.listMode && this.addToList("glScalef", [x, y, z])) return;
+            scaleMatrix(gl.matrix, x, y, z);
+            DEBUG > 1 && console.log("glScalef", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
+        },
+
         glScaled: function(x, y, z) {
             if (gl.listMode && this.addToList("glScaled", [x, y, z])) return;
-            var m = gl.matrix;
-            m[0] *= x; m[1] *= x; m[2] *= x; m[3] *= x;
-            m[4] *= y; m[5] *= y; m[6] *= y; m[7] *= y;
-            m[8] *= z; m[9] *= z; m[10] *= z; m[11] *= z;
+            scaleMatrix(gl.matrix, x, y, z);
             DEBUG > 1 && console.log("glScaled", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
         },
 
         glShadeModel: function(mode) {
             if (gl.listMode && this.addToList("glShadeModel", [mode])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glShadeModel", GL_Symbols[mode]);
+            DEBUG > 0 && console.log("UNIMPLEMENTED glShadeModel", GL_Symbol(mode));
         },
 
         glStencilFunc: function(func, ref, mask) {
             if (gl.listMode && this.addToList("glStencilFunc", [func, ref, mask])) return;
-            DEBUG > 1 && console.log("glStencilFunc", GL_Symbols[func], ref, '0x'+(mask>>>0).toString(16));
+            DEBUG > 1 && console.log("glStencilFunc", GL_Symbol(func), ref, '0x'+(mask>>>0).toString(16));
             webgl.stencilFunc(func, ref, mask);
         },
 
         glStencilOp: function(fail, zfail, zpass) {
             if (gl.listMode && this.addToList("glStencilOp", [fail, zfail, zpass])) return;
-            DEBUG > 1 && console.log("glStencilOp", GL_Symbols[fail], GL_Symbols[zfail], GL_Symbols[zpass]);
+            DEBUG > 1 && console.log("glStencilOp", GL_Symbol(fail), GL_Symbol(zfail), GL_Symbol(zpass));
             webgl.stencilOp(fail, zfail, zpass);
         },
 
@@ -1514,21 +1549,21 @@ function OpenGL() {
                         case GL.MODULATE:
                             // Modulate means multiply the texture color with the fragment color
                             // which is what our fragment shader does by default
-                            DEBUG > 1 && console.log("glTexEnvi", GL_Symbols[target], "GL_TEXTURE_ENV_MODE", GL_Symbols[param]);
+                            DEBUG > 1 && console.log("glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
                             break;
                         default:
-                            DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbols[target], "GL_TEXTURE_ENV_MODE", GL_Symbols[param] || param);
+                            DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
                             return
                     }
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbols[target] || target, GL_Symbols[pname] || pname, GL_Symbols[param] || param);
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbol(target), GL_Symbol(pname), GL_Symbol(param));
             }
         },
 
         glTexImage2D: function(target, level, internalformat, width, height, border, format, type, pixels) {
             if (gl.listMode && this.addToList("glTexImage2D", [target, level, internalformat, width, height, border, format, type, pixels])) return;
-            DEBUG > 1 && console.log("glTexImage2D", GL_Symbols[target], level, GL_Symbols[internalformat], width, height, border, GL_Symbols[format], GL_Symbols[type], pixels);
+            DEBUG > 1 && console.log("glTexImage2D", GL_Symbol(target), level, GL_Symbol(internalformat), width, height, border, GL_Symbol(format), GL_Symbol(type), pixels);
             gl.texture.width = width;
             gl.texture.height = height;
             // WebGL does not support GL_UNPACK_ROW_LENGTH, GL_UNPACK_SKIP_ROWS, GL_UNPACK_SKIP_PIXELS
@@ -1622,7 +1657,7 @@ function OpenGL() {
 
         glTexCoordPointer: function(size, type, stride, pointer) {
             if (gl.listMode && this.addToList("glTexCoordPointer", [size, type, stride, pointer])) return;
-            DEBUG > 1 && console.log("glTexCoordPointer", size, GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glTexCoordPointer", size, GL_Symbol(type), stride, pointer);
             gl.clientState.textureCoordArray.size = size;
             gl.clientState.textureCoordArray.type = type;
             gl.clientState.textureCoordArray.stride = stride;
@@ -1631,13 +1666,13 @@ function OpenGL() {
 
         glTexParameteri: function(target, pname, param) {
             if (gl.listMode && this.addToList("glTexParameteri", [target, pname, param])) return;
-            DEBUG > 1 && console.log("glTexParameteri", GL_Symbols[target], GL_Symbols[pname], GL_Symbols[param] || param);
+            DEBUG > 1 && console.log("glTexParameteri", GL_Symbol(target), GL_Symbol(pname), GL_Symbol(param));
             webgl.texParameteri(target, pname, param);
         },
 
         glTexSubImage2D: function(target, level, xoffset, yoffset, width, height, format, type, pixels) {
             if (gl.listMode && this.addToList("glTexSubImage2D", [target, level, xoffset, yoffset, width, height, format, type, pixels])) return;
-            DEBUG > 1 && console.log("glTexSubImage2D", GL_Symbols[target], level, xoffset, yoffset, width, height, GL_Symbols[format], GL_Symbols[type], pixels);
+            DEBUG > 1 && console.log("glTexSubImage2D", GL_Symbol(target), level, xoffset, yoffset, width, height, GL_Symbol(format), GL_Symbol(type), pixels);
             // WebGL does not support GL_UNPACK_ROW_LENGTH, GL_UNPACK_SKIP_ROWS, GL_UNPACK_SKIP_PIXELS
             // emulate GL_UNPACK_SKIP_ROWS
             var pixelsOffset = gl.pixelStoreUnpackSkipRows * gl.texture.width; // to be multiplied by pixel size below
@@ -1710,7 +1745,7 @@ function OpenGL() {
 
         glVertexPointer: function(size, type, stride, pointer) {
             if (gl.listMode && this.addToList("glVertexPointer", [size, type, stride, pointer])) return;
-            DEBUG > 1 && console.log("glVertexPointer", size, GL_Symbols[type], stride, pointer);
+            DEBUG > 1 && console.log("glVertexPointer", size, GL_Symbol(type), stride, pointer);
             gl.clientState.vertexArray.size = size;
             gl.clientState.vertexArray.type = type;
             gl.clientState.vertexArray.stride = stride;
@@ -2035,14 +2070,14 @@ function rotateMatrix(m, angle, x, y, z) {
     m[9] = m[1] * m20 + m[5] * m21 + m[9] * m22;
     m[10] = m[2] * m20 + m[6] * m21 + m[10] * m22;
     m[11] = m[3] * m20 + m[7] * m21 + m[11] * m22;
-    m[0] = m0;
-    m[1] = m1;
-    m[2] = m2;
-    m[3] = m3;
-    m[4] = m4;
-    m[5] = m5;
-    m[6] = m6;
-    m[7] = m7;
+    m[0] = m0; m[1] = m1; m[2] = m2; m[3] = m3;
+    m[4] = m4; m[5] = m5; m[6] = m6; m[7] = m7;
+}
+
+function scaleMatrix(m, x, y, z) {
+    m[0] *= x; m[1] *= x; m[2] *= x; m[3] *= x;
+    m[4] *= y; m[5] *= y; m[6] *= y; m[7] *= y;
+    m[8] *= z; m[9] *= z; m[10] *= z; m[11] *= z;
 }
 
 function initGLConstants() {
@@ -2113,6 +2148,7 @@ function initGLConstants() {
         CULL_FACE:                   0x0B44,
         CULL_FACE_MODE:              0x0B45,
         FRONT_FACE:                  0x0B46,
+        COLOR_MATERIAL:              0x0B57,
         DEPTH_RANGE:                 0x0B70,
         DEPTH_TEST:                  0x0B71,
         DEPTH_WRITEMASK:             0x0B72,
@@ -2222,6 +2258,8 @@ function initGLConstants() {
         POINT:                       0x1B00,
         LINE:                        0x1B01,
         FILL:                        0x1B02,
+        FLAT:                        0x1D00,
+        SMOOTH:                      0x1D01,
         KEEP:                        0x1E00,
         REPLACE:                     0x1E01,
         INCR:                        0x1E02,
@@ -2264,6 +2302,27 @@ function initGLConstants() {
         INDEX_ARRAY:                 0x8077,
         TEXTURE_COORD_ARRAY:         0x8078,
         TEXTURE_COMPRESSED:          0x86A1,
+        CURRENT_BIT:                0x00001,
+        POINT_BIT:                  0x00002,
+        LINE_BIT:                   0x00004,
+        POLYGON_BIT:                0x00008,
+        POLYGON_STIPPLE_BIT:        0x00010,
+        PIXEL_MODE_BIT:             0x00020,
+        LIGHTING_BIT:               0x00040,
+        FOG_BIT:                    0x00080,
+        DEPTH_BUFFER_BIT:           0x00100,
+        ACCUM_BUFFER_BIT:           0x00200,
+        STENCIL_BUFFER_BIT:         0x00400,
+        GL_VIEWPORT_BIT:            0x00800,
+        GL_TRANSFORM_BIT:           0x01000,
+        ENABLE_BIT:                 0x02000,
+        COLOR_BUFFER_BIT:           0x04000,
+        HINT_BIT:                   0x08000,
+        EVAL_BIT:                   0x10000,
+        LIST_BIT:                   0x20000,
+        TEXTURE_BIT:                0x40000,
+        SCISSOR_BIT:                0x80000,
+        ALL_ATTRIB_BITS:            0xFFFFF,
     };
     GL_Symbols = {};
     for (var name in GL) {

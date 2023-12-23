@@ -27,7 +27,6 @@ function B3DEnginePlugin() {
             var vtx = this.stackFloat32Array(2, 4);
             var matrix = this.stackFloat32Array(1, 16);
             var rescale = this.interpreterProxy.stackValue(0);
-            debugger
             if (!from || !matrix) return false;
             var doRescale;
             if (rescale.isNil) doRescale = this.analyzeMatrix3x3Length(matrix);
@@ -41,7 +40,6 @@ function B3DEnginePlugin() {
             DEBUG > 0 && console.log("Squeak3D: b3dTransformPrimitivePosition");
             var vtx = this.stackFloat32Array(1, 4);
             var matrix = this.stackFloat32Array(0, 16);
-            debugger
             if (!from || !matrix) return false;
             this.transformPoint(matrix, vtx, vtx);
             this.interpreterProxy.pop(argCount);
@@ -92,6 +90,63 @@ function B3DEnginePlugin() {
             return true;
         },
 
+        b3dInplaceHouseHolderInvert(argCount) {
+            if (argCount !== 0) return false;
+            debugger
+            var rcvr = this.stackFloat32Array(0, 16);
+            if (!rcvr) return false;
+            var m = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+            var x = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]];
+            var d = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+
+            for (var i = 0; i < 4; i++) {
+                for (var j = 0; j < 4; j++)
+                    m[i][j] = rcvr[i*4+j];
+            }
+            for (var j = 0; j < 4; j++) {
+                var sigma = 0;
+                for (var i = j; i < 4; i++)
+                    sigma += m[i][j] * m[i][j];
+                if (sigma < 1e-10) return false; // matrix is singular
+                var s = m[j][j] < 0 ? Math.sqrt(sigma) : -Math.sqrt(sigma);
+                for (var r = 0; r < 4; r++)
+                    d[j][r] = s;
+                var beta = 1 / (s * m[j][j] - sigma);
+                m[j][j] -= s;
+                // update remaining columns
+                for (var k = j+1; k < 4; k++) {
+                    var sum = 0;
+                    for (var i = j; i < 4; i++)
+                        sum += m[i][j] * m[i][k];
+                    sum *= beta;
+                    for (var i = j; i < 4; i++)
+                        m[i][k] += m[i][j] * sum;
+                }
+                // update vector
+                for (var r = 0; r < 4; r++) {
+                    var sum = 0;
+                    for (var i = j; i < 4; i++)
+                        sum += x[i][r] * m[i][j];
+                    sum *= beta;
+                    for (var i = j; i < 4; i++)
+                        x[i][r] += sum * m[i][j];
+                }
+            }
+            // Now calculate result
+            for (var r = 0; r < 4; r++) {
+                for (var i = 3; i >= 0; i--) {
+                    for (var j = i+1; j < 4; j++)
+                        x[i][r] -= x[j][r] * m[i][j];
+                    x[i][r] /= d[i][r];
+                }
+            }
+            for (var i = 0; i < 4; i++) {
+                for (var j = 0; j < 4; j++)
+                    rcvr[i*4+j] = x[i][j];
+            }
+            return true;
+        },
+
         b3dTransposeMatrix: function(argCount) {
             if (argCount !== 0) return false;
             DEBUG > 1 && console.log("Squeak3D: b3dTransposeMatrix");
@@ -116,8 +171,7 @@ function B3DEnginePlugin() {
             DEBUG > 0 && console.log("Squeak3D: b3dTransformDirection");
             var matrix = this.stackFloat32Array(1, 16);
             var from = this.stackFloat32Array(0, 3);
-            debugger
-            if (!matrix || !vertex) return false;
+            if (!matrix || !from) return false;
             var fromOop = this.interpreterProxy.stackObjectValue(0);
             var toOop = this.interpreterProxy.clone(fromOop);
             if (!toOop) return false;
@@ -164,7 +218,7 @@ function B3DEnginePlugin() {
             var rz = x * matrix[8] + y * matrix[9] + z * matrix[10];
             if (rescale) {
                 var dot = rx * rx + ry * ry + rz * rz;
-                if (dot < 1.0e-20 ) {
+                if (dot < 1e-20 ) {
                     rx = 0;
                     ry = 0;
                     rz = 0;
