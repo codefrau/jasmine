@@ -20,7 +20,9 @@
 // [ ] implement vertex buffer objects
 // [X] implement material + lighting
 // [X] implement clip planes
-// [ ] make glBitmap pixel-perfect
+// [ ] implement fog
+// [ ] implement tex coord gen
+// [ ] fix glBitmap for size other than 640x480
 // [ ] optimize list compilation glBegin/glEnd
 // [ ] implement light attenuation
 // [ ] implement spot lights
@@ -33,7 +35,11 @@ var GL;
 function OpenGL() {
     "use strict";
 
-    var DEBUG = 1; // 0 = off, 1 = some, 2 = lots
+    var DEBUG = 1;
+    // 0 = off
+    // 1 = some (errors, warnings)
+    // 2 = lots (function calls)
+    // 3 = all (call details)
 
     var identity = new Float32Array([
         1, 0, 0, 0,
@@ -265,7 +271,7 @@ function OpenGL() {
             // ourselves.
             if (!bitmap.buffer) bitmap = new Uint8Array(bitmap);
             if (gl.listMode && this.addToList("glBitmap", [width, height, xorig, yorig, xmove, ymove, bitmap])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glBitmap", width, height, xorig, yorig, xmove, ymove, bitmap);
+            DEBUG > 1 && console.log("glBitmap", width, height, xorig, yorig, xmove, ymove, bitmap);
             if (width > 0 && height > 0) {
                 // we need to convert the 1-bit deep bitmap to a 1-byte
                 // per pixel texture in ALPHA format, with the bitmap
@@ -866,6 +872,21 @@ function OpenGL() {
             }
         },
 
+        glFogi: function(pname, param) {
+            if (gl.listMode && this.addToList("glFogi", [pname, param])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glFogi", GL_Symbol(pname), GL_Symbol(param));
+        },
+
+        glFogf: function(pname, param) {
+            if (gl.listMode && this.addToList("glFogf", [pname, param])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glFogf", GL_Symbol(pname), param);
+        },
+
+        glFogfv: function(pname, params) {
+            if (gl.listMode && this.addToList("glFogfv", [pname, params])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glFogfv", GL_Symbol(pname), Array.from(params));
+        },
+
         getShader: function(geometryFlags) {
             // geometryFlags: HAS_TEXCOORD, HAS_NORMAL, HAS_COLOR, USE_POINT_SIZE
 
@@ -945,12 +966,12 @@ function OpenGL() {
 
         setShaderUniforms: function(shader) {
             var loc = shader.locations;
-            DEBUG > 1 && console.log("uModelView", Array.from(gl.matrices[GL.MODELVIEW][0]));
+            DEBUG > 2 && console.log("uModelView", Array.from(gl.matrices[GL.MODELVIEW][0]));
             webgl.uniformMatrix4fv(loc['uModelView'], false, gl.matrices[GL.MODELVIEW][0]);
-            DEBUG > 1 && console.log("uProjection", Array.from(gl.matrices[GL.PROJECTION][0]));
+            DEBUG > 2 && console.log("uProjection", Array.from(gl.matrices[GL.PROJECTION][0]));
             webgl.uniformMatrix4fv(loc['uProjection'], false, gl.matrices[GL.PROJECTION][0]);
             if (loc['uNormal']) {
-                DEBUG > 1 && console.log("uNormal", Array.from(gl.normal));
+                DEBUG > 2 && console.log("uNormal", Array.from(gl.normal));
                 webgl.uniform3fv(loc['uNormal'], gl.normal);
             }
             if (loc['uColor']) {
@@ -960,44 +981,44 @@ function OpenGL() {
                 webgl.uniform4fv(loc['uColor'], color);
             }
             if (loc['uTexCoord']) {
-                DEBUG > 1 && console.log("uTexCoord", Array.from(gl.texCoord));
+                DEBUG > 2 && console.log("uTexCoord", Array.from(gl.texCoord));
                 webgl.uniform2fv(loc['uTexCoord'], gl.texCoord);
             }
             if (loc['uSampler']) {
-                DEBUG > 1 && console.log("uSampler", gl.texture);
+                DEBUG > 2 && console.log("uSampler", gl.texture);
                 webgl.activeTexture(webgl.TEXTURE0);
                 webgl.bindTexture(webgl.TEXTURE_2D, gl.texture);
                 webgl.uniform1i(loc['uSampler'], 0);
             }
             if (loc['uPointSize']) {
-                DEBUG > 1 && console.log("uPointSize", gl.pointSize);
+                DEBUG > 2 && console.log("uPointSize", gl.pointSize);
                 webgl.uniform1f(loc['uPointSize'], gl.pointSize);
             }
             var numLights = (shader.flags & NUM_LIGHTS_MASK) >> NUM_LIGHTS_SHIFT;
             if (numLights > 0) {
-                DEBUG > 1 && console.log("uLightModelAmbient", Array.from(gl.lightModelAmbient));
+                DEBUG > 2 && console.log("uLightModelAmbient", Array.from(gl.lightModelAmbient));
                 webgl.uniform4fv(loc['uLightModelAmbient'], gl.lightModelAmbient);
-                DEBUG > 1 && console.log("uMaterialAmbient", Array.from(gl.material.ambient));
+                DEBUG > 2 && console.log("uMaterialAmbient", Array.from(gl.material.ambient));
                 webgl.uniform4fv(loc['uMaterialAmbient'], gl.material.ambient);
-                DEBUG > 1 && console.log("uMaterialDiffuse", Array.from(gl.material.diffuse));
+                DEBUG > 2 && console.log("uMaterialDiffuse", Array.from(gl.material.diffuse));
                 webgl.uniform4fv(loc['uMaterialDiffuse'], gl.material.diffuse);
-                DEBUG > 1 && console.log("uMaterialSpecular", Array.from(gl.material.specular));
+                DEBUG > 2 && console.log("uMaterialSpecular", Array.from(gl.material.specular));
                 webgl.uniform4fv(loc['uMaterialSpecular'], gl.material.specular);
-                DEBUG > 1 && console.log("uMaterialEmission", Array.from(gl.material.emission));
+                DEBUG > 2 && console.log("uMaterialEmission", Array.from(gl.material.emission));
                 webgl.uniform4fv(loc['uMaterialEmission'], gl.material.emission);
-                DEBUG > 1 && console.log("uMaterialShininess", gl.material.shininess);
+                DEBUG > 2 && console.log("uMaterialShininess", gl.material.shininess);
                 webgl.uniform1f(loc['uMaterialShininess'], gl.material.shininess);
                 var index = 0;
                 for (var i = 0; i < MAX_LIGHTS; i++) {
                     var light = gl.lights[i];
                     if (!light.enabled) continue;
-                    DEBUG > 1 && console.log("uLights[" + index + "].ambient", Array.from(light.ambient));
+                    DEBUG > 2 && console.log("uLights[" + index + "].ambient", Array.from(light.ambient));
                     webgl.uniform4fv(loc['uLights'][index].ambient, light.ambient);
-                    DEBUG > 1 && console.log("uLights[" + index + "].diffuse", Array.from(light.diffuse));
+                    DEBUG > 2 && console.log("uLights[" + index + "].diffuse", Array.from(light.diffuse));
                     webgl.uniform4fv(loc['uLights'][index].diffuse, light.diffuse);
-                    DEBUG > 1 && console.log("uLights[" + index + "].specular", Array.from(light.specular));
+                    DEBUG > 2 && console.log("uLights[" + index + "].specular", Array.from(light.specular));
                     webgl.uniform4fv(loc['uLights'][index].specular, light.specular);
-                    DEBUG > 1 && console.log("uLights[" + index + "].position", Array.from(light.position));
+                    DEBUG > 2 && console.log("uLights[" + index + "].position", Array.from(light.position));
                     webgl.uniform4fv(loc['uLights'][index].position, light.position);
                     index++;
                 }
@@ -1008,7 +1029,7 @@ function OpenGL() {
                 for (var i = 0; i < MAX_CLIP_PLANES; i++) {
                     var clipPlane = gl.clipPlanes[i];
                     if (!clipPlane.enabled) continue;
-                    DEBUG > 1 && console.log("uClipPlanes[" + index + "].equation", Array.from(clipPlane.equation));
+                    DEBUG > 2 && console.log("uClipPlanes[" + index + "].equation", Array.from(clipPlane.equation));
                     webgl.uniform4fv(loc['uClipPlanes'][index], clipPlane.equation);
                     index++;
                 }
@@ -1041,9 +1062,9 @@ function OpenGL() {
             webgl.bindBuffer(webgl.ARRAY_BUFFER, vertexBuffer);
             webgl.bufferData(webgl.ARRAY_BUFFER, data, webgl.DYNAMIC_DRAW);
 
-            // set drawMode depending on primitive mode
+            // set mode depending on primitive mode
             // and create index buffer if needed
-            var drawMode;
+            var mode;
             var indices;
 
             switch (primitive.mode) {
@@ -1055,8 +1076,8 @@ function OpenGL() {
                 case webgl.TRIANGLES:
                 case webgl.TRIANGLE_STRIP:
                 case webgl.TRIANGLE_FAN:
-                    DEBUG > 1 && console.log("glEnd " + GL_Symbols[primitive.mode] + ":" + shader.label);
-                    drawMode = primitive.mode;
+                    DEBUG > 1 && console.log("glEnd " + GL_Symbol(primitive.mode, "POINTS") + ":" + shader.label);
+                    mode = primitive.mode;
                     break;
                 // not supported by WebGL, emulate
                 case GL.QUADS:
@@ -1076,7 +1097,7 @@ function OpenGL() {
                         indices[offset++] = i+2;
                         indices[offset++] = i+3;
                     }
-                    drawMode = webgl.TRIANGLES;
+                    mode = webgl.TRIANGLES;
                     break;
                 case GL.QUAD_STRIP:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glEnd GL_QUAD_STRIP:" + shader.label);
@@ -1084,7 +1105,7 @@ function OpenGL() {
                 case GL.POLYGON:
                     // use triangle fan, which works for convex polygons
                     DEBUG > 1 && console.log("glEnd GL_POLYGON:" + shader.label);
-                    drawMode = webgl.TRIANGLE_FAN;
+                    mode = webgl.TRIANGLE_FAN;
                     break;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glEnd", primitive.mode, shader.label);
@@ -1129,11 +1150,11 @@ function OpenGL() {
 
             // draw
             if (indexBuffer) {
-                DEBUG > 1 && console.log("Draw indexed vertices", GL_Symbol(drawMode), Array.from(indices), vertices.map(function(v) { return ""+v; }));
-                webgl.drawElements(drawMode, indices.length, vertices.length > 256 ? webgl.UNSIGNED_SHORT : webgl.UNSIGNED_BYTE, 0);
+                DEBUG > 1 && console.log("Draw indexed vertices", GL_Symbol(mode), Array.from(indices), vertices.map(function(v) { return ""+v; }));
+                webgl.drawElements(mode, indices.length, vertices.length > 256 ? webgl.UNSIGNED_SHORT : webgl.UNSIGNED_BYTE, 0);
             } else {
-                DEBUG > 1 && console.log("Draw vertices", GL_Symbol(drawMode), 0, vertices.map(function(v) { return ""+v; }));
-                webgl.drawArrays(drawMode, 0, vertices.length);
+                DEBUG > 1 && console.log("Draw vertices", GL_Symbol(mode), 0, vertices.map(function(v) { return ""+v; }));
+                webgl.drawArrays(mode, 0, vertices.length);
             }
             webgl.useProgram(null);
             webgl.disableVertexAttribArray(loc['aPosition']);
@@ -1355,7 +1376,7 @@ function OpenGL() {
         glLoadMatrixf: function(m) {
             if (gl.listMode && this.addToList("glLoadMatrixf", [m])) return;
             gl.matrix.set(m);
-            DEBUG > 1 && console.log("glLoadMatrixf", GL_Symbols[gl.matrixMode], Array.from(m));
+            DEBUG > 1 && console.log("glLoadMatrixf", GL_Symbol(gl.matrixMode), Array.from(m));
         },
 
         glMaterialfv: function(face, pname, param) {
@@ -1405,7 +1426,7 @@ function OpenGL() {
         glMultMatrixf: function(m) {
             if (gl.listMode && this.addToList("glMultMatrixf", [m])) return;
             multMatrix(gl.matrix, m);
-            DEBUG > 1 && console.log("glMultMatrixf", GL_Symbols[gl.matrixMode], Array.from(m), "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glMultMatrixf", GL_Symbol(gl.matrixMode), Array.from(m), "=>", Array.from(gl.matrix));
         },
 
         glNewList: function(list, mode) {
@@ -1501,7 +1522,7 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glPushMatrix", [])) return;
             gl.matrix = new Float32Array(gl.matrix);
             gl.matrices[gl.matrixMode].unshift(gl.matrix);
-            DEBUG > 1 && console.log("glPushMatrix", GL_Symbols[gl.matrixMode], "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glPushMatrix", GL_Symbol(gl.matrixMode), "=>", Array.from(gl.matrix));
         },
 
         glPointSize: function(size) {
@@ -1521,7 +1542,7 @@ function OpenGL() {
                 return DEBUG > 0 && console.warn("OpenGL: matrix stack underflow");
             gl.matrices[gl.matrixMode].shift();
             gl.matrix = gl.matrices[gl.matrixMode][0];
-            DEBUG > 1 && console.log("glPopMatrix", GL_Symbols[gl.matrixMode], "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glPopMatrix", GL_Symbol(gl.matrixMode), "=>", Array.from(gl.matrix));
         },
 
         glRasterPos3f: function(x, y, z) {
@@ -1572,31 +1593,31 @@ function OpenGL() {
         glTranslated: function(x, y, z) {
             if (gl.listMode && this.addToList("glTranslated", [x, y, z])) return;
             translateMatrix(gl.matrix, x, y, z);
-            DEBUG > 1 && console.log("glTranslated", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glTranslated", GL_Symbol(gl.matrixMode), x, y, z, "=>", Array.from(gl.matrix));
         },
 
         glTranslatef: function(x, y, z) {
             if (gl.listMode && this.addToList("glTranslatef", [x, y, z])) return;
             translateMatrix(gl.matrix, x, y, z);
-            DEBUG > 1 && console.log("glTranslatef", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glTranslatef", GL_Symbol(gl.matrixMode), x, y, z, "=>", Array.from(gl.matrix));
         },
 
         glRotatef: function(angle, x, y, z) {
             if (gl.listMode && this.addToList("glRotatef", [angle, x, y, z])) return;
             rotateMatrix(gl.matrix, angle, x, y, z);
-            DEBUG > 1 && console.log("glRotatef", GL_Symbols[gl.matrixMode], angle, x, y, z, "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glRotatef", GL_Symbol(gl.matrixMode), angle, x, y, z, "=>", Array.from(gl.matrix));
         },
 
         glScalef: function(x, y, z) {
             if (gl.listMode && this.addToList("glScalef", [x, y, z])) return;
             scaleMatrix(gl.matrix, x, y, z);
-            DEBUG > 1 && console.log("glScalef", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glScalef", GL_Symbol(gl.matrixMode), x, y, z, "=>", Array.from(gl.matrix));
         },
 
         glScaled: function(x, y, z) {
             if (gl.listMode && this.addToList("glScaled", [x, y, z])) return;
             scaleMatrix(gl.matrix, x, y, z);
-            DEBUG > 1 && console.log("glScaled", GL_Symbols[gl.matrixMode], x, y, z, "=>", Array.from(gl.matrix));
+            DEBUG > 1 && console.log("glScaled", GL_Symbol(gl.matrixMode), x, y, z, "=>", Array.from(gl.matrix));
         },
 
         glShadeModel: function(mode) {
@@ -1643,6 +1664,16 @@ function OpenGL() {
             }
         },
 
+        glTexGeni: function(coord, pname, param) {
+            if (gl.listMode && this.addToList("glTexGeni", [coord, pname, param])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glTexGeni", GL_Symbol(coord, "S"), GL_Symbol(pname), GL_Symbol(param));
+        },
+
+        glTexGenfv: function(coord, pname, params) {
+            if (gl.listMode && this.addToList("glTexGenfv", [coord, pname, params])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glTexGenfv", GL_Symbol(coord, "S"), GL_Symbol(pname), Array.from(params));
+        },
+
         glTexImage2D: function(target, level, internalformat, width, height, border, format, type, pixels) {
             if (gl.listMode && this.addToList("glTexImage2D", [target, level, internalformat, width, height, border, format, type, pixels])) return;
             DEBUG > 1 && console.log("glTexImage2D", GL_Symbol(target), level, GL_Symbol(internalformat), width, height, border, GL_Symbol(format), GL_Symbol(type), pixels);
@@ -1665,10 +1696,9 @@ function OpenGL() {
                     break;
                 case GL.BGRA:
                     format = webgl.RGBA;
-                    // todo: swap bytes in shader
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D format " + format);
+                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D format " + GL_Symbol(format));
                     return;
             }
             // pixels are coming in via FFI as void* (ArrayBuffer)
@@ -1681,7 +1711,7 @@ function OpenGL() {
                     gl.texture.pixels = pixels; // for debugging
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D type " + type);
+                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D type " + GL_Symbol(type));
                     return;
             }
             webgl.texImage2D(target, level, internalformat, width, height, border, format, type, pixels);
@@ -2253,6 +2283,8 @@ function initGLConstants() {
         INVALID_VALUE:               0x0501,
         INVALID_OPERATION:           0x0502,
         OUT_OF_MEMORY:               0x0505,
+        EXP:                         0x0800,
+        EXP2:                        0x0801,
         CW:                          0x0900,
         CCW:                         0x0901,
         POINT_SIZE:                  0x0B11,
@@ -2271,6 +2303,12 @@ function initGLConstants() {
         CULL_FACE_MODE:              0x0B45,
         FRONT_FACE:                  0x0B46,
         COLOR_MATERIAL:              0x0B57,
+        FOG:                         0x0B60,
+        FOG_DENSITY:                 0x0B62,
+        FOG_START:                   0x0B63,
+        FOG_END:                     0x0B64,
+        FOG_MODE:                    0x0B65,
+        FOG_COLOR:                   0x0B66,
         DEPTH_RANGE:                 0x0B70,
         DEPTH_TEST:                  0x0B71,
         DEPTH_WRITEMASK:             0x0B72,
@@ -2304,6 +2342,31 @@ function initGLConstants() {
         PERSPECTIVE_CORRECTION_HINT: 0x0C50,
         LINE_SMOOTH_HINT:            0x0C52,
         POLYGON_SMOOTH_HINT:         0x0C53,
+        FOG_HINT:                    0x0C54,
+        TEXTURE_GEN_S:               0x0C60,
+        TEXTURE_GEN_T:               0x0C61,
+        TEXTURE_GEN_R:               0x0C62,
+        TEXTURE_GEN_Q:               0x0C63,
+        PIXEL_MAP_I_TO_I:            0x0C70,
+        PIXEL_MAP_S_TO_S:            0x0C71,
+        PIXEL_MAP_I_TO_R:            0x0C72,
+        PIXEL_MAP_I_TO_G:            0x0C73,
+        PIXEL_MAP_I_TO_B:            0x0C74,
+        PIXEL_MAP_I_TO_A:            0x0C75,
+        PIXEL_MAP_R_TO_R:            0x0C76,
+        PIXEL_MAP_G_TO_G:            0x0C77,
+        PIXEL_MAP_B_TO_B:            0x0C78,
+        PIXEL_MAP_A_TO_A:            0x0C79,
+        PIXEL_MAP_I_TO_I_SIZE:       0x0CB0,
+        PIXEL_MAP_S_TO_S_SIZE:       0x0CB1,
+        PIXEL_MAP_I_TO_R_SIZE:       0x0CB2,
+        PIXEL_MAP_I_TO_G_SIZE:       0x0CB3,
+        PIXEL_MAP_I_TO_B_SIZE:       0x0CB4,
+        PIXEL_MAP_I_TO_A_SIZE:       0x0CB5,
+        PIXEL_MAP_R_TO_R_SIZE:       0x0CB6,
+        PIXEL_MAP_G_TO_G_SIZE:       0x0CB7,
+        PIXEL_MAP_B_TO_B_SIZE:       0x0CB8,
+        PIXEL_MAP_A_TO_A_SIZE:       0x0CB9,
         UNPACK_SWAP_BYTES:           0x0CF0,
         UNPACK_LSB_FIRST:            0x0CF1,
         UNPACK_ROW_LENGTH:           0x0CF2,
@@ -2390,9 +2453,20 @@ function initGLConstants() {
         RENDERER:                    0x1F01,
         VERSION:                     0x1F02,
         EXTENSIONS:                  0x1F03,
+        S:                           0x2000,
+        T:                           0x2001,
+        R:                           0x2002,
+        Q:                           0x2003,
         MODULATE:                    0x2100,
         TEXTURE_ENV_MODE:            0x2200,
         TEXTURE_ENV:                 0x2300,
+        EYE_LINEAR:                  0x2400,
+        OBJECT_LINEAR:               0x2401,
+        SPHERE_MAP:                  0x2402,
+        TEXTURE_GEN_MODE:            0x2500,
+        OBJECT_PLANE:                0x2501,
+        EYE_PLANE:                   0x2502,
+        SPHERE_MAP:                  0x2402,
         NEAREST:                     0x2600,
         LINEAR:                      0x2601,
         NEAREST_MIPMAP_NEAREST:      0x2700,
