@@ -151,7 +151,7 @@ function B3DAcceleratorPlugin() {
             if (!webgl) return false;
             // create renderer
             rendererId++;
-            var renderer = this.primHandler.makeStString("WebGL(#" + rendererId + ":" + x + "," + y + "," + w + "," + h + ")");
+            var renderer = this.primHandler.makeStString("WebGL#" + rendererId);
             renderer.rendererId = rendererId;
             renderer.canvas = canvas;
             renderer.webgl = webgl;

@@ -990,6 +990,11 @@ function OpenGL() {
             webgl.uniformMatrix4fv(loc['uModelView'], false, gl.matrices[GL.MODELVIEW][0]);
             DEBUG > 2 && console.log("uProjection", Array.from(gl.matrices[GL.PROJECTION][0]));
             webgl.uniformMatrix4fv(loc['uProjection'], false, gl.matrices[GL.PROJECTION][0]);
+            if (loc['uNormalMatrix']) {
+                var normalMatrix = asNormalMatrix(gl.matrices[GL.MODELVIEW][0]);
+                DEBUG > 2 && console.log("uNormalMatrix", Array.from(normalMatrix));
+                webgl.uniformMatrix3fv(loc['uNormalMatrix'], false, normalMatrix);
+            }
             if (loc['uNormal']) {
                 DEBUG > 2 && console.log("uNormal", Array.from(gl.normal));
                 webgl.uniform3fv(loc['uNormal'], gl.normal);
@@ -1356,7 +1361,7 @@ function OpenGL() {
                     gl.lights[i].specular = param;
                     break;
                 case GL.POSITION:
-                    transformPoint(gl.matrices[GL.MODELVIEW][0], param, Array.from(gl.lights[i].position));
+                    transformPoint(gl.matrices[GL.MODELVIEW][0], param, gl.lights[i].position);
                     DEBUG > 1 && console.log("glLightfv", i, "GL_POSITION", param, "=>", Array.from(gl.lights[i].position));
                     break;
                 default:
@@ -1976,6 +1981,7 @@ function OpenGL() {
                 } else {
                     src.push("uniform vec3 uNormal;");
                 }
+                src.push("uniform mat3 uNormalMatrix;");
                 src.push("uniform vec4 uLightModelAmbient;");
                 src.push("uniform vec4 uMaterialAmbient;");
                 src.push("uniform vec4 uMaterialDiffuse;");
@@ -2005,9 +2011,9 @@ function OpenGL() {
             src.push("  vec4 position = uModelView * vec4(aPosition, 1.0);");
             if (numLights > 0) {
                 if (shaderFlags & HAS_NORMAL) {
-                    src.push("  vec3 normal = normalize(aNormal);");
+                    src.push("  vec3 normal = normalize(uNormalMatrix * aNormal);");
                 } else {
-                    src.push("  vec3 normal = normalize(uNormal);");
+                    src.push("  vec3 normal = normalize(uNormalMatrix * uNormal);");
                 }
                 src.push("  vec4 lighting = uMaterialEmission;");
                 src.push("  lighting += uMaterialAmbient * uLightModelAmbient;");
@@ -2128,6 +2134,7 @@ function OpenGL() {
                 } else{
                     locations.uNormal = webgl.getUniformLocation(program, "uNormal");
                 }
+                locations.uNormalMatrix = webgl.getUniformLocation(program, "uNormalMatrix");
                 locations.uLightModelAmbient = webgl.getUniformLocation(program, "uLightModelAmbient");
                 locations.uMaterialAmbient = webgl.getUniformLocation(program, "uMaterialAmbient");
                 locations.uMaterialDiffuse = webgl.getUniformLocation(program, "uMaterialDiffuse");
@@ -2266,6 +2273,26 @@ function scaleMatrix(m, x, y, z) {
     m[0] *= x; m[1] *= x; m[2] *= x; m[3] *= x;
     m[4] *= y; m[5] *= y; m[6] *= y; m[7] *= y;
     m[8] *= z; m[9] *= z; m[10] *= z; m[11] *= z;
+}
+
+function asNormalMatrix(m) {
+    // inverse transpose of upper-left 3x3 matrix
+    var out = new Float32Array(9);
+    var m11 = m[0], m21 = m[1], m31 = m[2],
+        m12 = m[4], m22 = m[5], m32 = m[6],
+        m13 = m[8], m23 = m[9], m33 = m[10];
+    var t11 = m33 * m22 - m32 * m23,
+        t12 = m32 * m13 - m33 * m12,
+        t13 = m23 * m12 - m22 * m13;
+    var det = m11 * t11 + m21 * t12 + m31 * t13;
+    if (det !== 0 ) {
+        const s = 1 / det;
+        // store in transposed order
+        out[0] = t11 * s; out[3] = (m31 * m23 - m33 * m21) * s; out[6] = (m32 * m21 - m31 * m22) * s;
+        out[1] = t12 * s; out[4] = (m33 * m11 - m31 * m13) * s; out[7] = (m31 * m12 - m32 * m11) * s;
+        out[2] = t13 * s; out[5] = (m21 * m13 - m23 * m11) * s; out[8] = (m22 * m11 - m21 * m12) * s;
+    }
+    return out;
 }
 
 var GL_Symbols; // reverse mapping for debug printing
