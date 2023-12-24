@@ -1587,12 +1587,13 @@ function OpenGL() {
 
         glReadPixels: function(x, y, width, height, format, type, pixels) {
             if (gl.listMode && this.addToList("glReadPixels", [x, y, width, height, format, type, pixels])) return;
+            var swizzle = false;
             switch (format) {
                 case webgl.RGBA:
-                    DEBUG > 0 && console.warn("glReadPixels GL_RGBA: need to unswizzle BGRA");
                     break;
                 case GL.BGRA:
                     format = webgl.RGBA;
+                    swizzle = true;
                     break;
                 default:
                     DEBUG > 0 && console.warn("UNIMPLEMENTED glReadPixels format " + GL_Symbol(format));
@@ -1608,6 +1609,14 @@ function OpenGL() {
             }
             DEBUG > 1 && console.log("glReadPixels", x, y, width, height, GL_Symbol(format), GL_Symbol(type), pixels);
             webgl.readPixels(x, y, width, height, format, type, pixels);
+            if (swizzle) {
+                for (var i = 0; i < pixels.length; i += 4) {
+                    var r = pixels[i];
+                    var b = pixels[i+2];
+                    pixels[i] = b;
+                    pixels[i+2] = r;
+                }
+            }
         },
 
         glTranslated: function(x, y, z) {
