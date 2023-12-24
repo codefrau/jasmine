@@ -1544,6 +1544,31 @@ function OpenGL() {
             gl.rasterColor.set(gl.color);
         },
 
+        glReadPixels: function(x, y, width, height, format, type, pixels) {
+            if (gl.listMode && this.addToList("glReadPixels", [x, y, width, height, format, type, pixels])) return;
+            switch (format) {
+                case webgl.RGBA:
+                    DEBUG > 0 && console.warn("glReadPixels GL_RGBA: need to unswizzle BGRA");
+                    break;
+                case GL.BGRA:
+                    format = webgl.RGBA;
+                    break;
+                default:
+                    DEBUG > 0 && console.warn("UNIMPLEMENTED glReadPixels format " + GL_Symbol(format));
+                    return;
+            }
+            switch (type) {
+                case webgl.UNSIGNED_BYTE:
+                    pixels = new Uint8Array(pixels);
+                    break;
+                default:
+                    DEBUG > 0 && console.warn("UNIMPLEMENTED glReadPixels type " + GL_Symbol(type));
+                    return;
+            }
+            DEBUG > 1 && console.log("glReadPixels", x, y, width, height, GL_Symbol(format), GL_Symbol(type), pixels);
+            webgl.readPixels(x, y, width, height, format, type, pixels);
+        },
+
         glTranslated: function(x, y, z) {
             if (gl.listMode && this.addToList("glTranslated", [x, y, z])) return;
             translateMatrix(gl.matrix, x, y, z);
