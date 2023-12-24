@@ -615,6 +615,10 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glDisable GL_DEPTH_TEST");
                     webgl.disable(webgl.DEPTH_TEST);
                     break;
+                case GL.NORMALIZE:
+                    DEBUG > 1 && console.log("glDisable GL_NORMALIZE");
+                    // we always normalize normals
+                    break;
                 case GL.LIGHT0:
                 case GL.LIGHT1:
                 case GL.LIGHT2:
@@ -641,6 +645,12 @@ function OpenGL() {
                 case webgl.TEXTURE_2D:
                     DEBUG > 1 && console.log("glDisable GL_TEXTURE_2D");
                     gl.textureEnabled = false;
+                    break;
+                case GL.TEXTURE_GEN_S:
+                case GL.TEXTURE_GEN_T:
+                case GL.TEXTURE_GEN_R:
+                case GL.TEXTURE_GEN_Q:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisable GL_TEXTURE_GEN_" + (cap - GL.TEXTURE_GEN_S));
                     break;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glDisable", GL_Symbol(cap));
@@ -816,6 +826,10 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glEnable GL_DEPTH_TEST");
                     webgl.enable(webgl.DEPTH_TEST);
                     break;
+                case GL.NORMALIZE:
+                    DEBUG > 1 && console.log("glEnable GL_NORMALIZE");
+                    // we always normalize normals
+                    break;
                 case GL.LIGHT0:
                 case GL.LIGHT1:
                 case GL.LIGHT2:
@@ -842,6 +856,12 @@ function OpenGL() {
                 case webgl.TEXTURE_2D:
                     DEBUG > 1 && console.log("glEnable GL_TEXTURE_2D");
                     gl.textureEnabled = true;
+                    break;
+                case GL.TEXTURE_GEN_S:
+                case GL.TEXTURE_GEN_T:
+                case GL.TEXTURE_GEN_R:
+                case GL.TEXTURE_GEN_Q:
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnable GL_" + GL_Symbol(cap, "TEXTURE_GEN_S"));
                     break;
                 default:
                     DEBUG > 0 && console.log("UNIMPLEMENTED glEnable", GL_Symbol(cap));
@@ -1637,36 +1657,55 @@ function OpenGL() {
             webgl.stencilOp(fail, zfail, zpass);
         },
 
-        glTexEnvi: function(target, pname, param) {
-            if (gl.listMode && this.addToList("glTexEnvi", [target, pname, param])) return;
+        glTexEnv: function(target, pname, param) {
+            if (gl.listMode && this.addToList("glTexEnv", [target, pname, param])) return;
             switch (pname) {
                 case GL.TEXTURE_ENV_MODE:
                     switch (param) {
                         case GL.MODULATE:
                             // Modulate means multiply the texture color with the fragment color
                             // which is what our fragment shader does by default
-                            DEBUG > 1 && console.log("glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
+                            DEBUG > 1 && console.log("glTexEnv", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
                             gl.textureEnvMode = param;
                             return;
                         case GL.REPLACE:
                             // Replace means use the texture color as the fragment color
                             // which we emulate by forcing the uniform color to white
-                            DEBUG > 0 && console.log("glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
+                            DEBUG > 1 && console.log("glTexEnv", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
                             gl.textureEnvMode = param;
                             return;
                         default:
-                            DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
-                            return;
+                            DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnv", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
                     }
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbol(target), GL_Symbol(pname), GL_Symbol(param));
+                    DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnv", GL_Symbol(target), GL_Symbol(pname), GL_Symbol(param));
             }
         },
 
+        glTexEnvi: function(target, pname, param) {
+            this.glTexEnv(target, pname, param);
+        },
+
+        glTexEnvf: function(target, pname, param) {
+            this.glTexEnv(target, pname, param);
+        },
+
+        glTexGen: function(coord, pname, param) {
+            if (gl.listMode && this.addToList("glTexGen", [coord, pname, param])) return;
+            DEBUG > 0 && console.log("UNIMPLEMENTED glTexGen", GL_Symbol(coord, "S"), GL_Symbol(pname), GL_Symbol(param));
+        },
+
         glTexGeni: function(coord, pname, param) {
-            if (gl.listMode && this.addToList("glTexGeni", [coord, pname, param])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glTexGeni", GL_Symbol(coord, "S"), GL_Symbol(pname), GL_Symbol(param));
+            this.glTexGen(coord, pname, param);
+        },
+
+        glTexGenf: function(coord, pname, param) {
+            this.glTexGen(coord, pname, param);
+        },
+
+        glTexGend: function(coord, pname, params) {
+            this.glTexGen(coord, pname, param);
         },
 
         glTexGenfv: function(coord, pname, params) {
@@ -2323,9 +2362,20 @@ function initGLConstants() {
         STENCIL_PASS_DEPTH_PASS:     0x0B96,
         STENCIL_REF:                 0x0B97,
         STENCIL_WRITEMASK:           0x0B98,
+        MATRIX_MODE:                 0x0BA0,
+        NORMALIZE:                   0x0BA1,
         VIEWPORT:                    0x0BA2,
+        MODELVIEW_STACK_DEPTH:       0x0BA3,
+        PROJECTION_STACK_DEPTH:      0x0BA4,
+        TEXTURE_STACK_DEPTH:         0x0BA5,
         MODELVIEW_MATRIX:            0x0BA6,
         PROJECTION_MATRIX:           0x0BA7,
+        TEXTURE_MATRIX:              0x0BA8,
+        ATTRIB_STACK_DEPTH:          0x0BB0,
+        CLIENT_ATTRIB_STACK_DEPTH:   0x0BB1,
+        ALPHA_TEST:                  0x0BC0,
+        ALPHA_TEST_FUNC:             0x0BC1,
+        ALPHA_TEST_REF:              0x0BC2,
         DITHER:                      0x0BD0,
         BLEND_DST:                   0x0BE0,
         BLEND_SRC:                   0x0BE1,
@@ -2458,6 +2508,7 @@ function initGLConstants() {
         R:                           0x2002,
         Q:                           0x2003,
         MODULATE:                    0x2100,
+        DECAL:                       0x2101,
         TEXTURE_ENV_MODE:            0x2200,
         TEXTURE_ENV:                 0x2300,
         EYE_LINEAR:                  0x2400,

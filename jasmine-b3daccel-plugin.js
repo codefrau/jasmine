@@ -33,7 +33,8 @@ function B3DAcceleratorPlugin() {
 
         setInterpreter: function(anInterpreter) {
             this.interpreterProxy = anInterpreter;
-            this.primHandler = this.interpreterProxy.vm.primHandler;
+            this.vm = this.interpreterProxy.vm;
+            this.primHandler = this.vm.primHandler;
             return true;
         },
 
@@ -341,6 +342,9 @@ function B3DAcceleratorPlugin() {
             DEBUG > 1 && console.log("B3DAccel: primitiveSwapRendererBuffers", currentRenderer);
             // let browser display the rendered frame
             this.interpreterProxy.vm.breakNow();
+            // tell the spinner we have been rendering
+            this.primHandler.display.lastTick = this.vm.lastTick;
+
             if (DEBUG_WAIT) debugger; // wait after each frame
             this.interpreterProxy.pop(argCount);
             return true;
