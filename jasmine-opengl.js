@@ -143,6 +143,7 @@ function OpenGL() {
                 textures: {}, // webgl texture objects by id
                 texture: null, // texture
                 textureEnabled: false, // texture enabled
+                textureEnvMode: GL.MODULATE, // texture environment mode
                 listIdGen: 0, // display list id generator
                 lists: {}, // display lists by id
                 list: null, // current display list
@@ -953,8 +954,10 @@ function OpenGL() {
                 webgl.uniform3fv(loc['uNormal'], gl.normal);
             }
             if (loc['uColor']) {
-                DEBUG > 1 && console.log("uColor", Array.from(gl.color));
-                webgl.uniform4fv(loc['uColor'], gl.color);
+                var color = gl.color;
+                if (gl.textureEnvMode === GL.REPLACE) color = [1, 1, 1, 1]; // HACK
+                DEBUG > 2 && console.log("uColor", Array.from(color));
+                webgl.uniform4fv(loc['uColor'], color);
             }
             if (loc['uTexCoord']) {
                 DEBUG > 1 && console.log("uTexCoord", Array.from(gl.texCoord));
@@ -1597,10 +1600,17 @@ function OpenGL() {
                             // Modulate means multiply the texture color with the fragment color
                             // which is what our fragment shader does by default
                             DEBUG > 1 && console.log("glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
-                            break;
+                            gl.textureEnvMode = param;
+                            return;
+                        case GL.REPLACE:
+                            // Replace means use the texture color as the fragment color
+                            // which we emulate by forcing the uniform color to white
+                            DEBUG > 0 && console.log("glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
+                            gl.textureEnvMode = param;
+                            return;
                         default:
                             DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnvi", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
-                            return
+                            return;
                     }
                     break;
                 default:
