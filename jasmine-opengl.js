@@ -2031,7 +2031,7 @@ function OpenGL() {
                 src.push("    }");
                 src.push("    lighting += ambient + diffuse + specular;");
                 src.push("  }");
-                src.push("  vColor *= lighting;");
+                src.push("  vColor *= clamp(lighting, 0.0, 1.0);");
                 src.push("  vColor.a = uMaterialDiffuse.a;");
             }
             if (numClipPlanes > 0) {
