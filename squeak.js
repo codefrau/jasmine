@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-23",               // Maybe replace at build time?
+        vmDate: "2023-12-24",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -55222,6 +55222,8 @@
                     case 1: buttons = Squeak.Mouse_Yellow; break;   // middle
                     case 2: buttons = Squeak.Mouse_Blue; break;     // right
                 }
+                if (buttons === Squeak.Mouse_Red && (evt.altKey || evt.metaKey))
+                    buttons = Squeak.Mouse_Yellow; // emulate middle-click
                 if (options.swapButtons)
                     if (buttons == Squeak.Mouse_Yellow) buttons = Squeak.Mouse_Blue;
                     else if (buttons == Squeak.Mouse_Blue) buttons = Squeak.Mouse_Yellow;
