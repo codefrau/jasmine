@@ -1364,7 +1364,11 @@ function OpenGL() {
                     gl.lights[i].specular = param;
                     break;
                 case GL.POSITION:
-                    transformPoint(gl.matrices[GL.MODELVIEW][0], param, gl.lights[i].position);
+                    if (param[3] === 0) {
+                        transformDirection(gl.matrices[GL.MODELVIEW][0], param, gl.lights[i].position);
+                    } else {
+                        transformPoint(gl.matrices[GL.MODELVIEW][0], param, gl.lights[i].position);
+                    }
                     DEBUG > 1 && console.log("glLightfv", i, "GL_POSITION", param, "=>", Array.from(gl.lights[i].position));
                     break;
                 default:
@@ -2040,7 +2044,7 @@ function OpenGL() {
                 src.push("    }");
                 src.push("    lighting += ambient + diffuse + specular;");
                 src.push("  }");
-                src.push("  vColor *= clamp(lighting, 0.0, 1.0);");
+                src.push("  vColor = clamp(lighting, 0.0, 1.0);");
                 src.push("  vColor.a = uMaterialDiffuse.a;");
             }
             if (numClipPlanes > 0) {
@@ -2178,6 +2182,19 @@ function OpenGL() {
             }
         },
     };
+}
+
+function transformDirection(matrix, src, dst) {
+    var x = src[0];
+    var y = src[1];
+    var z = src[2];
+    var rx = matrix[0] * x + matrix[4] * y + matrix[8] * z;
+    var ry = matrix[1] * x + matrix[5] * y + matrix[9] * z;
+    var rz = matrix[2] * x + matrix[6] * y + matrix[10] * z;
+    dst[0] = rx;
+    dst[1] = ry;
+    dst[2] = rz;
+    dst[3] = src[3];
 }
 
 function transformPoint(matrix, src, dst) {
