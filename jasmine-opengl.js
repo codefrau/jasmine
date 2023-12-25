@@ -186,8 +186,8 @@ function OpenGL() {
                 gl.lights[i] = {
                     enabled: false,
                     ambient: new Float32Array([0, 0, 0, 1]),
-                    diffuse: new Float32Array([0, 0, 0, 1]),
-                    specular: new Float32Array([0, 0, 0, 1]),
+                    diffuse: new Float32Array(i === 0 ? [1, 1, 1, 1] : [0, 0, 0, 1]),
+                    specular: new Float32Array(i === 0 ? [1, 1, 1, 1] : [0, 0, 0, 1]),
                     position: new Float32Array([0, 0, 1, 0]),
                 };
             }
