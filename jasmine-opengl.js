@@ -546,7 +546,10 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glClipPlane", [plane, equation])) return;
             DEBUG > 1 && console.log("glClipPlane", GL_Symbol(plane), Array.from(equation));
             var clipPlane = gl.clipPlanes[plane - GL.CLIP_PLANE0];
-            clipPlane.equation.set(equation);
+            // multiply by inverse of modelview matrix
+            var m = new Float32Array(16);
+            invertMatrix(gl.matrices[GL.MODELVIEW][0], m);
+            transformPoint(m, equation, clipPlane.equation);
         },
 
         glDeleteLists: function(list, range) {
@@ -1054,7 +1057,7 @@ function OpenGL() {
                 for (var i = 0; i < MAX_CLIP_PLANES; i++) {
                     var clipPlane = gl.clipPlanes[i];
                     if (!clipPlane.enabled) continue;
-                    DEBUG > 2 && console.log("uClipPlanes[" + index + "].equation", Array.from(clipPlane.equation));
+                    DEBUG > 2 && console.log("uClipPlanes[" + index + "]", Array.from(clipPlane.equation));
                     webgl.uniform4fv(loc['uClipPlanes'][index], clipPlane.equation);
                     index++;
                 }
@@ -2082,7 +2085,7 @@ function OpenGL() {
             if (numClipPlanes > 0) {
                 src.push("  bool clipped = false;");
                 src.push("  for (int i = 0; i < " + numClipPlanes + "; i++) {");
-                src.push("    if (vClipDist[i] > 0.0) clipped = true;");
+                src.push("    if (vClipDist[i] < 0.0) clipped = true;");
                 src.push("  }");
                 src.push("  if (clipped) discard;");
             }
@@ -2273,6 +2276,24 @@ function scaleMatrix(m, x, y, z) {
     m[0] *= x; m[1] *= x; m[2] *= x; m[3] *= x;
     m[4] *= y; m[5] *= y; m[6] *= y; m[7] *= y;
     m[8] *= z; m[9] *= z; m[10] *= z; m[11] *= z;
+}
+
+function invertMatrix(src, dst) {
+    var m00 = src[0], m01 = src[1], m02 = src[2], m03 = src[3],
+        m10 = src[4], m11 = src[5], m12 = src[6], m13 = src[7],
+        m20 = src[8], m21 = src[9], m22 = src[10], m23 = src[11],
+        m30 = src[12], m31 = src[13], m32 = src[14], m33 = src[15];
+    var t00 = m22 * m33 - m32 * m23,
+        t01 = m32 * m13 - m12 * m33,
+        t02 = m12 * m23 - m22 * m13;
+    var det = m00 * t00 + m10 * t01 + m20 * t02;
+    if (det !== 0) {
+        var s = 1 / det;
+        dst[0] = t00 * s; dst[1] = (m31 * m23 - m21 * m33) * s; dst[2] = (m21 * m13 - m31 * m13) * s; dst[3] = (m31 * m22 - m21 * m32) * s;
+        dst[4] = t01 * s; dst[5] = (m11 * m33 - m31 * m13) * s; dst[6] = (m31 * m03 - m01 * m33) * s; dst[7] = (m01 * m23 - m21 * m03) * s;
+        dst[8] = t02 * s; dst[9] = (m21 * m13 - m11 * m23) * s; dst[10] = (m11 * m32 - m31 * m12) * s; dst[11] = (m31 * m12 - m11 * m32) * s;
+        dst[12] = (m21 * m32 - m31 * m22) * s; dst[13] = (m31 * m02 - m01 * m32) * s; dst[14] = (m01 * m22 - m21 * m02) * s; dst[15] = (m11 * m22 - m21 * m12) * s;
+    }
 }
 
 function asNormalMatrix(m) {
