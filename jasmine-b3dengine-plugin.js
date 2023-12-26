@@ -92,7 +92,6 @@ function B3DEnginePlugin() {
 
         b3dInplaceHouseHolderInvert(argCount) {
             if (argCount !== 0) return false;
-            debugger
             var rcvr = this.stackFloat32Array(0, 16);
             if (!rcvr) return false;
             var m = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
