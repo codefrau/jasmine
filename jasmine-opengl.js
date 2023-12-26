@@ -35,7 +35,7 @@ var GL;
 function OpenGL() {
     "use strict";
 
-    var DEBUG = 1;
+    var DEBUG = 0;
     // 0 = off
     // 1 = some (errors, warnings)
     // 2 = lots (function calls)
@@ -88,7 +88,7 @@ function OpenGL() {
 
         ffiFunctionNotFoundHandler: function(name, args) {
             this.vm.warnOnce("OpenGL: UNIMPLEMENTED (missing) " + name);
-            if (DEBUG) debugger;
+            if (DEBUG > 0) debugger;
             return null; // do not fail but return nil
         },
 
@@ -450,7 +450,8 @@ function OpenGL() {
                     array = new Uint32Array(lists);
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glCallLists type", GL_Symbol(type));
+                    if (DEBUG) console.log("UNIMPLEMENTED glCallLists type", GL_Symbol(type))
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glCallLists type " + GL_Symbol(type));
                     return;
             }
             for (var i = 0; i < n; i++) {
@@ -653,10 +654,12 @@ function OpenGL() {
                 case GL.TEXTURE_GEN_T:
                 case GL.TEXTURE_GEN_R:
                 case GL.TEXTURE_GEN_Q:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisable GL_TEXTURE_GEN_" + (cap - GL.TEXTURE_GEN_S));
+                    if (DEBUG) console.log("UNIMPLEMENTED glDisable GL_TEXTURE_GEN_" + (cap - GL.TEXTURE_GEN_S));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glDisable GL_TEXTURE_GEN_" + (cap - GL.TEXTURE_GEN_S));
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisable", GL_Symbol(cap));
+                    if (DEBUG) console.log("UNIMPLEMENTED glDisable", GL_Symbol(cap));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glDisable " + GL_Symbol(cap));
             }
         },
 
@@ -680,7 +683,8 @@ function OpenGL() {
                     gl.clientState.textureCoordArray.enabled = false;
                     return;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDisableClientState", GL_Symbol(cap));
+                    if (DEBUG) console.log("UNIMPLEMENTED glDisableClientState", GL_Symbol(cap));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glDisableClientState " + GL_Symbol(cap));
             }
         },
 
@@ -709,7 +713,8 @@ function OpenGL() {
                     for (var i = 0; i < count; i++) indices[i] = indices32[i];
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glDrawElements type", GL_Symbol(type));
+                    if (DEBUG) console.log("UNIMPLEMENTED glDrawElements type", GL_Symbol(type));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glDrawElements type " + GL_Symbol(type));
                     return;
             }
 
@@ -720,14 +725,15 @@ function OpenGL() {
             if (mode === GL.POINTS) geometryFlags |= USE_POINT_SIZE;
 
             var shader = this.getShader(geometryFlags);
-            if (!shader) {
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glDrawElements " + GL_Symbol(mode) + ":" + shader.label);
+            if (!shader.program) {
+                if (DEBUG) console.warn("UNIMPLEMENTED glDrawElements shader: " + shader.label);
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glDrawElements shader: " + shader.label);
                 return;
             }
 
             var vertexArray = gl.clientState.vertexArray;
             if (!vertexArray.enabled || !vertexArray.pointer) {
-                DEBUG > 0 && console.log("glDrawElements: GL_VERTEX_ARRAY incomplete, skipping");
+                DEBUG > 0 && console.warn("glDrawElements: GL_VERTEX_ARRAY incomplete, skipping");
                 return;
             }
 
@@ -864,10 +870,12 @@ function OpenGL() {
                 case GL.TEXTURE_GEN_T:
                 case GL.TEXTURE_GEN_R:
                 case GL.TEXTURE_GEN_Q:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnable GL_" + GL_Symbol(cap, "TEXTURE_GEN_S"));
+                    if (DEBUG) console.log("UNIMPLEMENTED glEnable GL_" + GL_Symbol(cap, "TEXTURE_GEN_S"));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnable GL_" + GL_Symbol(cap, "TEXTURE_GEN_S"));
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnable", GL_Symbol(cap));
+                    if (DEBUG) console.log("UNIMPLEMENTED glEnable", GL_Symbol(cap));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnable " + GL_Symbol(cap));
             }
         },
 
@@ -891,7 +899,8 @@ function OpenGL() {
                     gl.clientState.textureCoordArray.enabled = true;
                     return;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnableClientState", GL_Symbol(cap));
+                    if (DEBUG) console.log("UNIMPLEMENTED glEnableClientState", GL_Symbol(cap));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnableClientState " + GL_Symbol(cap));
             }
         },
 
@@ -906,8 +915,7 @@ function OpenGL() {
         },
 
         glFogfv: function(pname, params) {
-            if (gl.listMode && this.addToList("glFogfv", [pname, params])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glFogfv", GL_Symbol(pname), Array.from(params));
+            this.glFog(pname, pname === GL.FOG_COLOR ? params : params[0]);
         },
 
         getShader: function(geometryFlags) {
@@ -1075,7 +1083,8 @@ function OpenGL() {
 
             var shader = this.getShader(geometryFlags);
             if (!shader) {
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glEnd" + GL_Symbol(primitive.mode) + ":" + shader.label);
+                if (DEBUG) console.warn("UNIMPLEMENTED glEnd shader: " + shader.label);
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnd shader: " + shader.label);
                 return;
             }
 
@@ -1128,7 +1137,8 @@ function OpenGL() {
                     mode = webgl.TRIANGLES;
                     break;
                 case GL.QUAD_STRIP:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnd GL_QUAD_STRIP:" + shader.label);
+                    if (DEBUG) console.log("UNIMPLEMENTED glEnd GL_QUAD_STRIP:" + shader.label);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnd GL_QUAD_STRIP");
                     return;
                 case GL.POLYGON:
                     // use triangle fan, which works for convex polygons
@@ -1136,7 +1146,8 @@ function OpenGL() {
                     mode = webgl.TRIANGLE_FAN;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glEnd", primitive.mode, shader.label);
+                    if (DEBUG) console.log("UNIMPLEMENTED glEnd", primitive.mode);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnd " + primitive.mode);
                     return;
             }
             var indexBuffer;
@@ -1276,7 +1287,8 @@ function OpenGL() {
                     params.set(gl.matrices[GL.PROJECTION][0]);
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetFloatv", GL_Symbol(pname));
+                    if (DEBUG) console.log("UNIMPLEMENTED glGetFloatv", GL_Symbol(pname));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glGetFloatv " + GL_Symbol(pname));
             }
         },
 
@@ -1287,7 +1299,8 @@ function OpenGL() {
                     params[0] = gl.list ? gl.list.id : 0;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetIntegerv", GL_Symbol(name));
+                    if (DEBUG) console.log("UNIMPLEMENTED glGetIntegerv", GL_Symbol(name));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glGetIntegerv " + GL_Symbol(name));
             }
         },
 
@@ -1297,7 +1310,8 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glGetString GL_EXTENSIONS");
                     return gl.extensions;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetString", name);
+                    if (DEBUG) console.log("UNIMPLEMENTED glGetString", name);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glGetString " + name);
             }
             return "";
         },
@@ -1307,7 +1321,8 @@ function OpenGL() {
                 case GL.TEXTURE_COMPRESSED:
                     return false;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glGetTexLevelParameteriv", target, level, pname, params);
+                    if (DEBUG) console.log("UNIMPLEMENTED glGetTexLevelParameteriv", GL_Symbol(target), level, GL_Symbol(pname), params);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glGetTexLevelParameteriv " + GL_Symbol(target) + " " + GL_Symbol(pname));
             }
         },
 
@@ -1322,7 +1337,8 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glIsEnabled GL_LIGHTING");
                     return gl.lightingEnabled;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glIsEnabled", cap);
+                    if (DEBUG) console.log("UNIMPLEMENTED glIsEnabled", cap);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glIsEnabled " + cap);
             }
             return false;
         },
@@ -1343,7 +1359,8 @@ function OpenGL() {
                     }
                     // fall through if not default
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightf", i, GL_Symbol(pname), param);
+                    if (DEBUG) console.log("UNIMPLEMENTED glLightf", i, GL_Symbol(pname), param);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glLightf " + GL_Symbol(pname));
             }
         },
 
@@ -1372,7 +1389,8 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glLightfv", i, "GL_POSITION", param, "=>", Array.from(gl.lights[i].position));
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightfv", i, GL_Symbol(pname), Array.from(param));
+                    if (DEBUG) console.log("UNIMPLEMENTED glLightfv", i, GL_Symbol(pname), Array.from(param));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glLightfv " + GL_Symbol(pname));
             }
         },
 
@@ -1384,7 +1402,8 @@ function OpenGL() {
                     gl.lightModelAmbient = params;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glLightModelfv", GL_Symbol(pname), Array.from(params));
+                    if (DEBUG) console.log("UNIMPLEMENTED glLightModelfv", GL_Symbol(pname), Array.from(params));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glLightModelfv " + GL_Symbol(pname));
             }
         },
 
@@ -1440,16 +1459,17 @@ function OpenGL() {
                     gl.material.diffuse = param;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glMaterialfv", GL_Symbol(pname), Array.from(param));
+                    if (DEBUG) console.log("UNIMPLEMENTED glMaterialfv", GL_Symbol(pname), Array.from(param));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glMaterialfv " + GL_Symbol(pname));
             }
         },
 
         glMatrixMode: function(mode) {
             if (gl.listMode && this.addToList("glMatrixMode", [mode])) return;
-            if (mode !== GL.MODELVIEW && mode !== GL.PROJECTION)
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glMatrixMode", GL_Symbol(mode));
-            else
-                DEBUG > 1 && console.log("glMatrixMode", GL_Symbol(mode));
+            if (mode !== GL.MODELVIEW && mode !== GL.PROJECTION) {
+                if (DEBUG) console.warn("UNIMPLEMENTED glMatrixMode", GL_Symbol(mode));
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glMatrixMode " + GL_Symbol(mode));
+            } else DEBUG > 1 && console.log("glMatrixMode", GL_Symbol(mode));
             gl.matrixMode = mode;
             if (!gl.matrices[mode]) gl.matrices[mode] = [new Float32Array(identity)];
             gl.matrix = gl.matrices[mode][0];
@@ -1518,7 +1538,8 @@ function OpenGL() {
                     gl.pixelStoreUnpackSkipPixels = param;
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glPixelStorei", pname, param);
+                    if (DEBUG) console.log("UNIMPLEMENTED glPixelStorei", pname, param);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glPixelStorei " + pname);
             }
         },
 
@@ -1547,7 +1568,7 @@ function OpenGL() {
                     }
                 }
                 console.log("UNIMPLEMENTED glPushAttrib", maskString);
-            }
+            } else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glPushAttrib");
         },
 
         glPushMatrix: function() {
@@ -1559,13 +1580,14 @@ function OpenGL() {
 
         glPointSize: function(size) {
             if (gl.listMode && this.addToList("glPointSize", [size])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glPointSize", size);
+            DEBUG > 1 && console.log("glPointSize", size);
             gl.pointSize = size;
         },
 
         glPopAttrib: function() {
             if (gl.listMode && this.addToList("glPopAttrib", [])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glPopAttrib");
+            if (DEBUG) console.log("UNIMPLEMENTED glPopAttrib");
+            else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glPopAttrib");
         },
 
         glPopMatrix: function() {
@@ -1608,7 +1630,8 @@ function OpenGL() {
                     swizzle = true;
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glReadPixels format " + GL_Symbol(format));
+                    if (DEBUG) console.warn("UNIMPLEMENTED glReadPixels format " + GL_Symbol(format));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glReadPixels format " + GL_Symbol(format));
                     return;
             }
             switch (type) {
@@ -1616,7 +1639,8 @@ function OpenGL() {
                     pixels = new Uint8Array(pixels);
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glReadPixels type " + GL_Symbol(type));
+                    if (DEBUG) console.warn("UNIMPLEMENTED glReadPixels type " + GL_Symbol(type));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glReadPixels type " + GL_Symbol(type));
                     return;
             }
             DEBUG > 1 && console.log("glReadPixels", x, y, width, height, GL_Symbol(format), GL_Symbol(type), pixels);
@@ -1663,7 +1687,8 @@ function OpenGL() {
 
         glShadeModel: function(mode) {
             if (gl.listMode && this.addToList("glShadeModel", [mode])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glShadeModel", GL_Symbol(mode));
+            if (DEBUG) console.log("UNIMPLEMENTED glShadeModel", GL_Symbol(mode));
+            else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glShadeModel " + GL_Symbol(mode));
         },
 
         glStencilFunc: function(func, ref, mask) {
@@ -1696,11 +1721,13 @@ function OpenGL() {
                             gl.textureEnvMode = param;
                             return;
                         default:
-                            DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnv", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
+                            if (DEBUG) console.log("UNIMPLEMENTED glTexEnv", GL_Symbol(target), "GL_TEXTURE_ENV_MODE", GL_Symbol(param));
+                            else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexEnv " + GL_Symbol(target) + " GL_TEXTURE_ENV_MODE " + GL_Symbol(param));
                     }
                     break;
                 default:
-                    DEBUG > 0 && console.log("UNIMPLEMENTED glTexEnv", GL_Symbol(target), GL_Symbol(pname), GL_Symbol(param));
+                    if (DEBUG) console.log("UNIMPLEMENTED glTexEnv", GL_Symbol(target), GL_Symbol(pname), GL_Symbol(param));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexEnv " + GL_Symbol(target) + " " + GL_Symbol(pname));
             }
         },
 
@@ -1714,7 +1741,8 @@ function OpenGL() {
 
         glTexGen: function(coord, pname, param) {
             if (gl.listMode && this.addToList("glTexGen", [coord, pname, param])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glTexGen", GL_Symbol(coord, "S"), GL_Symbol(pname), GL_Symbol(param));
+            if (DEBUG) console.log("UNIMPLEMENTED glTexGen", GL_Symbol(coord, "S"), GL_Symbol(pname), GL_Symbol(param));
+            else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexGen " + GL_Symbol(pname));
         },
 
         glTexGeni: function(coord, pname, param) {
@@ -1731,7 +1759,8 @@ function OpenGL() {
 
         glTexGenfv: function(coord, pname, params) {
             if (gl.listMode && this.addToList("glTexGenfv", [coord, pname, params])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glTexGenfv", GL_Symbol(coord, "S"), GL_Symbol(pname), Array.from(params));
+            if (DEBUG) console.log("UNIMPLEMENTED glTexGenfv", GL_Symbol(coord, "S"), GL_Symbol(pname), Array.from(params));
+            else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexGenfv " + GL_Symbol(pname));
         },
 
         glTexImage2D: function(target, level, internalformat, width, height, border, format, type, pixels) {
@@ -1741,24 +1770,29 @@ function OpenGL() {
             gl.texture.height = height;
             // WebGL does not support GL_UNPACK_ROW_LENGTH, GL_UNPACK_SKIP_ROWS, GL_UNPACK_SKIP_PIXELS
             if (gl.pixelStoreUnpackRowLength !== 0 && gl.pixelStoreUnpackRowLength !== gl.texture.width) {
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D GL_UNPACK_ROW_LENGTH " + gl.pixelStoreUnpackRowLength);
+                if (DEBUG) console.warn("UNIMPLEMENTED glTexImage2D GL_UNPACK_ROW_LENGTH " + gl.pixelStoreUnpackRowLength);
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexImage2D GL_UNPACK_ROW_LENGTH");
             }
             if (gl.pixelStoreUnpackSkipRows !== 0) {
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D GL_UNPACK_SKIP_ROWS " + gl.pixelStoreUnpackSkipRows);
+                if (DEBUG) console.warn("UNIMPLEMENTED glTexImage2D GL_UNPACK_SKIP_ROWS " + gl.pixelStoreUnpackSkipRows);
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexImage2D GL_UNPACK_SKIP_ROWS");
             }
             if (gl.pixelStoreUnpackSkipPixels !== 0) {
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D GL_UNPACK_SKIP_PIXELS " + gl.pixelStoreUnpackSkipPixels);
+                if (DEBUG) console.warn("UNIMPLEMENTED glTexImage2D GL_UNPACK_SKIP_PIXELS " + gl.pixelStoreUnpackSkipPixels);
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexImage2D GL_UNPACK_SKIP_PIXELS");
             }
             // WebGL only supports GL_RGBA
             switch (format) {
                 case webgl.RGBA:
-                    DEBUG > 0 && console.warn("glTexImage2D GL_RGBA: need to not swizzle BGRA");
+                    if (DEBUG) console.warn("glTexImage2D GL_RGBA: need to not swizzle BGRA");
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexImage2D format GL_RGBA");
                     break;
                 case GL.BGRA:
                     format = webgl.RGBA;
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D format " + GL_Symbol(format));
+                    if (DEBUG) console.warn("UNIMPLEMENTED glTexImage2D format " + GL_Symbol(format));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexImage2D format " + GL_Symbol(format));
                     return;
             }
             // pixels are coming in via FFI as void* (ArrayBuffer)
@@ -1771,7 +1805,8 @@ function OpenGL() {
                     gl.texture.pixels = pixels; // for debugging
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexImage2D type " + GL_Symbol(type));
+                    if (DEBUG) console.warn("UNIMPLEMENTED glTexImage2D type " + GL_Symbol(type));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexImage2D type " + GL_Symbol(type));
                     return;
             }
             webgl.texImage2D(target, level, internalformat, width, height, border, format, type, pixels);
@@ -1850,7 +1885,8 @@ function OpenGL() {
             var pixelsOffset = gl.pixelStoreUnpackSkipRows * gl.texture.width; // to be multiplied by pixel size below
             // assume GL_UNPACK_ROW_LENGTH is full width (which is the case when uploading part of a bitmap in Squeak)
             if (gl.pixelStoreUnpackRowLength !== 0 && gl.pixelStoreUnpackRowLength !== gl.texture.width) {
-                DEBUG > 0 && console.warn("UNIMPLEMENTED glTexSubImage2D GL_UNPACK_ROW_LENGTH " + gl.pixelStoreUnpackRowLength);
+                if (DEBUG) console.warn("UNIMPLEMENTED glTexSubImage2D GL_UNPACK_ROW_LENGTH " + gl.pixelStoreUnpackRowLength);
+                else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexSubImage2D GL_UNPACK_ROW_LENGTH");
             }
             // WebGL does not support GL_UNPACK_SKIP_PIXELS to allow different width
             if (width !== gl.texture.width) {
@@ -1872,7 +1908,8 @@ function OpenGL() {
                     format = webgl.RGBA;
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexSubImage2D format " + format);
+                    if (DEBUG) console.warn("UNIMPLEMENTED glTexSubImage2D format " + GL_Symbol(format));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexSubImage2D format " + GL_Symbol(format));
                     return;
             }
             // pixels are coming in via FFI as void* (ArrayBuffer)
@@ -1882,7 +1919,8 @@ function OpenGL() {
                     pixels = new Uint8Array(pixels, pixelsOffset);
                     break;
                 default:
-                    DEBUG > 0 && console.warn("UNIMPLEMENTED glTexSubImage2D type " + type);
+                    if (DEBUG) console.warn("UNIMPLEMENTED glTexSubImage2D type " + GL_Symbol(type));
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glTexSubImage2D type " + GL_Symbol(type));
                     return;
             }
             webgl.texSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
