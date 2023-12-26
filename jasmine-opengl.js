@@ -942,28 +942,29 @@ function OpenGL() {
             // create shader program
             var shader = gl.shaders[shaderFlags];
             if (!shader) {
-                var implemented = HAS_TEXCOORD | HAS_NORMAL | HAS_COLOR | USE_TEXTURE | NUM_LIGHTS_MASK | NUM_CLIP_PLANES_MASK | USE_POINT_SIZE;
-                if (shaderFlags & ~implemented) return null;
-
                 var flagString = "[POSITION";
                 if (shaderFlags & HAS_NORMAL) flagString += ", NORMAL";
                 if (shaderFlags & HAS_COLOR) flagString += ", COLOR";
                 if (shaderFlags & HAS_TEXCOORD) flagString += ", TEXCOORD";
                 flagString += "]";
                 if (shaderFlags & USE_TEXTURE) flagString += ", TEXTURE";
-                if (shaderFlags & ANY_LIGHTS) flagString += ", "+ numLights +" LIGHT"; if (numLights > 1) flagString += "S";
-                if (shaderFlags & ANY_CLIP_PLANES) flagString += ", "+ numClipPlanes +" CLIP_PLANE"; if (numClipPlanes > 1) flagString += "S";
+                if (shaderFlags & ANY_LIGHTS) { flagString += ", "+ numLights +" LIGHT"; if (numLights !== 1) flagString += "S"; }
+                if (shaderFlags & ANY_CLIP_PLANES) { flagString += ", "+ numClipPlanes +" CLIP_PLANE"; if (numClipPlanes !== 1) flagString += "S"; }
                 if (shaderFlags & USE_ALPHA_TEST) flagString += ", ALPHA_TEST";
                 if (shaderFlags & USE_POINT_SIZE) flagString += ", POINT_SIZE";
 
                 shader = gl.shaders[shaderFlags] = {
                     flags: shaderFlags,
                     label: flagString,
-                    program: webgl.createProgram(),
+                    program: null,
                     locations: null,
                     vsource: null, // for debugging
                     fsource: null, // for debugging
                 };
+                var implemented = HAS_TEXCOORD | HAS_NORMAL | HAS_COLOR | USE_TEXTURE | NUM_LIGHTS_MASK | NUM_CLIP_PLANES_MASK | USE_POINT_SIZE;
+                if (shaderFlags & ~implemented) return shader;
+
+                var program = webgl.createProgram()
                 var vs = webgl.createShader(webgl.VERTEX_SHADER);
                 shader.vsource = this.vertexShaderSource(shaderFlags);
                 webgl.shaderSource(vs, shader.vsource);
@@ -971,7 +972,7 @@ function OpenGL() {
                 if (!webgl.getShaderParameter(vs, webgl.COMPILE_STATUS)) {
                     console.error("OpenGL: vertex shader compile error: " + webgl.getShaderInfoLog(vs));
                     debugger;
-                    return;
+                    return shader;
                 }
                 var fs = webgl.createShader(webgl.FRAGMENT_SHADER);
                 shader.fsource = this.fragmentShaderSource(shaderFlags);
@@ -980,17 +981,18 @@ function OpenGL() {
                 if (!webgl.getShaderParameter(fs, webgl.COMPILE_STATUS)) {
                     console.error("OpenGL: fragment shader compile error: " + webgl.getShaderInfoLog(fs));
                     debugger;
-                    return;
+                    return shader;
                 }
-                webgl.attachShader(shader.program, vs);
-                webgl.attachShader(shader.program, fs);
-                webgl.linkProgram(shader.program);
-                if (!webgl.getProgramParameter(shader.program, webgl.LINK_STATUS)) {
-                    console.error("OpenGL: shader link error: " + webgl.getProgramInfoLog(shader.program));
+                webgl.attachShader(program, vs);
+                webgl.attachShader(program, fs);
+                webgl.linkProgram(program);
+                if (!webgl.getProgramParameter(program, webgl.LINK_STATUS)) {
+                    console.error("OpenGL: shader link error: " + webgl.getProgramInfoLog(program));
                     debugger
-                    return;
+                    return shader;
                 }
-                shader.locations = this.getLocations(shader.program, shaderFlags);
+                shader.program = program;
+                shader.locations = this.getLocations(program, shaderFlags);
             }
             return shader;
         },
@@ -1082,7 +1084,7 @@ function OpenGL() {
             if (primitive.mode === GL.POINTS) geometryFlags |= USE_POINT_SIZE;
 
             var shader = this.getShader(geometryFlags);
-            if (!shader) {
+            if (!shader.program) {
                 if (DEBUG) console.warn("UNIMPLEMENTED glEnd shader: " + shader.label);
                 else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glEnd shader: " + shader.label);
                 return;
