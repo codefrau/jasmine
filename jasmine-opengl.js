@@ -64,7 +64,8 @@ function OpenGL() {
     var NUM_CLIP_PLANES_MASK = (1 << flagCounter++)  // 3 bits for number of clip planes (0-5)
                              + (1 << flagCounter++)
                              + (1 << flagCounter++);
-    var USE_FOG =               1 << flagCounter++;
+    var FOG_MASK =             (1 << flagCounter++)  // 2 bits for fog mode (off, linear, exp, exp2)
+                             + (1 << flagCounter++);
 
     // this math is silly but fun ...
     var NUM_LIGHTS_SHIFT = Math.floor(Math.log2(NUM_LIGHTS_MASK)) - 2;
@@ -76,6 +77,15 @@ function OpenGL() {
     var MAX_CLIP_PLANES = (NUM_CLIP_PLANES_MASK >> NUM_CLIP_PLANES_SHIFT) + 1;
     var ANY_CLIP_PLANES = (MAX_CLIP_PLANES-1) << NUM_CLIP_PLANES_SHIFT;
     if (ANY_CLIP_PLANES !== NUM_CLIP_PLANES_MASK) throw Error("OpenGL: bad NUM_CLIP_PLANES_MASK");
+
+    var FOG_SHIFT = Math.floor(Math.log2(FOG_MASK)) - 1;
+    var MAX_FOG = (FOG_MASK >> FOG_SHIFT) + 1;
+    var ANY_FOG = (MAX_FOG-1) << FOG_SHIFT;
+    if (ANY_FOG !== FOG_MASK) throw Error("OpenGL: bad ANY_FOG");
+    var NO_FOG     = 0;
+    var LINEAR_FOG = 1;
+    var EXP_FOG    = 2;
+    var EXP2_FOG   = 3;
 
     var gl;    // the emulated OpenGL state
     var webgl; // the actual WebGL context
@@ -137,6 +147,13 @@ function OpenGL() {
                 primitiveAttrs: 0, // for glVertex
                 clipPlanes: [], // clip plane equations
                 clientState: {}, // enabled arrays by attr
+                fogMode: GL.EXP, // fog mode
+                fogEnabled: false, // fog enabled
+                fogDensity: 1, // fog density
+                fogStart: 0, // fog start
+                fogEnd: 1, // fog end
+                fogColor: new Float32Array([0, 0, 0, 0]), // fog color
+                fogHint: GL.DONT_CARE, // fog hint
                 shaders: {}, // shader programs by attr/flags
                 matrixMode: 0, // current matrix mode
                 matrices: {}, // matrix stacks by mode
@@ -619,6 +636,10 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glDisable GL_DEPTH_TEST");
                     webgl.disable(webgl.DEPTH_TEST);
                     break;
+                case GL.FOG:
+                    DEBUG > 1 && console.log("glDisable GL_FOG");
+                    gl.fogEnabled = false;
+                    break;
                 case GL.NORMALIZE:
                     DEBUG > 1 && console.log("glDisable GL_NORMALIZE");
                     // we always normalize normals
@@ -835,6 +856,10 @@ function OpenGL() {
                     DEBUG > 1 && console.log("glEnable GL_DEPTH_TEST");
                     webgl.enable(webgl.DEPTH_TEST);
                     break;
+                case GL.FOG:
+                    DEBUG > 1 && console.log("glEnable GL_FOG");
+                    gl.fogEnabled = true;
+                    break;
                 case GL.NORMALIZE:
                     DEBUG > 1 && console.log("glEnable GL_NORMALIZE");
                     // we always normalize normals
@@ -904,14 +929,49 @@ function OpenGL() {
             }
         },
 
+        glFog: function(pname, param) {
+            if (gl.listMode && this.addToList("glFog", [pname, param])) return;
+            switch (pname) {
+                case GL.FOG_MODE:
+                    gl.fogMode = param;
+                    DEBUG > 1 && console.log("glFog GL_FOG_MODE", GL_Symbol(param));
+                    break;
+                case GL.FOG_DENSITY:
+                    DEBUG > 1 && console.log("glFog GL_FOG_DENSITY", param);
+                    gl.fogDensity = param;
+                    break;
+                case GL.FOG_START:
+                    DEBUG > 1 && console.log("glFog GL_FOG_START", param);
+                    gl.fogStart = param;
+                    break;
+                case GL.FOG_END:
+                    DEBUG > 1 && console.log("glFog GL_FOG_END", param);
+                    gl.fogEnd = param;
+                    break;
+                case GL.FOG_COLOR:
+                    DEBUG > 1 && console.log("glFog GL_FOG_COLOR", Array.from(param));
+                    gl.fogColor.set(param);
+                    break;
+                default:
+                    if (DEBUG) console.log("UNIMPLEMENTED glFog", GL_Symbol(pname), param);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glFog " + GL_Symbol(pname));
+            }
+        },
+
         glFogi: function(pname, param) {
-            if (gl.listMode && this.addToList("glFogi", [pname, param])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glFogi", GL_Symbol(pname), GL_Symbol(param));
+            this.glFog(pname, param);
         },
 
         glFogf: function(pname, param) {
-            if (gl.listMode && this.addToList("glFogf", [pname, param])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glFogf", GL_Symbol(pname), param);
+            this.glFog(pname, param);
+        },
+
+        glFogiv: function(pname, params) {
+            // FOG_COLOR integer values are mapped linearly such that the most positive representable value maps to 1.0,
+            // and the most negative representable value maps to -1.0
+            this.glFog(pname, pname === GL.FOG_COLOR
+                ? params.map(function(x) { return (x + 0.5) / (0x7FFFFFFF + 0.5); })
+                : params[0]);
         },
 
         glFogfv: function(pname, params) {
@@ -924,6 +984,11 @@ function OpenGL() {
             var shaderFlags = geometryFlags;
             if (gl.textureEnabled && gl.texture) shaderFlags |= USE_TEXTURE;
             if (gl.alphaTest) shaderFlags |= USE_ALPHA_TEST; // UNIMPLEMENTED
+            if (gl.fogEnabled) switch (gl.fogMode) {
+                case GL.EXP: shaderFlags |= EXP_FOG << FOG_SHIFT; break;
+                case GL.EXP2: shaderFlags |= EXP2_FOG << FOG_SHIFT; break;
+                case GL.LINEAR: shaderFlags |= LINEAR_FOG << FOG_SHIFT; break;
+            }
             var numLights = 0;
             if (gl.lightingEnabled) {
                 for (var i = 0; i < MAX_LIGHTS; i++) {
@@ -952,6 +1017,7 @@ function OpenGL() {
                 if (shaderFlags & ANY_CLIP_PLANES) { flagString += ", "+ numClipPlanes +" CLIP_PLANE"; if (numClipPlanes !== 1) flagString += "S"; }
                 if (shaderFlags & USE_ALPHA_TEST) flagString += ", ALPHA_TEST";
                 if (shaderFlags & USE_POINT_SIZE) flagString += ", POINT_SIZE";
+                if (shaderFlags & ANY_FOG) flagString += ", FOG";
 
                 shader = gl.shaders[shaderFlags] = {
                     flags: shaderFlags,
@@ -961,7 +1027,7 @@ function OpenGL() {
                     vsource: null, // for debugging
                     fsource: null, // for debugging
                 };
-                var implemented = HAS_TEXCOORD | HAS_NORMAL | HAS_COLOR | USE_TEXTURE | NUM_LIGHTS_MASK | NUM_CLIP_PLANES_MASK | USE_POINT_SIZE;
+                var implemented = HAS_TEXCOORD | HAS_NORMAL | HAS_COLOR | USE_TEXTURE | NUM_LIGHTS_MASK | NUM_CLIP_PLANES_MASK | USE_POINT_SIZE | FOG_MASK;
                 if (shaderFlags & ~implemented) return shader;
 
                 var program = webgl.createProgram()
@@ -1071,6 +1137,22 @@ function OpenGL() {
                     webgl.uniform4fv(loc['uClipPlanes'][index], clipPlane.equation);
                     index++;
                 }
+            }
+            if (loc['uFogColor']) {
+                DEBUG > 2 && console.log("uFogColor", Array.from(gl.fogColor));
+                webgl.uniform4fv(loc['uFogColor'], gl.fogColor);
+            }
+            if (loc['uFogEnd']) {
+                DEBUG > 2 && console.log("uFogEnd", gl.fogEnd);
+                webgl.uniform1f(loc['uFogEnd'], gl.fogEnd);
+            }
+            if (loc['uFogRange']) {
+                DEBUG > 2 && console.log("uFogRange", gl.fogEnd - gl.fogStart);
+                webgl.uniform1f(loc['uFogRange'], gl.fogEnd - gl.fogStart);
+            }
+            if (loc['uFogDensity']) {
+                DEBUG > 2 && console.log("uFogDensity", gl.fogDensity);
+                webgl.uniform1f(loc['uFogDensity'], gl.fogDensity);
             }
         },
 
@@ -1330,7 +1412,14 @@ function OpenGL() {
 
         glHint: function(target, mode) {
             if (gl.listMode && this.addToList("glHint", [target, mode])) return;
-            DEBUG > 0 && console.log("UNIMPLEMENTED glHint", GL_Symbol(target), GL_Symbol(mode));
+            switch (target) {
+            case webgl.GENERATE_MIPMAP_HINT:
+                DEBUG > 1 && console.log("glHint GL_GENERATE_MIPMAP_HINT", GL_Symbol(mode));
+                webgl.hint(target, mode);
+                break;
+            }
+            // webgl doesn't support any other hints
+            DEBUG > 1 && console.log("IGNORING glHint", GL_Symbol(target), GL_Symbol(mode));
         },
 
         glIsEnabled: function(cap) {
@@ -2048,6 +2137,16 @@ function OpenGL() {
                 src.push("uniform vec4 uClipPlanes[" + numClipPlanes + "];");
                 src.push("varying float vClipDist[" + numClipPlanes + "];");
             }
+            var fog = (shaderFlags & FOG_MASK) >> FOG_SHIFT;
+            if (fog !== NO_FOG) {
+                if (fog === LINEAR_FOG) {
+                    src.push("uniform float uFogEnd;");
+                    src.push("uniform float uFogRange;");
+                } else {
+                    src.push("uniform float uFogDensity;");
+                }
+                src.push("varying float vFogDist;");
+            }
 
             src.push("void main(void) {");
             if (shaderFlags & HAS_COLOR) {
@@ -2095,6 +2194,9 @@ function OpenGL() {
             if (shaderFlags & HAS_TEXCOORD) {
                 src.push("  vTexCoord = aTexCoord;");
             }
+            if (fog !== NO_FOG) {
+                src.push("  vFogDist = -position.z;");
+            }
             if (shaderFlags & USE_POINT_SIZE) {
                 src.push("  gl_PointSize = uPointSize;");
             }
@@ -2125,6 +2227,17 @@ function OpenGL() {
                 }
                 src.push("uniform sampler2D uSampler;");
             }
+            var fog = (shaderFlags & FOG_MASK) >> FOG_SHIFT;
+            if (fog !== NO_FOG) {
+                if (fog === LINEAR_FOG) {
+                    src.push("uniform float uFogEnd;");
+                    src.push("uniform float uFogRange;");
+                } else {
+                    src.push("uniform float uFogDensity;");
+                }
+                src.push("uniform vec4 uFogColor;");
+                src.push("varying float vFogDist;");
+            }
             src.push("void main(void) {");
             if (numClipPlanes > 0) {
                 src.push("  bool clipped = false;");
@@ -2145,6 +2258,20 @@ function OpenGL() {
                     src.push("  vec2 texCord = uTexCoord;");
                 }
                 src.push("  color *= texture2D(uSampler, texCord).bgra;");
+            }
+            if (fog !== NO_FOG) {
+                switch (fog) {
+                    case LINEAR_FOG:
+                        src.push("  float fogAmount = (uFogEnd - vFogDist) / uFogRange;");
+                        break;
+                    case EXP_FOG:
+                        src.push("  float fogAmount = exp(-uFogDensity * vFogDist);");
+                        break;
+                    case EXP2_FOG:
+                        src.push("  float fogAmount = exp(-uFogDensity * uFogDensity * vFogDist * vFogDist);");
+                        break;
+                }
+                src.push("  color.rgb = mix(uFogColor.rgb, color.rgb, clamp(fogAmount, 0.0, 1.0));");
             }
             src.push("  gl_FragColor = color;");
             src.push("}");
@@ -2204,6 +2331,16 @@ function OpenGL() {
                 for (var i = 0; i < numClipPlanes; i++) {
                     locations.uClipPlanes.push(webgl.getUniformLocation(program, "uClipPlanes[" + i + "]"));
                 }
+            }
+            var fog = (shaderFlags & FOG_MASK) >> FOG_SHIFT;
+            if (fog !== NO_FOG) {
+                if (fog === LINEAR_FOG) {
+                    locations.uFogEnd = webgl.getUniformLocation(program, "uFogEnd");
+                    locations.uFogRange = webgl.getUniformLocation(program, "uFogRange");
+                } else {
+                    locations.uFogDensity = webgl.getUniformLocation(program, "uFogDensity");
+                }
+                locations.uFogColor = webgl.getUniformLocation(program, "uFogColor");
             }
 
             DEBUG > 1 && console.log(locations);
