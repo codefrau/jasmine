@@ -6,7 +6,7 @@ Live version: [codefrau.github.io/jasmine](https://codefrau.github.io/jasmine/)
 
 This is a version of Croquet Jasmine running on the [SqueakJS](https://squeak.js.org) virtual machine.
 Here is an [early demo of the system](https://www.youtube.com/watch?v=cXGLOiZUZ2U) from 2003.
-Alan Kay used it for his [Turing Award lecture in 2004](https://www.youtube.com/watch?v=aXC19T5sJ1U&t=994s).
+Alan Kay used it for his [Turing Award lecture in 2004](https://tinlizzie.org/IA/index.php/Alan_Kay_Turing_Award_Lecture_(2004)) (jump to 1 hour in for the Croquet part, but the whole thing is worth a watch).
 While working on that demo, David Smith posted some blog entries
 ([1](https://www.croquet.zone/2004/10/turing-lecture-add-gravity.html),
 [2](https://www.croquet.zone/2004/10/turing-lecture-change-spring-constant.html),
