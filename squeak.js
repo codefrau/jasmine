@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-24",               // Maybe replace at build time?
+        vmDate: "2023-12-27",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -1805,6 +1805,9 @@
             // sorting them by id, and then linking them into old space.
             this.vm.addMessage("fullGC: " + reason);
             var start = Date.now();
+            var previousNew = this.newSpaceCount;
+            var previousYoung = this.youngSpaceCount;
+            var previousOld = this.oldSpaceCount;
             var newObjects = this.markReachableObjects();
             this.removeUnmarkedOldObjects();
             this.appendToOldObjects(newObjects);
@@ -1815,8 +1818,12 @@
             this.hasNewInstances = {};
             this.gcCount++;
             this.gcMilliseconds += Date.now() - start;
-            console.log("Full GC (" + reason + "): " + (Date.now() - start) + " ms");
-            if (reason === "primitive") console.log("  surviving objects: " + this.oldSpaceCount + " (" + this.oldSpaceBytes + " bytes)");
+            var delta = previousOld - this.oldSpaceCount;
+            console.log("Full GC (" + reason + "): " + (Date.now() - start) + " ms, " +
+                "surviving objects: " + this.oldSpaceCount + " (" + this.oldSpaceBytes + " bytes), " +
+                "tenured " + newObjects.length + " (total " + (delta > 0 ? "+" : "") + delta + "), " +
+                "gc'ed " + previousYoung + " young and " + (previousNew - previousYoung) + " new objects");
+
             return newObjects.length > 0 ? newObjects[0] : null;
         },
         gcRoots: function() {
@@ -1965,6 +1972,7 @@
             // and finalize weak refs
             this.vm.addMessage("partialGC: " + reason);
             var start = Date.now();
+            var previous = this.newSpaceCount;
             var young = this.findYoungObjects();
             this.appendToYoungSpace(young);
             this.finalizeWeakReferences();
@@ -1974,7 +1982,9 @@
             this.newSpaceCount = this.youngSpaceCount;
             this.pgcCount++;
             this.pgcMilliseconds += Date.now() - start;
-            console.log("Partial GC (" + reason+ "): " + (Date.now() - start) + " ms");
+            console.log("Partial GC (" + reason+ "): " + (Date.now() - start) + " ms, " +
+                "found " + this.youngRootsCount + " roots in " + this.oldSpaceCount + " old, " +
+                "kept " + this.youngSpaceCount + " young (" + (previous - this.youngSpaceCount) + " gc'ed)");
             return young[0];
         },
         youngRoots: function() {
@@ -2003,6 +2013,7 @@
             // PartialGC: find new objects transitively reachable from old objects
             var todo = this.youngRoots(),     // direct pointers from old space
                 newObjects = [];
+            this.youngRootsCount = todo.length;
             this.weakObjects = [];
             while (todo.length > 0) {
                 var object = todo.pop();
@@ -4860,6 +4871,9 @@
         classString: function() {
             return this.vm.specialObjects[Squeak.splOb_ClassString];
         },
+        classByteArray: function() {
+            return this.vm.specialObjects[Squeak.splOb_ClassByteArray];
+        },
         nilObject: function() {
             return this.vm.nilObj;
         },
@@ -5741,7 +5755,7 @@
                 case 215: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketRemoteAddress', argCount);
                 case 216: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketRemotePort', argCount);
                 case 217: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketConnectToPort', argCount);
-                case 218: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketListenOnPort', argCount);
+                case 218: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketListenWithOrWithoutBacklog', argCount);
                     else { this.vm.warnOnce("missing primitive: 218 (tryNamedPrimitiveInForWithArgs"); return false; }
                 case 219: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketCloseConnection', argCount);
                 case 220: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketAbortConnection', argCount);
@@ -5752,6 +5766,7 @@
                     else return this.primitiveClosureValueNoContextSwitch(argCount);
                 case 223: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketSendDataBufCount', argCount);
                 case 224: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketSendDone', argCount);
+                case 225: if (this.oldPrims) return this.namedPrimitive('SocketPlugin', 'primitiveSocketAccept', argCount);
                     break;  // fail 223-229 if fell through
                 // 225-229: unused
                 // Other Primitives (230-249)
@@ -56025,7 +56040,7 @@
             }
             for (var path in options.templates) {
                 var dir = path[0] == "/" ? path : options.root + path,
-                    baseUrl = new URL(options.url, document.baseURI).href,
+                    baseUrl = new URL(options.url, document.baseURI).href.split(/[?#]/)[0],
                     url = Squeak.splitUrl(options.templates[path], baseUrl).full;
                 if (url.endsWith("/.")) url = url.slice(0,-2);
                 Squeak.fetchTemplateDir(dir, url);
