@@ -15,6 +15,7 @@
     <script src="jasmine-opengl.js"></script>
     <!-- <script src="https://greggman.github.io/webgl-lint/webgl-lint.js" crossorigin></script> -->
     <script src="jasmine-mpeg3-plugin.js"></script>
+    <script src="jasmine-socket-plugin.js"></script>
 </head>
 <body>
     <canvas id="sqCanvas" width="800" height="600"></canvas>
@@ -23,11 +24,11 @@
     <script>
         window.onload = function() {
             // will copy error logs to console
-            Squeak.debugFiles = true;
+            Squeak.debugFiles = false;
             // pretend to be Unix so Croquet platform detection works
             Squeak.platformName = "unix";
             // re-fetch content if needed (earlier versions were missing some files)
-            if (!Squeak.Settings["squeak-template:/jasmine/Content/CAD/rule.png"]) {
+            if (!Squeak.Settings["squeak-template:/jasmine/Content/CAD"]) {
                 var all = Object.keys(Squeak.Settings);
                 for (var i = 0; i < all.length; i++) {
                     var key = all[i];
