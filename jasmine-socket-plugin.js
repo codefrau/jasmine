@@ -158,6 +158,7 @@ function SocketPlugin() {
 
       // Store address found
       if (hasAddress) {
+        DEBUG > 2 && console.log("DNS lookup for " + originalQuestion.name + " found " + address.join(".") + " (TTL " + ttl + ")");
         this.lookupCache[originalQuestion.name] = { address: address, validUntil: Date.now() + (ttl * 1000) };
       }
     },
@@ -811,8 +812,9 @@ function SocketPlugin() {
           else if (this.type === plugin.UDP_Socket_Type) details += " udp";
           if (this.listening) details += " listening on: " + this.localPort;
           else if (this.localPort) details += " local: " + this.localPort;
+          if (this.listenSocket) details += "(" + this.listenSocket.localPort + ")";
           if (this.port) details += " remote: " + (this.host || this.hostAddress.join(".")) + ":" + this.port;
-          if (this.status !== plugin.Socket_Unconnected || !details) details += " (" + this.statusString() + ")";
+          details += " (" + this.statusString() + ")";
           return name + "[" + details.trim() + "]";
         },
 
@@ -846,30 +848,26 @@ function SocketPlugin() {
     },
 
     primitiveResolverNameLookupResult: function(argCount) {
-      DEBUG > 1 && console.log("primitiveResolverNameLookupResult");
       if (argCount !== 0) return false;
-
+      var result = this.interpreterProxy.nilObject(); // Answer nil if no lookup was started
       // Validate that lastLookup is in fact a name (and not an address)
-      if (!this.lastLookup || !this.lastLookup.substr) {
-        this.interpreterProxy.popthenPush(argCount + 1, this.interpreterProxy.nilObject());
-        return true;
+      if (typeof this.lastLookup === "string") {
+        // Retrieve result from cache
+        var address = this._getAddressFromLookupCache(this.lastLookup, true);
+        if (address) result = this.primHandler.makeStByteArray(address);
       }
-
-      // Retrieve result from cache
-      var address = this._getAddressFromLookupCache(this.lastLookup, true);
-      this.interpreterProxy.popthenPush(argCount + 1, address ?
-        this.primHandler.makeStByteArray(address) :
-        this.interpreterProxy.nilObject()
-      );
+      DEBUG > 1 && console.log("primitiveResolverNameLookupResult => " + result);
+      this.interpreterProxy.popthenPush(argCount + 1, result);
       return true;
     },
 
     primitiveResolverStartNameLookup: function(argCount) {
-      DEBUG > 1 && console.log("primitiveResolverStartNameLookup");
       if (argCount !== 1) return false;
 
       // Start new lookup, ignoring if one is in progress
       var lookup = this.lastLookup = this.interpreterProxy.stackValue(0).bytesAsString();
+
+      DEBUG > 1 && console.log("primitiveResolverStartNameLookup " + lookup);
 
       // Perform lookup in local cache
       var result = this._getAddressFromLookupCache(lookup, false);
@@ -881,6 +879,7 @@ function SocketPlugin() {
         // Perform DNS request
         var dnsQueryURL = "https://9.9.9.9:5053/dns-query?name=" + encodeURIComponent(this.lastLookup) + "&type=A";
         var queryStarted = false;
+        DEBUG > 2 && console.log("DNS query: " + dnsQueryURL);
         if (self.fetch) {
           var thisSocket = this;
           var init = {
@@ -981,9 +980,19 @@ function SocketPlugin() {
       return true;
     },
 
+    resolverStatusString: function() {
+      switch (this.status) {
+        case this.Resolver_Uninitialized: return 'uninitialized';
+        case this.Resolver_Ready: return 'ready';
+        case this.Resolver_Busy: return 'busy';
+        case this.Resolver_Error: return 'error';
+        default: return 'unknown ' + this.status;
+      }
+    },
+
     primitiveResolverStatus: function(argCount) {
-      DEBUG > 1 && console.log("primitiveResolverStatus");
       if (argCount !== 0) return false;
+      DEBUG > 1 && console.log("primitiveResolverStatus => " + this.resolverStatusString());
       this.interpreterProxy.popthenPush(argCount + 1, this.status);
       return true;
     },
@@ -1297,12 +1306,10 @@ function SocketPlugin() {
       // until the session is established.
       // Then we can fill in the address and continue execution.
       this.withCroquetNetworkDo(function(network) {
-        var croquetAddress = network.ipAddress.split(".").map(function(s) { return +s; });
         for (var i = 0; i < 4; i++) {
-          localAddressOop.bytes[i] = croquetAddress[i];
+          localAddressOop.bytes[i] = this.croquetAddress[i];
         }
         DEBUG > 1 && console.log("primitiveResolverLocalAddress => " + localAddressOop.bytes.join("."));
-        this.croquetAddress = croquetAddress;
       }.bind(this));
 
       this.interpreterProxy.popthenPush(argCount + 1, localAddressOop);
@@ -1316,7 +1323,7 @@ function SocketPlugin() {
       socket.pendingConnections = [];
       this.withCroquetNetworkDo(function(network) {
         var type = socket.type === this.TCP_Socket_Type ? "tcp" : "udp";
-        var ip = this.croquetAddress.join(".");
+        var ip = this.croquetAddr;
         var ipAndPort = ip + ":" + port;
         DEBUG > 0 && console.log("Croquet network: " + socket + " asking to listen on " + type + " " +ipAndPort);
         network.publish(ip, "listen", {ip, port, type});
@@ -1347,14 +1354,14 @@ function SocketPlugin() {
     croquetAccept: function(socket, newSocket, src, port) {
       var acceptedPort = newSocket.allocatePort();
       if (!acceptedPort) return false;
-      var localHost = this.croquetAddress.join(".");
+      var localHost = this.croquetAddr;
       var srcAndPort = src + ":" + port;
       var dstAndPort = localHost + ":" + socket.localPort;
       var connectionId = srcAndPort + "-" + dstAndPort;
       newSocket.isCroquet = true;
       newSocket.hostAddress = src.split(".").map(function(s) { return +s; });
       newSocket.port = port;
-      newSocket.localPort = socket.localPort;
+      newSocket.listenSocket = socket;
       newSocket.status = this.Socket_Connected;
       this.withCroquetNetworkDo(function(network) {
         DEBUG > 0 && console.log("Croquet network: " + socket + " accepted connection from " + srcAndPort);
@@ -1379,7 +1386,7 @@ function SocketPlugin() {
       if (!localPort) return false;
       socket.isCroquet = true;
       this.withCroquetNetworkDo(function(network) {
-        var src = this.croquetAddress.join(".");
+        var src = this.croquetAddr;
         var dst = hostAddr.join(".");
         var srcAndPort = src + ":" + localPort;
         var dstAndPort = dst + ":" + port;
@@ -1410,7 +1417,7 @@ function SocketPlugin() {
     croquetClose: function(socket) {
       if (!socket.isCroquet) return false;
       this.withCroquetNetworkDo(function(network) {
-        var src = this.croquetAddress.join(".");
+        var src = this.croquetAddr;
         var dst = socket.hostAddress.join(".");
         var srcAndPort = src + ":" + socket.localPort;
         var dstAndPort = dst + ":" + socket.port;
@@ -1427,21 +1434,26 @@ function SocketPlugin() {
       if (!socket.isCroquet) return false;
       this.withCroquetNetworkDo(function(network) {
         DEBUG > 0 && console.log("Croquet network: " + socket + " destroying");
-        var dstAndPort = socket.hostAddress.join(".") + ":" + socket.port;
+        var local = this.croquetAddr;
+        var localAndPort = local + ":" + socket.localPort;
         if (socket.type === this.TCP_Socket_Type) {
-          var srcAndPort = this.croquetAddress.join(".") + ":" + socket.localPort;
-          var connectionId = srcAndPort + "-" + dstAndPort;
           if (socket.listening) {
-            network.unsubscribe(srcAndPort, "tcp-listening", "*");
-            network.unsubscribe(srcAndPort, "tcp-accept", "*");
+            network.unsubscribe(localAndPort, "tcp-listening", "*");
+            network.unsubscribe(localAndPort, "tcp-accept", "*");
+          } else if (socket.listenSocket) {
+            localAndPort = local + ":" + socket.listenSocket.localPort;
           }
-          network.unsubscribe(connectionId, "tcp-connected", "*");
-          network.unsubscribe(connectionId, "tcp-disconnected", "*");
-          network.unsubscribe(connectionId, "tcp-receive", "*");
+          if (socket.hostAddress) {
+            var remoteAndPort = socket.hostAddress.join(".") + ":" + socket.port;
+            var connectionId = localAndPort + "-" + remoteAndPort;
+            network.unsubscribe(connectionId, "tcp-connected", "*");
+            network.unsubscribe(connectionId, "tcp-disconnected", "*");
+            network.unsubscribe(connectionId, "tcp-receive", "*");
+          }
         } else {
           if (socket.listening) {
-            network.unsubscribe(dstAndPort, "udp-listening", "*");
-            network.unsubscribe(dstAndPort, "udp-receive", "*");
+            network.unsubscribe(localAndPort, "udp-listening", "*");
+            network.unsubscribe(localAndPort, "udp-receive", "*");
           }
         }
       }.bind(this));
@@ -1451,7 +1463,7 @@ function SocketPlugin() {
     croquetSendTCP: function(socket, data, start, end) {
       var count = end - start;
       if (start > 0 || count !== data.length) data = data.subarray(start, end);
-      var src = this.croquetAddress.join(".");
+      var src = this.croquetAddr;
       var dst = socket.hostAddress.join(".");
       var port = socket.port;
       var srcAndPort = src + ":" + socket.localPort;
@@ -1497,6 +1509,9 @@ function SocketPlugin() {
         this.startCroquetNetwork()
         .then(session => {
             this.croquetNetwork = session;
+            var ipAddress = session.view.ipAddress;
+            this.croquetAddress = ipAddress.split(".").map(function(s) { return +s; });
+            this.croquetAddr = ipAddress;
             func(this.croquetNetwork.view);
             continueExecution();
         }).catch(error => {
@@ -1721,6 +1736,9 @@ function SocketPlugin() {
 
       // start session
       if (!this.sessionPromise) {
+          // to run this locally I use the URL
+          // http://localhost:8000/jasmine/?apiKey=my-dev-key
+          // because the public key is restricted to my github.io domain
           let apiKey = window.location.search.match(/apiKey=([^&]+)/);
           if (apiKey) apiKey = apiKey[1];
           else apiKey = "1bfHo0sk3HLmzqxiaasuEFBccxNDE660vMzghymFm";
