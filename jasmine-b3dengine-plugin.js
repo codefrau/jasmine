@@ -4,7 +4,7 @@ function B3DEnginePlugin() {
     var DEBUG = 0; // 0 = off, 1 = some, 2 = lots
 
     return {
-        getModuleName: function() { return 'Squeak3D'; },
+        getModuleName: function() { return 'Squeak3D (jasmine)'; },
         interpreterProxy: null,
         primHandler: null,
 

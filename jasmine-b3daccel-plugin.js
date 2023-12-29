@@ -27,7 +27,7 @@ function B3DAcceleratorPlugin() {
     var B3D_SYNCVBL           = 0x0020;
 
     return {
-        getModuleName: function() { return 'B3DAcceleratorPlugin'; },
+        getModuleName: function() { return 'B3DAcceleratorPlugin (jasmine)'; },
         interpreterProxy: null,
         primHandler: null,
 
@@ -140,6 +140,7 @@ function B3DAcceleratorPlugin() {
             DEBUG > 0 && console.log("B3DAccel: primitiveCreateRendererFlags", x, y, w, h, flags);
             // create WebGL canvas
             var canvas = document.createElement("canvas");
+            canvas.classList.add("b3daccel");
             canvas.width = w;
             canvas.height = h;
             canvas.style.backgroundColor = "transparent";

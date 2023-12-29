@@ -91,6 +91,8 @@ function OpenGL() {
     var webgl; // the actual WebGL context
 
     return {
+        getModuleName: function() { return 'libGL.so (jasmine)'; },
+
         setInterpreter: function(anInterpreterProxy) {
             this.vm = anInterpreterProxy.vm;
             return true;

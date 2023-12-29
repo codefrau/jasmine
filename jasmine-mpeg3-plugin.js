@@ -14,7 +14,7 @@ function JasmineMpeg3Plugin() {
     var DEBUG = 1; // 0 = off, 1 = some, 2 = lots
 
     return {
-        getModuleName: function() { return 'Mpeg3Plugin'; },
+        getModuleName: function() { return 'Mpeg3Plugin (jasmine)'; },
         interpreterProxy: null,
         primHandler: null,
         vm: null,
