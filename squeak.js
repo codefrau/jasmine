@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-28",               // Maybe replace at build time?
+        vmDate: "2023-12-29",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -5837,6 +5837,7 @@
             var sp = this.vm.sp;
             if (mod) {
                 this.interpreterProxy.argCount = argCount;
+                this.interpreterProxy.primitiveName = functionName;
                 var primitive = mod[functionName];
                 if (typeof primitive === "function") {
                     result = mod[functionName](argCount);
