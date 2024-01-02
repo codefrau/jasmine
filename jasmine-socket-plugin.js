@@ -2,11 +2,27 @@
  * Croquet Jasmine Socket Plugin
  *
  * This plugin is a modified version of the SocketPlugin from the SqueakJS project.
- * It is used to provide a SocketPlugin for the Jasmine Smalltalk image.
- * It emulates a LAN connection by joining a (modern) Croquet.io session.
+ * It is used to provide a networking for the Jasmine Smalltalk image.
+ * It emulates an IP network (TCP and UDP) by joining a (modern) Croquet.io session.
+ * That network has no connection to any "real" network, it is purely virtual.
  *
- * ORIGINAL COMMENT FROM SOCKET PLUGIN
-
+ * Note that the use of croquet.io is purely to emulate that network, the actual
+ * synchronization logic is all inside the (old) Smalltalk image. That also makes it
+ * useful beyond just Jasmine. It should be able to support e.g. Croquet Hedgehog and
+ * other networked Croquet apps as well (e.g. a Seaside server image, and a client
+ * image accessing it).
+ *
+ * TODO:
+ * [x] UDP
+ * [ ] TCP
+ * [ ] chunked reads
+ * [ ] chunked writes?
+ * [ ] fragmentation for oversized packets
+ * [ ] leave Croquet session when no longer needed (all sockets destroyed, or maybe
+ *     unconnected for a while)
+ *
+ * ORIGINAL COMMENT FROM SOCKET PLUGIN by Fabio Niephaus:
+ *
  * This Socket plugin only fulfills http:/https:/ws:/wss: requests by intercepting them
  * and sending as either XMLHttpRequest or Fetch or WebSocket.
  * To make connections to servers without CORS, it uses a CORS proxy.
@@ -36,9 +52,26 @@ function SocketPlugin() {
   var DEBUG = 0; // 0 = off, 1 = some, 2 = more, 3 = lots
 
   var CROQUET_URL = "https://cdn.jsdelivr.net/npm/@croquet/croquet@1.1.0-41";
-  var CROQUET_RATE_LIMIT = 1000 / 60; // 60 sends/s
 
-  var BROADCAST_ADDR = "255.255.255.255";
+  // The embedded API key is restricted to codefrau.github.io
+  // get your own key from https://croquet.io/keys
+  // to run this locally I use the URL
+  // http://localhost:8000/jasmine/?apiKey=my-dev-key
+  var CROQUET_APIKEY = "1bfHo0sk3HLmzqxiaasuEFBccxNDE660vMzghymFm";
+  var CROQUET_APPID = "net.codefrau.squeakjs"; // can be anything
+  var CROQUET_SESSION = "10.42.0.0"; // network as session name because why not
+  var CROQUET_PASSWORD = "none"; // make everyone join the same session
+
+  // we use the 10.42.0.0/16 subnet, giving us 65535 IP addresses
+  var CROQUET_NETWORK = CROQUET_SESSION.split(".").map(d => +d);
+  var BROADCAST_ADDR = "255.255.255.255"; // technically it's 10.42.255.255
+  var CROQUET_RELEASE_HOSTNAME = 1000 * 60 * 60 * 24; // 24 hours
+  var CROQUET_RATE_LIMIT = 1000 / 20; // if we send too often, Croquet will kick us out
+
+  const CROQUET_IP_HEADER = 2 * 4 + 1; // 2 addresses (4 bytes each) + protocol (1 byte)
+  const CROQUET_UDP_HEADER = 2 * 2; // 2 ports (2 bytes each)
+  const CROQUET_TCP_HEADER = 2 * 2 + 2 * 4 + 1; // 2 ports (2 bytes each) + seq/ack (4 bytes each) + flags (1 byte)
+  const CROQUET_MTU = 11000; // Croquet messages are limited to 16k, but we need to account for BASE64 encoding and headers
 
   return {
     getModuleName: function () { return 'SocketPlugin (croquet.io)'; },
@@ -59,9 +92,9 @@ function SocketPlugin() {
 
     // allocated network ports for croquet network sockets (portNumber => socket)
     croquetTCPPorts: {},
-    croquetTCPNextPort: 1024,
+    croquetTCPNextPort: 49152, // 49152 - 65535 (IANA suggested range for dynamic or private ports)
     croquetUDPPorts: {},
-    croquetUDPNextPort: 1024,
+    croquetUDPNextPort: 49152, // 49152 - 65535
 
     // Constants
     Domain_Unspecified: 0,
@@ -202,6 +235,10 @@ function SocketPlugin() {
         writeSemaIndex: writeSemaIdx,
 
         webSocket: null,
+
+        isCroquet: false,
+        localPort: null, // only for croquet sockets (maybe should generalize this to all sockets?)
+        listening: false, // ready to receive a connection (TCP) or data (UDP)
 
         sendBuffer: null,
         sendTimeout: null,
@@ -656,14 +693,14 @@ function SocketPlugin() {
         },
 
         connect: function (hostAddress, port) {
-          this.hostAddress = hostAddress;
-          this.host = plugin._reverseLookupNameForAddress(hostAddress);
-          this.port = port;
-          // check if this is going to a croquet address (10.42.*.*), otherwise assume it's http
-          var isCroquetAddress = plugin.croquetAddress && this.hostAddress[0] === plugin.croquetAddress[0] && this.hostAddress[1] === plugin.croquetAddress[1];
+          // check if we're connecting to the Croquet subnet otherwise assume it's http
+          var isCroquetAddress = hostAddress[0] === CROQUET_NETWORK[0] && hostAddress[1] === CROQUET_NETWORK[1];
           if (isCroquetAddress) {
-            plugin.croquetConnect(this, hostAddress, port);
+              plugin.croquetConnect(this, hostAddress, port);
           } else {
+            this.hostAddress = hostAddress;
+            this.host = plugin._reverseLookupNameForAddress(hostAddress);
+            this.port = port;
             this.status = plugin.Socket_Connected;
             this._signalConnSemaphore();
             this._signalWriteSemaphore(); // Immediately ready to write
@@ -688,11 +725,7 @@ function SocketPlugin() {
 
         destroy: function () {
           if (this.localPort) {
-            var ports = this.type === plugin.TCP_Socket_Type ? plugin.croquetTCPPorts : plugin.croquetUDPPorts;
-            delete ports[this.localPort];
-            DEBUG > 0 && console.log("Croquet network: " + this + " released local port " + this.localPort + " (now " + Object.keys(ports).length + " ports)");
             plugin.croquetDestroy(this);
-            this.localPort = null;
           }
           this.status = plugin.Socket_InvalidSocket;
         },
@@ -739,7 +772,7 @@ function SocketPlugin() {
         },
 
         send: function (data, start, end) {
-          if (this.isCroquet) return plugin.croquetTCPSend(this, data.bytes, start, end);
+          if (this.isCroquet) return plugin.croquetSend(this, data.bytes, start, end);
           if (this.sendTimeout !== null) {
             self.clearTimeout(this.sendTimeout);
           }
@@ -760,12 +793,6 @@ function SocketPlugin() {
           return newBytes.byteLength;
         },
 
-        sendUDP: function (data, start, end, address, port) {
-          if (this.isCroquet) return plugin.croquetUDPSend(this, data, start, end, address, port);
-          console.warn("udp not supported");
-          return 0;
-        },
-
         allocatePort: function (port) {
           var tcp = this.type === plugin.TCP_Socket_Type;
           var ports = tcp ? plugin.croquetTCPPorts : plugin.croquetUDPPorts;
@@ -779,7 +806,7 @@ function SocketPlugin() {
               if (!ports[port]) break;
             }
             if (ports[port]) {
-              for (port = 1024; port < startPort; port++) {
+              for (port = 49152; port < startPort; port++) {
                 if (!ports[port]) break;
               }
             }
@@ -792,7 +819,6 @@ function SocketPlugin() {
           }
           ports[port] = this;
           this.localPort = port;
-          DEBUG > 0 && console.log("Croquet network: allocated: " + this);
           return port;
         },
 
@@ -802,16 +828,7 @@ function SocketPlugin() {
             return false;
           }
           var success = plugin.croquetListen(this, port, backlog);
-          if (success) this.listening = true;
           return success;
-        },
-
-        connectPending: function () {
-          // we got a connection to this listening socket
-          // and accept was not called, so we connect directly
-          var srcAndPort = this.pendingConnections.shift().split(":");
-          this.hostAddress = srcAndPort[0].split(".").map(function (d) { return +d; });
-          this.port = srcAndPort[1];
         },
 
         [Symbol.toPrimitive]: function () {
@@ -822,7 +839,6 @@ function SocketPlugin() {
           else if (this.type === plugin.UDP_Socket_Type) details += " udp";
           if (this.listening) details += " listening on: " + this.localPort;
           else if (this.localPort) details += " local: " + this.localPort;
-          if (this.listenSocket) details += "(" + this.listenSocket.localPort + ")";
           if (this.port) details += " remote: " + (this.host || this.hostAddress.join(".")) + ":" + this.port;
           details += " (" + this.statusString() + ")";
           return name + "[" + details.trim() + "]";
@@ -1084,9 +1100,6 @@ function SocketPlugin() {
       var sqHandle = this.primHandler.makeStString(name);
       var socket = this._newSocket(domain, socketType, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
       socket.name = "socket#" + this.handleCounter;
-      if (socketType === this.UDP_Socket_Type) {
-        socket.status = this.Socket_Connected;
-      }
       sqHandle.socket = socket;
       return sqHandle;
     },
@@ -1217,14 +1230,52 @@ function SocketPlugin() {
       var end = start + count;
       if (end > data.length) return false;
 
-      DEBUG > 1 && console.log("primitiveSocketSendUDPDataBufCount " + socket + " to " + host + ":" + port + " (" + count + " bytes)");
+      DEBUG > 1 && console.log("primitiveSocketSendUDPDataBufCount " + socket + " to " + host.join(".") + ":" + port + " (" + count + " bytes)");
 
-      var res = socket.sendUDP(data, start, end, host, port);
-      this.interpreterProxy.popthenPush(argCount + 1, res);
+      if (!socket.localPort) {
+        this.croquetConnect(socket, host, port);
+      }
+
+      var count = this.croquetSend(socket, data, start, end);
+
+      this.interpreterProxy.popthenPush(argCount + 1, count);
       return true;
     },
 
+    primitiveSocketReceiveUDPDataBufCount: function (argCount) {
+      // primSocket: socketID receiveUDPDataInto: aStringOrByteArray startingAt: startIndex count: count
+      if (argCount !== 4) return false;
+      var socket = this.interpreterProxy.stackObjectValue(3).socket;
+      if (socket === undefined) return false;
+      var target = this.interpreterProxy.stackObjectValue(2);
+      var start = this.interpreterProxy.stackIntegerValue(1) - 1;
+      var count = this.interpreterProxy.stackIntegerValue(0);
+      if ((start + count) > target.bytes.length) return false;
+
+      var responseBefore = socket.response.length;
+      var bytes = socket.recv(count);
+      target.bytes.set(bytes, start);
+      DEBUG > 1 && console.log("primitiveSocketReceiveUDPDataBufCount " + socket + " => " + bytes.length + " bytes");
+      var results = this.interpreterProxy.instantiateClassindexableSize(this.interpreterProxy.classArray(), 4);
+      var addressOop = this.interpreterProxy.instantiateClassindexableSize(this.interpreterProxy.classByteArray(), 4);
+      addressOop.bytes.set(socket.hostAddress);
+      var port = socket.port;
+      var moreFlag = socket.response.length === responseBefore;
+      results.pointers[0] = bytes.length;
+      results.pointers[1] = addressOop;
+      results.pointers[2] = port;
+      results.pointers[3] = moreFlag ? this.vm.trueObj : this.vm.falseObj;
+      this.interpreterProxy.popthenPush(argCount + 1, results);
+    },
+
     /****************** CROQUET STUFF ******************/
+
+    croquetRegisterSocket: function (socket, port) {
+      socket.isCroquet = true;
+      port = socket.allocatePort(port);
+      DEBUG > 0 && console.log("Croquet network: registered " + socket);
+      return port;
+    },
 
     primitiveSocketListenWithOrWithoutBacklog: function (argCount) {
       if (argCount < 2) return false;
@@ -1343,246 +1394,154 @@ function SocketPlugin() {
     },
 
     croquetListen: function (socket, port, backlog) {
-      socket.isCroquet = true;
-      this.withCroquetNetworkDo(function (network) {
-        port = socket.allocatePort(port);
-        var type = socket.type === this.TCP_Socket_Type ? "tcp" : "udp";
-        var ip = this.croquetAddr;
-        var ipAndPort = ip + ":" + port;
-        DEBUG > 0 && console.log("Croquet network: " + socket + " listen on " + ipAndPort);
-        if (type === "tcp") {
-          DEBUG > 2 && console.log("View.publish(" + ip + ":tcp-listen, { " + ip + ", " + port + " })");
-          network.publish(ip, "tcp-listen", { ip, port });
-          socket.pendingConnections = [];
-          socket.status = this.Socket_WaitingForConnection;
-          socket.sendIsReply = true;
-          // socket._signalConnSemaphore();
-          network.subscribe(ipAndPort, "tcp-connected-src", function tcpConnected(srcAndPort) {
-            DEBUG > 0 && console.log("Croquet network: " + socket + " connection from " + srcAndPort);
-            socket.pendingConnections.push(srcAndPort); // TODO: limit number of pending connections to backlog
-            socket.status = this.Socket_Connected;
-            socket._signalConnSemaphore();
-            // now subscribe to receive data
-            var connection = srcAndPort + "-" + ipAndPort;
-            socket.connection = connection; // remember for easy unsubscribe
-            network.subscribe(connection, "tcp-sent", function (data) {
-              DEBUG > 0 && console.log("Croquet network: " + socket + " received " + data.length + " bytes from " + srcAndPort);
-              socket.response = [data];
-              socket.responseReceived = true;
-              socket._signalReadSemaphore();
-            }.bind(this));
-            network.subscribe(connection, "tcp-disconnected-src", function () {
-              DEBUG > 0 && console.log("Croquet network: " + socket + " closed connection from " + srcAndPort);
-              socket.status = this.Socket_OtherEndClosed;
-              socket._signalConnSemaphore();
-            }.bind(this));
-          }.bind(this));
-        } else {
-          function udpReceive(data) {
-            DEBUG > 0 && console.log("Croquet network: " + socket + " received " + data.length + " bytes");
-            socket.response = [data];
-            socket.responseReceived = true;
-            socket._signalReadSemaphore();
-          };
-          udpReceive = udpReceive.bind(this);
-          var broadcastAddrAndPort = BROADCAST_ADDR + ":" + port;
-          udpReceive = udpReceive.bind(this);
-          DEBUG > 2 && console.log("View.publish(" + ip + ", udp-listen, { " + ip + ", " + port + " })");
-          network.publish(ip, "udp-listen", { ip, port });
-          network.subscribe(ipAndPort, "udp-sent", udpReceive);
-          network.subscribe(broadcastAddrAndPort, "udp-sent", udpReceive);
+      this.withCroquetNetworkDo(network => {
+        DEBUG > 0 && console.log("Croquet network: " + socket + " listen on " + port);
+        this.croquetRegisterSocket(socket, port);
+        if (socket.type === this.UDP_Socket_Type) {
+          socket.status = this.Socket_Connected; // ready to receive or send
+        } else { // TCP
+          debugger
         }
-      }.bind(this));
+        socket.listening = true;
+      });
       return true;
     },
 
-    croquetAccept: function (socket, newSocket, src, port) {
-      var acceptedPort = newSocket.allocatePort();
-      if (!acceptedPort) return false;
-      var localHost = this.croquetAddr;
-      var srcAndPort = src + ":" + port;
-      var dstAndPort = localHost + ":" + socket.localPort;
-      var connection = srcAndPort + "-" + dstAndPort;
-      newSocket.isCroquet = true;
-      newSocket.hostAddress = src.split(".").map(function (s) { return +s; });
-      newSocket.port = port;
-      newSocket.listenSocket = socket;
-      newSocket.status = this.Socket_Connected;
-      newSocket.sendIsReply = true;
-      newSocket.connection = connection;
-      this.withCroquetNetworkDo(function (network) {
-        DEBUG > 0 && console.log("Croquet network: " + socket + " accepted connection from " + srcAndPort);
-        network.subscribe(connection, "tcp-sent", function (data) {
-          DEBUG > 0 && console.log("Croquet network: " + newSocket + " received " + data.length + " bytes from " + srcAndPort);
-          newSocket.response = [data];
-          newSocket.responseReceived = true;
-          newSocket._signalReadSemaphore();
-        }.bind(this));
-        network.subscribe(connection, "tcp-disconnected-dst", function () {
-          DEBUG > 0 && console.log("Croquet network: " + newSocket + " closed connection from " + srcAndPort);
-          newSocket.status = this.Socket_OtherEndClosed;
-          newSocket._signalConnSemaphore();
-        }.bind(this));
-      }.bind(this));
+    croquetConnect: function (socket, dstAddr, port) {
+      this.withCroquetNetworkDo(network => {
+        const dst = dstAddr.join(".");
+        DEBUG > 0 && console.log("Croquet network: " + socket + " connecting to " + dst + ":" + port + " ...");
+        this.croquetRegisterSocket(socket);
+        socket.hostAddress = dstAddr;
+        socket.host = dst;
+        socket.port = port;
+        if (socket.type === this.UDP_Socket_Type) {
+          socket.status = this.Socket_Connected; // ready to receive or send
+          socket._signalConnSemaphore();
+          socket._signalWriteSemaphore(); // Immediately ready to write
+          DEBUG > 0 && console.log("Croquet network: " + socket + " connected");
+        } else { // TCP
+          debugger
+        }
+      });
       return true;
     },
 
-    croquetConnect: function (socket, hostAddr, port) {
-      socket.isCroquet = true;
-      this.withCroquetNetworkDo(function (network) {
-        var localPort = socket.allocatePort();
-        var src = this.croquetAddr;
-        var dst = hostAddr.join(".");
-        var srcAndPort = src + ":" + localPort;
-        var dstAndPort = dst + ":" + port;
-        DEBUG > 0 && console.log("Croquet network: " + socket + " connecting " + srcAndPort + " to " + dstAndPort);
-        socket.status = this.Socket_WaitingForConnection;
-        socket._signalConnSemaphore();
-
-        function connect() {
-          if (socket.status === this.Socket_WaitingForConnection) {
-            DEBUG > 2 && console.log("View.publish(" + dstAndPort + ":tcp-connect, { " + srcAndPort + ", " + dstAndPort + " })");
-            network.publish(dstAndPort, "tcp-connect", { srcAndPort, dstAndPort });
-            setTimeout(connect, 100);
-          }
+    croquetSend: function (socket, data, start, end) {
+      var count = end - start;
+      if (start > 0 || count !== data.length) data = data.subarray(start, end);
+      this.withCroquetNetworkDo(network => {
+        DEBUG > 0 && console.log("Croquet network: " + socket + " send " + data.length + " bytes");
+        const payloadHeader = socket.type === this.UDP_Socket_Type ? CROQUET_UDP_HEADER : CROQUET_TCP_HEADER;
+        const ipPacket = new Uint8Array(CROQUET_IP_HEADER + payloadHeader + data.length);
+        const src = this.croquetAddress;
+        const dst = socket.hostAddress;
+        ipPacket.set(src, 0);
+        ipPacket.set(dst, 4);
+        ipPacket[ 8] = socket.type; // UDP or TCP
+        ipPacket[ 9] = socket.localPort >> 8;
+        ipPacket[10] = socket.localPort & 0xFF;
+        ipPacket[11] = socket.port >> 8;
+        ipPacket[12] = socket.port & 0xFF;
+        if (socket.type === this.TCP_Socket_Type) {
+          // need to set seq/ack/flags
+          debugger
         }
-        connect = connect.bind(this);
-        connect();
+        ipPacket.set(data, CROQUET_IP_HEADER + payloadHeader);
+        network.send(ipPacket);
+        this.lastCroquetSend = Date.now();
+        this.writeSemaNeeded = true;
+        setTimeout(() => this.croquetSendDone(socket, true), CROQUET_RATE_LIMIT);
+      });
+      return count;
+    },
 
-        var connection = srcAndPort + "-" + dstAndPort;
-        socket.connection = connection; // remember for easy unsubscribe
-        network.subscribe(connection, "tcp-connected-dst", function () {
-          DEBUG > 0 && console.log("Croquet network: " + socket + " connected to " + dstAndPort);
-          socket.status = this.Socket_Connected;
-          socket._signalConnSemaphore();
-          socket._signalWriteSemaphore(); // now ready to write
-          // now subscribe to receive data
-          network.subscribe(connection, "tcp-replied", function (data) {
-            DEBUG > 0 && console.log("Croquet network: " + socket + " received " + data.length + " bytes from " + dstAndPort);
-            socket.response = [data];
-            socket.responseReceived = true;
-            socket._signalReadSemaphore();
-          }.bind(this));
-        }.bind(this));
-        network.subscribe(connection, "tcp-disconnected-dst", function ({ msg }) {
-          if (socket.status === this.Socket_WaitingForConnection) {
-            DEBUG > 0 && console.log("Croquet network: " + socket + " failed to connect " + srcAndPort + " to " + dstAndPort + ": " + msg);
-          } else {
-            DEBUG > 0 && console.log("Croquet network: " + socket + " disconnected " + dstAndPort + " from " + srcAndPort + ": " + msg);
-          }
-          socket.status = this.Socket_OtherEndClosed;
-          socket._signalConnSemaphore();
-        }.bind(this));
-      }.bind(this));
-      return true;
+    lastCroquetSend: 0,
+    writeSemaNeeded: false,
+
+    croquetSendDone: function (socket, signal) {
+      if (!this.croquetNetwork) return true;
+      var msSinceLastSend = Date.now() - this.lastCroquetSend;
+      var wait = CROQUET_RATE_LIMIT - msSinceLastSend;
+      var done = wait <= 0;
+      DEBUG > 2 && !done && console.log("Croquet network: send limit wait time " + (CROQUET_RATE_LIMIT - msSinceLastSend) + "ms");
+      if (done && this.writeSemaNeeded) {
+        if (signal) socket._signalWriteSemaphore();
+        this.writeSemaNeeded = false;
+      }
+      return done;
+    },
+
+    croquetReceive(ipPacket) {
+      const type = ipPacket[8];
+      const ports = type === this.UDP_Socket_Type ? this.croquetUDPPorts : this.croquetTCPPorts;
+      const dstPort = ipPacket[11] << 8 | ipPacket[12];
+      const socket = ports[dstPort];
+      if (!socket) {
+        DEBUG > 0 && console.warn("Croquet network: receiving " + ipPacket.length + " bytes for unregistered port " + dstPort);
+        return;
+      }
+      DEBUG > 0 && console.log("Croquet network: receiving " + ipPacket.length + " bytes for " + socket);
+      if (socket.status === this.Socket_Connected) {
+        if (!socket.hostAddress) {
+          const src = ipPacket.slice(0, 4);
+          const srcPort = ipPacket[9] << 8 | ipPacket[10];
+          socket.hostAddress = src;
+          socket.host = socket.hostAddress.join(".");
+          socket.port = srcPort;
+        }
+        // socket is connected, so this is data
+        const header = type === this.UDP_Socket_Type ? CROQUET_UDP_HEADER : CROQUET_TCP_HEADER;
+        const payload = ipPacket.subarray(CROQUET_IP_HEADER + header);
+        if (!socket.response) socket.response = [];
+        socket.response.push(payload);
+        socket.responseReceived = true;
+        socket._signalReadSemaphore();
+      } else {
+       debugger
+      }
     },
 
     croquetClose: function (socket) {
-      if (!socket.isCroquet) return false;
-      this.withCroquetNetworkDo(function (network) {
         DEBUG > 0 && console.log("Croquet network: " + socket + " closing");
-        var ip = this.croquetAddr;
-        var port = socket.localPort;
-        var ipAndPort = ip + ":" + port;
-        if (socket.type === this.TCP_Socket_Type) {
+        if (socket.type === this.UDP_Socket_Type) {
+          if (socket.status === this.Socket_Connected) {
+            socket.hostAddress = null;
+            socket.host = null;
+            socket.port = 0;
+          } else {
+            debugger
+          }
           if (socket.listening) {
-            network.unsubscribe(ipAndPort, "tcp-connected-src", "*");
-            DEBUG > 2 && console.log("View.publish(" + ip + ":tcp-unlisten, { " + ip + ", " + port + " })");
-            network.publish(ipAndPort, "tcp-unlisten", { ip, port });
             socket.listening = false;
           }
-          if (socket.connection) {
-            var connection = socket.connection;
-            if (socket.sendIsReply) {
-              network.unsubscribe(connection, "tcp-sent", "*");
-              network.unsubscribe(connection, "tcp-disconnected-src", "*");
-            } else {
-              network.unsubscribe(connection, "tcp-replied", "*");
-              network.unsubscribe(connection, "tcp-connected-dst", "*");
-              network.unsubscribe(connection, "tcp-disconnected-dst", "*");
-            }
-            var [srcAndPort, dstAndPort] = connection.split("-");
-            DEBUG > 2 && console.log("View.publish(" + connection + ":tcp-close, { " + srcAndPort + ", " + dstAndPort + " })");
-            network.publish(connection, "tcp-close", { srcAndPort, dstAndPort });
-            socket.connection = null;
-          }
-        } else { // UDP
-          if (socket.listening) {
-            network.unsubscribe(ipAndPort, "udp-sent", "*");
-            DEBUG > 2 && console.log("View.publish(" + ipAndPort + ", udp-unlisten, { " + ip + ", " + port + " })");
-            network.publish(ipAndPort, "udp-unlisten", { ip, port });
-            socket.listening = false;
-          }
+        } else { // TCP
+          debugger
         }
-        console.log(CROQUETVD.subscriptions);
-      }.bind(this));
       return true;
     },
 
     croquetDestroy: function (socket) {
       if (!socket.isCroquet) return false;
-      DEBUG > 0 && console.log("Croquet network: " + socket + " destroying");
       if (socket.status !== this.Socket_Unconnected) {
         this.croquetClose(socket);
       }
-      socket.status = this.Socket_InvalidSocket;
-      socket._signalConnSemaphore();
+      var ports = socket.type === this.UDP_Socket_Type ? this.croquetUDPPorts : this.croquetTCPPorts;
+      delete ports[socket.localPort];
+      socket.localPort = 0;
+      DEBUG > 0 && console.log("Croquet network: " + socket + " destroyed (now " + Object.keys(ports).length + " ports)");
+      // TODO: leave Croquet session if no more sockets
       return true;
     },
 
-    croquetTCPSend: function (socket, data, start, end) {
-      var count = end - start;
-      if (start > 0 || count !== data.length) data = data.subarray(start, end);
-      this.withCroquetNetworkDo(function send(network) {
-        var srcAndPort, dstAndPort, connection;
-        if (socket.sendIsReply) {
-          if (!socket.hostAddress) socket.connectPending();
-          srcAndPort = socket.hostAddress.join(".") + ":" + socket.port;
-          dstAndPort = this.croquetAddr + ":" + socket.localPort;
-          connection = srcAndPort + "-" + dstAndPort;
-          DEBUG > 0 && console.log("Croquet network: " + socket + " reply " + data.length + " bytes");
-          DEBUG > 2 && console.log("View.publish(" + connection + ":tcp-reply, { " + srcAndPort + ", " + dstAndPort + ", " + data.length + " bytes })");
-          network.publish(connection, "tcp-reply", { srcAndPort, dstAndPort, data });
-        } else {
-          srcAndPort = this.croquetAddr + ":" + socket.localPort;
-          dstAndPort = socket.hostAddress.join(".") + ":" + socket.port;
-          connection = srcAndPort + "-" + dstAndPort;
-          DEBUG > 0 && console.log("Croquet network: " + socket + " send " + data.length + " bytes");
-          DEBUG > 2 && console.log("View.publish(" + connection + ":tcp-send, { " + srcAndPort + ", " + dstAndPort + ", " + data.length + " bytes })");
-          network.publish(connection, "tcp-send", { srcAndPort, dstAndPort, data });
-        }
-        this.lastCroquetSend = Date.now();
-      }.bind(this));
-      return count;
-    },
-
-    croquetUDPSend: function (socket, data, start, end, address, port) {
-      var count = end - start;
-      if (start > 0 || count !== data.length) data = data.subarray(start, end);
-      var dst = address.join(".");
-      var dstAndPort = dst + ":" + port;
-      this.withCroquetNetworkDo(function send(network) {
-        DEBUG > 0 && console.log("Croquet network: " + socket + " send " + data.length + " bytes");
-        DEBUG > 2 && console.log("View.publish(" + dstAndPort + ", udp-send, { " + dstAndPort + ", " + data.length + " bytes })");
-        network.publish(dstAndPort, "udp-send", { dstAndPort, data });
-        this.lastCroquetSend = Date.now();
-      }.bind(this));
-      return count;
-    },
-
-    lastCroquetSend: 0,
-
-    croquetSendDone: function (socket) {
-      if (!this.croquetNetwork) return true;
-      var msSinceLastSend = Date.now() - this.lastCroquetSend;
-      var wait = CROQUET_RATE_LIMIT - msSinceLastSend;
-      DEBUG > 2 && wait > 0 && console.log("Croquet network: send limit wait time " + (CROQUET_RATE_LIMIT - msSinceLastSend) + "ms");
-      return wait <= 0;
-    },
-
     withCroquetNetworkDo: function (func) {
-      // call func with the local NetworkParticipantView instance
-      if (this.croquetNetwork) {
+      // call func with the local NetworkHost instance
+
+      // this.croquetNetwork is the Croquet session
+      // it will only be null the first time we call this
+      // this.croquetNetwork.view is the local NetworkHost instance
+      // which may go away if the session went dormant
+      if (this.croquetNetwork && this.croquetNetwork.view) {
         return func(this.croquetNetwork.view);
       }
       var primitiveName = this.interpreterProxy.primitiveName;
@@ -1597,374 +1556,305 @@ function SocketPlugin() {
           }
           unfreeze = null; // don't unfreeze twice
         }
-        this.startCroquetNetwork()
-          .then(session => {
-            this.croquetNetwork = session;
-            var ip = session.view.ip;
-            this.croquetAddress = ip.split(".").map(function (s) { return +s; });
-            this.croquetAddr = ip;
-            func(this.croquetNetwork.view);
-            continueExecution();
-          }).catch(error => {
-            console.error("Failed to join Croquet session", error);
-            continueExecution();
-          });
+        if (!this.croquetNetwork) {
+          this.startCroquetNetwork()
+            .then(() => {
+              func(this.croquetNetwork.view);
+              continueExecution();
+            }).catch(error => {
+              console.error("Failed to join Croquet session", error);
+              alert("Failed to join Croquet session: " + error.message);
+              throw error;
+            });
+        } else {
+          // we have a session but view went away
+          // wait for it to come back
+          function checkForView() {
+            if (this.croquetNetwork.view) {
+              func(this.croquetNetwork.view);
+              continueExecution();
+            } else {
+              setTimeout(checkForView, 200);
+            }
+          }
+          checkForView = checkForView.bind(this);
+          DEBUG > 0 && console.log("Croquet Network: disconnected from session, waiting for it to come back");
+          checkForView();
+        }
       });
     },
 
     /****************************************************************
      * Initially this plugin assumes it will only be used for http
      * requests, which are handled by fetch() / XMLHttpRequest.
-     * We only load Croquet when we need it, which typically is indicated
-     * by the image requesting to know our local IP address. We allocate
-     * an IP by connecting to the Croquet session below - every Croquet
-     * View gets its own IP address, and we treat its viewId as the host
-     * name.
-     * Then when a socket is listening, or connecting to one of our
-     * virtual LAN addresses (10.42.*.*), we mark it as a Croquet socket.
-     * When a socket starts listening, it will register itself with the
-     * Croquet network, which keeps a list of listening ports for each host.
-     * The network model will subscribe to messages addressed to these ports,
-     * and re-publish them, so the subscribed socket can receive them.
      *
-     * Event scopes:
-     *   scope "network" / session:
-     *       about the network itself, e.g. hosts joining
-     *   scope ip (e.g. "10.42.0.1"):
-     *       regarding a specific host
-     *   scope ipAndPort (e.g. "10.42.0.1:1024"):
-     *       regarding a specific port
-     *   scope connection (e.g. "10.42.0.1:1024-10.42.0.2:3456"):
-     *       for a specific connection between two ports (TCP only)
+     * We only load Croquet when we need it, which typically is indicated
+     * by the image requesting to know our local IP address, or by
+     * starting to listen on a socket, or connecting a socket to an IP
+     * address in our virtual subnet (10.42.0.0/16).
+     *
+     * As with all Croquet apps, the logic is split into a shared "model"
+     * and a local "view". Our shared model is the NetworkRouter class below,
+     * and the view is the NetworkHost class.
+     *
+     * The router allocates an IP address in our subnet for each joining host,
+     * using the host's viewId as hostname. This basically emulates a DHCP service.
+     * The hostname-to-ip mapping is kept for a certain time even if the host
+     * goes away, so that it can rejoin with the same IP address. This happens
+     * automatically when the Croquet session goes dormant (disconnects due to
+     * the browser tab being hidden) and is resumed later.
+     *
+     * The Croquet router operates on the IP level. It doesn't know about TCP or
+     * UDP, those packets (with e.g. source and destination ports) are
+     * encapsulated in the IP packet payload. A host sends a packet by publishing
+     * it to the router. The reouter forwards packets to the destination IP
+     * address by re-publishing them. There is no buffering in the router, so if
+     * the destination is not online, the packet is lost. The host's TCP
+     * implementation will handle this, but UDP will not – as with the real internet.
+     *
+     * It's IP-over-Croquet, if you will.
      *
      * Events:
-     *   ==> means published by network, subscribed by host
-     *   <== means published by host, subscribed by network
+     *   ==> means published by router, subscribed by host
+     *   <== means published by host or croquet, subscribed by router
      *
      *   <== session "view-join" (hostName)
      *   <== session "view-exit" (hostName)
-     *   ==> "network" "ip-allocated" ({hostName, ip})
-     *   ==> "network" "ip-released" ({hostName, ip})
-     *
-     *   <== ip "udp-listen" ({ip, port})
-     *   <== ipAndPort "udp-unlisten" ({ip, port})
-     *   <== ipAndPort "udp-send" ({dstAndPort, data})
-     *   ==> ipAndPort "udp-sent" (data)
-     *
-     *   <== ip "tcp-listen" ({ip, port})
-     *   <== ipAndPort "tcp-unlisten" ({ip, port})
-     *   <== ipAndPort "tcp-connect" ({srcAndPort, dstAndPort})
-     *   ==> ipAndPort "tcp-connected-src" (srcAndPort)
-     *   ==> connection "tcp-connected-dst" ()
-     *   <== connection "tcp-send" ({srcAndPort, dstAndPort, data})
-     *   ==> connection "tcp-sent" (data)
-     *   <== connection "tcp-reply" ({srcAndPort, dstAndPort, data})
-     *   ==> connection "tcp-replied" (data)
-     *   <== connection "tcp-close" ({srcAndPort, dstAndPort})
-     *   ==> connection "tcp-disconnected-src" (msg)
-     *   ==> connection "tcp-disconnected-dst" (msg)
+     *   ==> "router" "host-online" (hostName, ip)   // these are just informational
+     *   ==> "router" "host-offline" (hostName, ip)  // for debugging
+     *   <== "router" "send" (src, dst, payload)     // src and dst are IP addresses
+     *   ==> dst "recv" (src, dst, payload)          // dst IP can be a broadcast address
      */
 
-    croquetPromise: null,
-    sessionPromise: null,
+    initCroquetClasses: function () {
+      // the local NetworkHost below will call plugin.croquetReceive()
+      // when it receives a packet from the router. This is so the
+      // host view itself is stateless and can be destroyed and recreated,
+      // which will happen when the browser tab is hidden and the Croquet
+      // sessiongoes dormant.
+      const plugin = this;
 
-    startCroquetNetwork: async function () {
-      // load Croquet only once (and only if we need it)
-      if (!this.croquetPromise) this.croquetPromise = new Promise(resolve => {
-        if (window.Croquet) resolve(); // already loaded
-        else {
-          const script = document.createElement("script");
-          script.src = CROQUET_URL;
-          document.head.appendChild(script);
-          script.onload = resolve;
-        }
-      });
-
-      await this.croquetPromise; // wait for Croquet to load
-
-      // the shared network, syncronized by Croquet
-      class NetworkModel extends Croquet.Model {
+      // the shared network router, syncronized by Croquet
+      class NetworkRouter extends Croquet.Model {
         init(options) {
           super.init(options);
           this.hostNames = new Map(); // host name (viewId) => host
           this.ipAddresses = new Map(); // ip addr => host
-          this.nextIp = 1;
-          this.udpBroadcasts = new Map(); // port => number of hosts listening
+          this.nextIP = 0xFFFD; // start high so we excercise the wrap-around code
           this.subscribe(this.sessionId, "view-join", this.hostJoined);
           this.subscribe(this.sessionId, "view-exit", this.hostExited);
+          this.subscribe("router", "send", this.send);
         }
 
-        hostJoined(hostName) {
-          // allocate an IP address for the new participant
-          // TODO: keep mapping for a certain time even if
-          // participant goes away, à la DHCP
-          let i = this.nextIp;
-          let ip;
-          let addr = [10, 42, 0, 0]; // we use 10.42.*.* for the IP addresses
-          do {
-            addr[2] = i >> 8;
-            addr[3] = i & 0xFF;
-            ip = addr.join(".");
-            if (++i > 0xFFFF) i = 1; // wrap around, skipping 0
-            if (i === this.nextIp) throw new Error("Too many participants"); // unlikely
-          } while (this.ipAddresses.has(ip));
-          this.nextIp = i;
-          // found an unused IP address
-          DEBUG > 1 && console.log("@" + this.now() + " host joined: " + hostName + " => " + ip);
-          const host = {
-            ip,
-            tcpPorts: new Map(), // port => connections
-            udpPorts: new Set(), // port
-          }
-          this.ipAddresses.set(ip, host);
-          this.hostNames.set(hostName, host);
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(network, ip-allocated, { " + hostName + ", " + ip + " })");
-          this.publish("network", "ip-allocated", { hostName, ip });
-          this.subscribe(ip, "tcp-listen", this.tcpListen);
-          this.subscribe(ip, "udp-listen", this.udpListen);
-        }
-
-        hostExited(hostName) {
-          const host = this.hostNames.get(hostName);
-          DEBUG > 1 && console.log("@" + this.now() + " host exited: " + hostName + " (" + host.ip + ")");
-          this.ipAddresses.delete(host.ip);
-          this.hostNames.delete(hostName);
-          this.unsubscribe(host.ip, "tcp-listen", "*");
-          this.unsubscribe(host.ip, "udp-listen", "*");
-          for (const port of host.tcpPorts.keys()) {
-            this.tcpUnsubscribe(host, port);
-          }
-          for (const port of host.udpPorts) {
-            this.udpUnsubscribe(host, port);
-          }
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(network, ip-released, { " + hostName + ", " + host.ip + " })");
-          this.publish("network", "ip-released", { hostName, ip: host.ip });
-        }
-
-        udpUnsubscribe(host, port) {
-          if (!host.udpPorts.has(port)) return; // not listening
-          host.udpPorts.delete(port);
-          // for udp we just care about sends ...
-          const ipAndPort = host.ip + ":" + port;
-          this.unsubscribe(ipAndPort, "udp-send", "*");
-          this.unsubscribe(ipAndPort, "udp-unlisten", "*");
-          // ... and broadcasts
-          let count = this.udpBroadcasts.get(port);
-          this.udpBroadcasts.set(port, --count);
-          if (count === 0) {
-            const broadcastAddrAndPort = BROADCAST_ADDR + ":" + port;
-            this.unsubscribe(broadcastAddrAndPort, "udp-send", "*");
-            this.udpBroadcasts.delete(port);
-          }
-        }
-
-        udpListen({ ip, port }) {
-          DEBUG > 1 && console.log("@" + this.now() + " got udp listen " + ip + ":" + port);
-          // a host started to listen on a udp port
-          const host = this.ipAddresses.get(ip);
-          if (!host) return;
-          if (host.udpPorts.has(port)) return; // already listening
-          host.udpPorts.add(port);
-          // for udp we just care about sends ...
-          const ipAndPort = ip + ":" + port;
-          this.subscribe(ipAndPort, "udp-send", this.udpSend);
-          this.subscribe(ipAndPort, "udp-unlisten", this.udpUnlisten);
-          // ... and broadcasts
-          let count = this.udpBroadcasts.get(port) || 0;
-          this.udpBroadcasts.set(port, ++count);
-          if (count === 1) {
-            const broadcastAddrAndPort = BROADCAST_ADDR + ":" + port;
-            this.subscribe(broadcastAddrAndPort, "udp-send", this.udpSend);
-          }
-        }
-
-        udpUnlisten({ ip, port }) {
-          DEBUG > 1 && console.log("@" + this.now() + " got udp unlisten " + ip + ":" + port);
-          // a host stopped listening on a udp port
-          const host = this.ipAddresses.get(ip);
-          if (!host) return;
-          this.udpUnsubscribe(host, port);
-        }
-
-        udpSend({ dstAndPort, data }) {
-          DEBUG > 1 && console.log("@" + this.now() + " got udp send " + data.length + " bytes to " + dstAndPort);
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + dstAndPort + ", udp-sent, " + data.length + " bytes)");
-          this.publish(dstAndPort, "udp-sent", data);
-        }
-
-        tcpListen({ ip, port }) {
-          DEBUG > 1 && console.log("@" + this.now() + " got tcp listen " + ip + ":" + port);
-          // a host started to listen on a tcp port
-          const host = this.ipAddresses.get(ip);
-          if (!host) return;
-          if (host.tcpPorts.has(port)) return; // already listening
-          // for tcp we keep track of connections
-          const connections = new Set(); // srcAndPort
-          host.tcpPorts.set(port, connections);
-          const ipAndPort = ip + ":" + port;
-          this.subscribe(ipAndPort, "tcp-connect", this.tcpConnect);
-          this.subscribe(ipAndPort, "tcp-unlisten", this.tcpUnlisten);
-        }
-
-        tcpConnect({ srcAndPort, dstAndPort }) {
-          DEBUG > 1 && console.log("@" + this.now() + " got tcp connect " + srcAndPort + " to " + dstAndPort);
-          const connection = srcAndPort + "-" + dstAndPort;
-          let [dst, port] = dstAndPort.split(":"); port = +port;
-          const host = this.ipAddresses.get(dst);
-          if (!host) {
-            DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-src, { msg: no such host " + dst + " })");
-            this.publish(connection, "tcp-disconnected-src", { msg: "no such host " + dst });
-            return;
-          }
-          const connections = host.tcpPorts.get(port);
-          if (!connections) {
-            DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-src, { msg: no such port " + dstAndPort + " })");
-            this.publish(connection, "tcp-disconnected-src", { msg: "no such port " + dstAndPort });
-            return;
-          }
-          if (connections.has(srcAndPort)) {
-            DEBUG > 1 && console.log("@" + this.now() + " ignoring (already connected)");
-            return;
-          }
-          connections.add(srcAndPort);
-          this.subscribe(connection, "tcp-send", this.tcpSend);
-          this.subscribe(connection, "tcp-reply", this.tcpReply);
-          this.subscribe(connection, "tcp-close", this.tcpClose);
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + dstAndPort + ":tcp-connected-src, " + srcAndPort + ")");
-          this.publish(dstAndPort, "tcp-connected-src", srcAndPort);
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-connected-dst)");
-          this.publish(connection, "tcp-connected-dst");
-        }
-
-        getConnection(srcAndPort, dstAndPort) {
-          let [dst, port] = dstAndPort.split(":"); port = +port;
-          const connection = srcAndPort + "-" + dstAndPort;
-          var dstHost = this.ipAddresses.get(dst);
-          if (!dstHost) {
-            DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-src, { msg: no such host " + dst + " })");
-            this.publish(connection, "tcp-disconnected-src", { msg: "no such host " + dst });
-            return;
-          }
-          const connections = dstHost.tcpPorts.get(port);
-          if (!connections) {
-            DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-src, { msg: no such port " + dstAndPort + " })");
-            this.publish(connection, "tcp-disconnected-src", { msg: "no such port " + dstAndPort });
-            return;
-          }
-          if (!connections.has(srcAndPort)) {
-            DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-src, { msg: not connected to " + dstAndPort + " })");
-            this.publish(connection, "tcp-disconnected-src", { msg: "not connected to " + dstAndPort });
-            return;
-          }
-          return connection;
-        }
-
-        tcpSend({ srcAndPort, dstAndPort, data }) {
-          DEBUG > 1 && console.log("@" + this.now() + " forwarding tcp send " + data.length + " bytes from " + srcAndPort + " to " + dstAndPort);
-          let connection = this.getConnection(srcAndPort, dstAndPort, data);
-          if (!connection) return;
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-sent, " + data.length + " bytes)");
-          this.publish(connection, "tcp-sent", data);
-        }
-
-        tcpReply({ srcAndPort, dstAndPort, data }) {
-          DEBUG > 1 && console.log("@" + this.now() + " forwarding tcp reply " + data.length + " bytes from " + srcAndPort + " to " + dstAndPort);
-          let connection = this.getConnection(srcAndPort, dstAndPort, data);
-          if (!connection) {
-            this.publish(connection, "tcp-disconnected-dst", { msg: "not connected to " + srcAndPort });
-            return;
-          }
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-replied, " + data.length + " bytes)");
-          this.publish(connection, "tcp-replied", data);
-        }
-
-        tcpUnsubscribePort(host, port) {
-          const ipAndPort = host.ip + ":" + port;
-          this.unsubscribe(ipAndPort, "tcp-connect", "*");
-          this.unsubscribe(ipAndPort, "tcp-unlisten", "*");
-          const connections = host.tcpPorts.get(port);
-          if (connections) {
-            for (const srcAndPort of connections) {
-              const connection = srcAndPort + "-" + ipAndPort;
-              this.tcpUnsubscribeConnection(connection);
+        hostJoined(name) {
+          let host = this.hostNames.get(name);
+          if (host) {
+            // host rejoined
+            host.offline = 0;
+            DEBUG > 1 && console.log("@" + this.now() + " host online again: " + name + " => " + ip);
+          } else {
+            // assign new IP address
+            const ip = this.allocateIP();
+            host = {
+              name: name,
+              ip,
+              offline: 0, // if non-zero, time when host went offline
             }
-            host.tcpPorts.delete(port);
+            this.hostNames.set(name, host);
+            this.ipAddresses.set(ip, host);
+            DEBUG > 1 && console.log("@" + this.now() + " host online: " + name + " => " + ip);
+          }
+          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(network, host-online, [" + name + ", " + host.ip + "])");
+          this.publish("router", "host-online", [ name, host.ip ]);
+          this.cleanUpHosts();
+        }
+
+        hostExited(name) {
+          const host = this.hostNames.get(name);
+          host.offline = this.now();
+          DEBUG > 1 && console.log("@" + this.now() + " host offline: " + name + " (" + host.ip + ")");
+          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(network, host-offline, [" + name + ", " + host.ip + "])");
+          this.publish("router", "host-offline", [ name, host.ip ]);
+        }
+
+        send(packet) {
+          const bytes = new Uint8Array(packet);
+          const src = bytes.subarray(0, 4).join(".");
+          const dst = bytes.subarray(4, 8).join(".");
+          DEBUG > 1 && console.log("@" + this.now() + " " + src + " to " + dst + ": " + packet.byteLength + " bytes");
+          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + dst + ", recv, " + packet.byteLength + " bytes])");
+          this.publish(dst, "recv", packet);
+        }
+
+        allocateIP() {
+          let ipNumber = this.nextIP;
+          let ipBytes = CROQUET_NETWORK.slice(); // 10.42.0.0
+          let ip;
+          do {
+            ipBytes[2] = ipNumber >> 8;
+            ipBytes[3] = ipNumber & 0xFF;
+            ip = ipBytes.join(".");
+            if (++ipNumber > 0xFFFE) ipNumber = 1; // wrap around, skipping 0 and FFFF
+            if (ipNumber === this.nextIP) {
+              // we've wrapped around, so we're out of IP addresses
+              const offlineHost = this.longestOfflineHost();
+              if (offlineHost) {
+                // reuse the IP address of the oldest offline host
+                ip = offlineHost.ip;
+                DEBUG > 1 && console.log("@" + this.now() + " " + offlineHost.name + " (" + ip + ") has been offline for too long, reusing IP address");
+                this.hostNames.delete(offlineHost.name);
+                this.ipAddresses.delete(ip);
+              } else throw new Error("Too many participants"); // unlikely
+            }
+          } while (this.ipAddresses.has(ip));
+          this.nextIP = ipNumber;
+          return ip;
+        }
+
+        longestOfflineHost() {
+          let found = null;
+          for (const host of this.hostNames.values()) {
+            if (host.offline && (!found || host.offline < found.offline)) {
+              found = host;
+            }
+          }
+          return found;
+        }
+
+        cleanUpHosts() {
+          // remove hosts that have been offline for too long
+          const now = this.now();
+          for (const host of this.hostNames.values()) {
+            if (host.offline && now - host.offline > CROQUET_RELEASE_HOSTNAME) {
+              this.hostNames.delete(host.name);
+              this.ipAddresses.delete(host.ip);
+              DEBUG > 1 && console.log("@" + this.now() + " " + host.name + " (" + host.ip + ") has been offline for too long, removing");
+            }
           }
         }
 
-        tcpUnsubscribeConnection(connection) {
-          this.unsubscribe(connection, "tcp-send", "*");
-          this.unsubscribe(connection, "tcp-reply", "*");
-          this.unsubscribe(connection, "tcp-close", "*");
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-src, { msg: closed })");
-          this.publish(connection, "tcp-disconnected-src", { msg: "closed" });
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + connection + ":tcp-disconnected-dst, { msg: closed })");
-          this.publish(connection, "tcp-disconnected-dst", { msg: "closed" });
-        }
-
-        tcpClose({ srcAndPort, dstAndPort }) {
-          let [dst, port] = dstAndPort.split(":"); port = +port;
-          DEBUG > 1 && console.log("@" + this.now() + " got tcp close " + srcAndPort + " to " + dstAndPort);
-          const host = this.ipAddresses.get(dst);
-          if (!host) return;
-          this.tcpUnsubscribeConnection(host, port);
-        }
-
-        tcpUnlisten({ ip, port }) {
-          DEBUG > 1 && console.log("@" + this.now() + " got tcp unlisten " + ip + ":" + port);
-          const host = this.ipAddresses.get(ip);
-          if (!host) return;
-          this.tcpUnsubscribePort(host, port);
-        }
       }
-      NetworkModel.register("NetworkModel");
+      NetworkRouter.register("NetworkRouter");
 
-      // the local network participant
-      class NetworkParticipantView extends Croquet.View {
+      // the local host, a network participant
+      class NetworkHost extends Croquet.View {
         constructor(model) {
           super(model);
           this.model = model;
-          this.subscribe("network", "ip-allocated", this.ipAllocated);
-          this.subscribe("network", "ip-released", this.ipReleased);
-          console.log("Croquet network: local participant " + this.viewId + " got IP " + this.ip);
-          console.log("Croquet network: " + this.model.hostNames.size + " participant" + (this.model.hostNames.size === 1 ? "" : "s"));
+          var reconnecting = !!plugin.croquetNetwork;
+          DEBUG > 0 && reconnecting && console.log("Croquet network: reconnected to session");
+          let count = 0;
+          for (const host of this.model.ipAddresses.values()) {
+            if (!host.offline) {
+              count++;
+              DEBUG > 0 && console.log("Croquet network: " + count + ". "+ host.name +
+              " " + host.ip + (host.name === this.viewId ? " (me)" : "" ));
+            }
+          }
+          !reconnecting && console.log("Croquet network: " + count + " host" + (count === 1 ? "" : "s") + " online," +
+            " my IP: " + this.ip());
+          this.subscribe(this.ip(), "recv", this.receive);
+          this.subscribe(BROADCAST_ADDR, "recv", this.receive);
+          this.subscribe("router", "host-online", this.hostOnline);
+          this.subscribe("router", "host-offline", this.hostOffline);
         }
 
-        ipAllocated({ hostName, ip }) {
-          console.log("Croquet network: allocated IP " + ip + " to participant " + hostName);
+        send(bytes) {
+          const packet = bytes.buffer;
+          if (packet.byteLength > CROQUET_MTU) {
+            console.warn("Croquet network: Package size " + packet.byteLength
+              + " bytes possibly too large for Croquet, need tro implement fragmentation");
+          }
+          const dst = bytes.subarray(4, 8).join(".");
+          if (dst !== plugin.croquetAddr) {
+            // if sending to self do not go through router
+            DEBUG > 1 && console.log("Croquet network: sending " + packet.byteLength + " bytes to " + dst
+              + " (shortcircuiting local host)");
+            Promise.resolve()
+              .then(() => this.receive(packet))
+              .catch(err => { console.error(err); debugger});
+          } else {
+            // send to another host via router
+            if (DEBUG > 2) {
+              // seriously, Croquet, you don't have a way to get the actual message size?
+              const fn = CROQUETSTATS.addNetworkTraffic;
+              CROQUETSTATS.addNetworkTraffic = (type, bytes) => {
+                fn.call(CROQUETSTATS, type, bytes);
+                delete CROQUETSTATS.addNetworkTraffic;
+                console.log("Croquet network: croquet msg size " + bytes + " bytes)");
+                if (!CROQUETSTATS.addNetworkTraffic) CROQUETSTATS.addNetworkTraffic = fn;
+              }
+            }
+            this.publish("router", "send", packet);
+            DEBUG > 1 && console.log("Croquet network: sent " + packet.byteLength + " bytes to " + dst);
+          }
         }
 
-        ipReleased({ hostName, ip }) {
-          console.log("Croquet network: released IP " + ip + " from participant " + hostName);
+        receive(packet) {
+          const bytes = new Uint8Array(packet);
+          if (DEBUG > 1) {
+            const src = bytes.subarray(0, 4).join(".");
+            console.log("Croquet network: receiving " + packet.byteLength + " bytes from " + src);
+          }
+          plugin.croquetReceive(bytes);
         }
 
-        get ip() {
-          const host = this.model.hostNames.get(this.viewId);
+        hostOnline([ name, ip ]) {
+          console.log("Croquet network: host came online " + name + " (" + ip + ")");
+        }
+
+        hostOffline([ name, ip ]) {
+          console.log("Croquet network: host went offline " + name + " (" + ip + ")");
+        }
+
+        ip(name=this.viewId) {
+          const host = this.model.hostNames.get(name);
           return host.ip;
         }
       }
 
-      // start session
-      if (!this.sessionPromise) {
-        // to run this locally I use the URL
-        // http://localhost:8000/jasmine/?apiKey=my-dev-key
-        // because the public key is restricted to my github.io domain
-        let apiKey = window.location.search.match(/apiKey=([^&]+)/);
-        if (apiKey) apiKey = apiKey[1];
-        else apiKey = "1bfHo0sk3HLmzqxiaasuEFBccxNDE660vMzghymFm";
-        this.sessionPromise = Croquet.Session.join({
-          apiKey, // get your own from https://croquet.io/keys
-          appId: "net.codefrau.jasmine", // can be anything
-          model: NetworkModel,
-          view: NetworkParticipantView,
-          name: "Jasmine",
-          password: "Jasmine",
-          debug: DEBUG > 2 && ["session", "subscribe"],
-          tps: 0, // if there are no future messages we don't need ticks
+      this.NetworkRouter = NetworkRouter;
+      this.NetworkHost = NetworkHost;
+    },
+
+    startCroquetNetwork: async function () {
+      // load Croquet only once (and only if we need it)
+      if (!window.Croquet) {
+        await new Promise(resolve => {
+          const script = document.createElement("script");
+          script.src = CROQUET_URL;
+          document.head.appendChild(script);
+          script.onload = () => {
+            if (!window.Croquet) {
+              throw new Error("Could not load Croquet from " + CROQUET_URL);
+            }
+            this.initCroquetClasses();
+            resolve();
+          }
         });
       }
 
-      return this.sessionPromise;
+      // allow passing an API key via URL parameter for local development
+      let apiKey = window.location.search.match(/apiKey=([^&]+)/);
+      if (apiKey) apiKey = apiKey[1];
+      else apiKey = CROQUET_APIKEY;
+
+      const session = await Croquet.Session.join({
+        apiKey,
+        appId: CROQUET_APPID,
+        model: this.NetworkRouter,
+        view: this.NetworkHost,
+        name: CROQUET_SESSION,
+        password: CROQUET_PASSWORD,
+        location: true,
+        tps: 0, // since there are no future messages we don't need ticks
+        debug: DEBUG > 2 && ["session", "subscribe"],
+      });
+
+      var ip = session.view.ip();
+      this.croquetAddress = ip.split(".").map(function (s) { return +s; });
+      this.croquetAddr = ip;
+      this.croquetNetwork = session;
     },
   };
 }
