@@ -117,7 +117,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2023-12-29",               // Maybe replace at build time?
+        vmDate: "2024-01-03",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -8466,7 +8466,7 @@
                     this.audioInContext = ctxProto && new ctxProto();
                     this.audioInSource = this.audioInContext.createMediaStreamSource(stream);
                     thenDo(this.audioInContext, this.audioInSource);
-                },
+                }.bind(this),
                 function onError() {
                     errorDo("cannot access microphone");
                 });
@@ -9117,7 +9117,7 @@
             }
 
             openReq.onsuccess = function(e) {
-                console.log("Opened files database.");
+                if (Squeak.debugFiles) console.log("Opened files database.");
                 window.SqueakDB = this.result;
                 SqueakDB.onversionchange = function(e) {
                     delete window.SqueakDB;
@@ -9130,7 +9130,7 @@
             };
             openReq.onupgradeneeded = function (e) {
                 // run only first time, or when version changed
-                console.log("Creating files database");
+                if (Squeak.debugFiles) console.log("Creating files database");
                 var db = e.target.result;
                 db.createObjectStore("files");
             };
@@ -11520,10 +11520,11 @@
                 this.audioInProcessor = null;
                 console.log("sound recording stopped");
             }
-            return true;
+            return this.popNIfOK(argCount);
         },
         snd_primitiveSoundSetRecordLevel: function(argCount) {
-            return true;
+            this.vm.warnOnce("sound set record level not supported");
+            return this.popNIfOK(argCount);
         },
     });
 

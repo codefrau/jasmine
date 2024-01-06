@@ -81,6 +81,13 @@ function SocketPlugin() {
   const TCP_ACK = 0x08;
   const TCP_MSL = 60 * 1000; // 60 seconds (maximum segment lifetime)
 
+  // wrap-around 32 bit math for sequence numbers
+  function seqNum(a) { return a >>> 0; } // convert to unsigned
+  function seqLE(a, b) { return ((b - a) | 0) >= 0; }
+  function seqLT(a, b) { return ((b - a) | 0) > 0; }
+  function seqGE(a, b) { return ((b - a) | 0) <= 0; }
+  function seqGT(a, b) { return ((b - a) | 0) < 0; }
+
   return {
     getModuleName: function () { return 'SocketPlugin (croquet.io)'; },
     interpreterProxy: null,
@@ -761,6 +768,9 @@ function SocketPlugin() {
         },
 
         recv: function (count) {
+          if (this.type == plugin.TCP_Socket_Type) {
+            return plugin.tcpRECEIVE(this, count);
+          }
           if (this.response === null) return [];
           var data = this.response[0];
           if (data.length > count) {
@@ -813,8 +823,7 @@ function SocketPlugin() {
           if (this.isCroquet) details += " Croquet";
           if (this.type === plugin.TCP_Socket_Type) details += " tcp";
           else if (this.type === plugin.UDP_Socket_Type) details += " udp";
-          if (this.listening) details += " listening on: " + this.localPort;
-          else if (this.localPort) details += " local: " + this.localPort;
+          if (this.localPort) details += ":" + this.localPort;
           if (this.port) details += " remote: " + (this.host || this.hostAddress.join(".")) + ":" + this.port;
           details += " (" + this.statusString() + ")";
           return name + "[" + details.trim() + "]";
@@ -1157,6 +1166,10 @@ function SocketPlugin() {
       var count = this.interpreterProxy.stackIntegerValue(0);
       if ((start + count) > target.bytes.length) return false;
       var bytes = socket.recv(count);
+      if (!bytes) {
+        DEBUG > 1 && console.log("primitiveSocketReceiveDataBufCount " + socket + " =>  failed");
+        return false;
+      }
       target.bytes.set(bytes, start);
       DEBUG > 1 && console.log("primitiveSocketReceiveDataBufCount " + socket + " => " + bytes.length + " bytes");
       this.interpreterProxy.popthenPush(argCount + 1, bytes.length);
@@ -1234,6 +1247,10 @@ function SocketPlugin() {
 
       var responseBefore = socket.response.length;
       var bytes = socket.recv(count);
+      if (!bytes) {
+        DEBUG > 1 && console.log("primitiveSocketReceiveDataBufCount " + socket + " =>  failed");
+        return false;
+      }
       target.bytes.set(bytes, start);
       DEBUG > 1 && console.log("primitiveSocketReceiveUDPDataBufCount " + socket + " => " + bytes.length + " bytes");
       var results = this.interpreterProxy.instantiateClassindexableSize(this.interpreterProxy.classArray(), 4);
@@ -1488,7 +1505,7 @@ function SocketPlugin() {
       const dstPort = ipPacket[11] << 8 | ipPacket[12];
       const socket = ports[dstPort];
       if (!socket) {
-        DEBUG > 0 && console.warn("Croquet network: receiving " + ipPacket.length + " bytes for unregistered port " + dstPort);
+        DEBUG > 2 && console.log("Croquet network: receiving " + ipPacket.length + " bytes for unregistered port " + dstPort);
         return;
       }
       // handle TCP
@@ -1576,6 +1593,7 @@ function SocketPlugin() {
       };
       socket.TCB.SND_WND = socket.sndBufSize;
       socket.TCB.RCV_WND = socket.rcvBufSize;
+      socket.response = socket.TCB.rcvQueue; // for Squeak
     },
 
     tcpDeleteTCB: function (socket) {
@@ -1594,12 +1612,10 @@ function SocketPlugin() {
       // and for sure inefficient, we should keep this in variables
       const TCB = socket.TCB;
       const inRetransmitQueue = TCB.retransmitQueue.reduce((sum, segment) => sum + segment.data.length, 0);
-      const sentButUnacknowledged = (TCB.SND_NXT - TCB.SND_UNA) >>> 0;
       const inSendQueue = TCB.sndQueue.reduce((sum, data) => sum + data.length, 0);
-      // retransmit queue should be the same as sent but unacknowledged?
-      // this is probably incorrect
-      debugger
-      return socket.sndBufSize - sentButUnacknowledged - inSendQueue;
+      const unused = socket.sndBufSize - inRetransmitQueue - inSendQueue;
+      DEBUG > 2 && console.log("sndQ: " + inSendQueue + ", rxQ: " + inRetransmitQueue + ", unused: " + unused);
+      return unused;
     },
 
     tcpSendDone: function (socket) {
@@ -1609,10 +1625,6 @@ function SocketPlugin() {
       // the previous send is "done" (meaning the app can send more data)
       // if there is still room in the send buffer
       return this.tcpUnusedSendBuffer(socket) > 0;
-    },
-
-    tcpDataAvailable: function (socket) {
-      return socket.rcvQueue.length > 0;
     },
 
     tcpSendQueuedData: function (socket) {
@@ -1627,18 +1639,19 @@ function SocketPlugin() {
         TCB.sndQueue.shift();
       }
       const sent = this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK, data);
+      socket._signalWriteSemaphore(); // for Squeak
       return sent;
     },
 
     tcpSendSegment: function (socket, seq, ack, flags, data) {
       if (flags === undefined) debugger
+      const TCB = socket.TCB;
       const segment = {
         seq: seq,
         ack: ack,
         flags: flags,
         data: data || [],
       };
-      const TCB = socket.TCB;
       const ipPacket = new Uint8Array(TCP_HEADER + segment.data.length);
       const src = this.croquetAddress;
       const dst = socket.hostAddress;
@@ -1662,7 +1675,7 @@ function SocketPlugin() {
       ipPacket[23] = TCB.RCV_WND & 0xFF;
       if (segment.data.length > 0) {
         ipPacket.set(data, TCP_HEADER);
-        TCB.SND_NXT = (TCB.SND_NXT + segment.data.length) >>> 0;
+        TCB.SND_NXT = seqNum(TCB.SND_NXT + segment.data.length);
       }
       this.withCroquetNetworkDo(network => network.send(ipPacket));
       if (segment.data.length > 0 || (flags & TCP_SYN) || (flags & TCP_FIN)) {
@@ -1682,24 +1695,50 @@ function SocketPlugin() {
           acked.push(segment);
         }
       }
-      debugger
       if (acked.length > 0) {
         TCB.retransmitQueue = TCB.retransmitQueue.filter(segment => !acked.includes(segment));
+        socket._signalWriteSemaphore(); // for Squeak
       }
     },
 
-    tcpUpdateReceiveWindow: function (socket, segment) {
+    tcpUpdateReceiveWindow: function (socket) {
       // if RCV.BUFF - RCV.USER - RCV.WND  >= min(0.5 * RCV.BUFF, Eff.snd.MSS )
       // then RCV.WND = RCV.BUFF - RCV.USER
       const TCB = socket.TCB;
       const rcvBuff = socket.rcvBufSize;
-      const rcvUser = TCB.receiveQueue.reduce((sum, segment) => sum + segment.data.length, 0);
-      const rcvWnd = TCB.RCV_WND;
-      const min = Math.min(0.5 * rcvBuff, CROQUET_MMS);
-      if (rcvBuff - rcvUser - rcvWnd >= min) {
+      const rcvUser = TCB.rcvQueue.reduce((sum, data) => sum + data.length, 0);
+      DEBUG > 2 && console.log("Croquet network: received " + rcvUser + " bytes, window is " + TCB.RCV_WND + " of " + rcvBuff);
+      const free = rcvBuff - rcvUser - TCB.RCV_WND;
+      if (free >= Math.min(0.5 * rcvBuff, CROQUET_MMS)) {
+        // increase the window
         TCB.RCV_WND = rcvBuff - rcvUser;
-        DEBUG > 2 && console.log("Croquet network: " + socket + " updated receive window to " + TCB.RCV_WND);
+        DEBUG > 2 && console.log("Croquet network: " + socket + " increased receive window to " + TCB.RCV_WND);
+      } else if (free < 0) {
+        // decrease the window
+        TCB.RCV_WND = rcvBuff - rcvUser;
+        DEBUG > 2 && console.log("Croquet network: " + socket + " decreased receive window to " + TCB.RCV_WND);
       }
+    },
+
+    tcpDeliverDataAndSendAck: function (socket, data) {
+      // Once the TCP endpoint takes responsibility for the data, it advances RCV.NXT
+      // over the data accepted, and adjusts RCV.WND as appropriate to the current
+      // buffer availability. The total of RCV.NXT and RCV.WND should not be reduced.
+      const TCB = socket.TCB;
+      TCB.rcvQueue.push(data);
+      socket._signalReadSemaphore(); // for Squeak
+      const oldRcvEnd = seqNum(TCB.RCV_NXT + TCB.RCV_WND);
+      TCB.RCV_NXT = seqNum(TCB.RCV_NXT + data.length);
+      this.tcpUpdateReceiveWindow(socket);
+      const newRcvEnd = seqNum(TCB.RCV_NXT + TCB.RCV_WND);
+      if (seqLT(newRcvEnd, oldRcvEnd)) {
+        // window shrunk ... not good
+        debugger
+      }
+      // Send an acknowledgment of the form:
+      // <SEQ=SND.NXT><ACK=RCV.NXT><CTL=ACK>
+      // TODO: This acknowledgment should be piggybacked on a segment being transmitted if possible without incurring undue delay.
+      this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
     },
 
     tcpOPEN: function (socket, active) {
@@ -1720,7 +1759,7 @@ function SocketPlugin() {
             TCB.ISS = this.tcpInitialSeq();
             this.tcpSendSegment(socket, TCB.ISS, 0, TCP_SYN);
             TCB.SND_UNA = TCB.ISS;
-            TCB.SND_NXT = (TCB.ISS + 1) >>> 0;
+            TCB.SND_NXT = seqNum(TCB.ISS + 1);
             socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT";
             socket.status = this.Socket_WaitingForConnection; // for Squeak
           }
@@ -1733,7 +1772,6 @@ function SocketPlugin() {
     },
 
     tcpSEND: function (socket, data) {
-      debugger
       const TCB = socket.TCB;
       switch (socket.tcpState || "CLOSED") {
         case "CLOSED":
@@ -1748,7 +1786,7 @@ function SocketPlugin() {
           TCB.ISS = this.tcpInitialSeq();
           this.tcpSendSegment(socket, TCB.ISS, 0, TCP_SYN);
           TCB.SND_UNA = TCB.ISS;
-          TCB.SND_NXT = (TCB.ISS + 1) >>> 0;
+          TCB.SND_NXT = seqNum(TCB.ISS + 1);
           socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT";
           socket.status = this.Socket_WaitingForConnection; // for Squeak
           // fall through
@@ -1757,18 +1795,22 @@ function SocketPlugin() {
         case "ESTABLISHED":
         case "CLOSE-WAIT":
           // queue data for later transmission if there is room in the send buffer
-          if (data.length > this.tcpUnusedSendBuffer(socket)) {
-            DEBUG > 0 && console.warn("Croquet network: send buffer overflow " + socket);
-            return -1; // error
-          }
           if (data.length > 0) {
+            const unused = this.tcpUnusedSendBuffer(socket);
+            if (data.length > unused) {
+              if (unused === 0) {
+                DEBUG > 0 && console.warn("Croquet network: send buffer overflow " + socket);
+                return -1; // error
+              }
+              data = data.subarray(0, unused);
+            }
             TCB.sndQueue.push(data);
           }
           if (socket.tcpState === "ESTABLISHED" || socket.tcpState === "CLOSE-WAIT") {
               // send data now
               return this.tcpSendQueuedData(socket);
           }
-          return 0; // success
+          return data.length; // success
         case "FIN-WAIT-1":
         case "FIN-WAIT-2":
         case "CLOSING":
@@ -1779,12 +1821,82 @@ function SocketPlugin() {
       }
     },
 
-    tcpRECEIVE: function (socket, data) {
-      debugger
+    tcpRECEIVE: function (socket, maxBytes) {
+      const TCB = socket.TCB;
+      switch (socket.tcpState || "CLOSED") {
+        case "CLOSED":
+          DEBUG > 0 && console.warn("Croquet network: connection does not exist " + socket);
+          return null; // error
+        case "SYN-SENT":
+        case "SYN-RECEIVED":
+        case "LISTEN":
+          return []; // no data
+        case "CLOSE-WAIT":
+          if (!TCB.rcvQueue[0]) {
+            DEBUG > 0 && console.warn("Croquet network: connection closing " + socket);
+            return null; // error
+          }
+          // fall through
+        case "ESTABLISHED":
+        case "FIN-WAIT-1":
+        case "FIN-WAIT-2":
+          // deliver data from the receive queue
+          var data = TCB.rcvQueue[0];
+          if (!data) return [];
+          if (data.length <= maxBytes) {
+            TCB.rcvQueue.shift();
+          } else {
+            var rest = data.subarray(maxBytes);
+            TCB.rcvQueue[0] = rest;
+            data = data.subarray(0, maxBytes);
+          }
+          return data;
+        case "CLOSING":
+        case "LAST-ACK":
+        case "TIME-WAIT":
+          DEBUG > 0 && console.warn("Croquet network: connection is closing " + socket);
+          return null; // error
+      }
     },
 
     tcpCLOSE: function (socket) {
-      debugger
+      const TCB = socket.TCB;
+      switch (socket.tcpState || "CLOSED") {
+        case "CLOSED":
+          DEBUG > 0 && console.warn("Croquet network: socket is closed " + socket);
+          return -1; // error
+        case "LISTEN":
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED";
+          this.tcpDeleteTCB(socket);
+          return 0; // success
+        case "SYN-SENT":
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED";
+          this.tcpDeleteTCB(socket);
+          return 0; // success
+        case "SYN-RECEIVED":
+            if (TCB.sndQueue.length === 0) {
+            this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-1";
+          } else {
+            this.tcpQueueSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN);
+          }
+          return 0; // success
+        case "ESTABLISHED":
+          this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-1";
+          return 0; // success
+        case "CLOSE-WAIT":
+          this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "LAST-ACK";
+          return 0; // success
+        case "FIN-WAIT-1":
+        case "FIN-WAIT-2":
+        case "CLOSING":
+        case "LAST-ACK":
+        case "TIME-WAIT":
+          DEBUG > 0 && console.warn("Croquet network: connection is closing " + socket);
+          return -1; // error
+      }
     },
 
     tcpABORT: function (socket) {
@@ -1797,13 +1909,12 @@ function SocketPlugin() {
 
     tcpSEGMENT_ARRIVED: function (socket, ipPacket) {
       // this is a beast of a method, but it follows the RFC literally
-      const SEG_SEQ = (ipPacket[13] << 24 | ipPacket[14] << 16 | ipPacket[15] << 8 | ipPacket[16]) >>> 0;
-      const SEG_ACK = (ipPacket[17] << 24 | ipPacket[18] << 16 | ipPacket[19] << 8 | ipPacket[20]) >>> 0;
+      const SEG_SEQ = seqNum(ipPacket[13] << 24 | ipPacket[14] << 16 | ipPacket[15] << 8 | ipPacket[16]);
+      const SEG_ACK = seqNum(ipPacket[17] << 24 | ipPacket[18] << 16 | ipPacket[19] << 8 | ipPacket[20]);
       const SEG_CTL = ipPacket[21];
       const SEG_WND = ipPacket[22] << 8 | ipPacket[23];
       const SEG_LEN = ipPacket.length - TCP_HEADER;
       const TCB = socket.TCB;
-      debugger
       switch (socket.tcpState || "CLOSED") {
         // ------------------------------------------------------------
         case "CLOSED":
@@ -1827,12 +1938,12 @@ function SocketPlugin() {
               socket.host = socket.hostAddress.join(".");
               socket.port = ipPacket[9] << 8 | ipPacket[10];
             }
-            TCB.RCV_NXT = (SEG_SEQ + 1) >>> 0;
+            TCB.RCV_NXT = seqNum(SEG_SEQ + 1);
             TCB.IRS = SEG_SEQ;
             TCB.ISS = this.tcpInitialSeq();
             this.tcpSendSegment(socket, TCB.ISS, TCB.RCV_NXT, TCP_SYN|TCP_ACK);
             TCB.SND_UNA = TCB.ISS;
-            TCB.SND_NXT = (TCB.ISS + 1) >>> 0;
+            TCB.SND_NXT = seqNum(TCB.ISS + 1);
             socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-RECEIVED";
             // TODO: "Note that any other
             // incoming control or data (combined with SYN) will be processed
@@ -1869,7 +1980,7 @@ function SocketPlugin() {
           // third check the security and precedence
           // fourth check the SYN bit
           if (SEG_CTL & TCP_SYN) {
-            TCB.RCV_NXT = (SEG_SEQ + 1) >>> 0;
+            TCB.RCV_NXT = seqNum(SEG_SEQ + 1);
             TCB.IRS = SEG_SEQ;
             if (SEG_CTL & TCP_ACK) {
               TCB.SND_UNA = SEG_ACK;
@@ -1907,14 +2018,14 @@ function SocketPlugin() {
           if (TCB.RCV_WND === 0) {
             acceptable = SEG_SEQ === TCB.RCV_NXT;
           } else {
-            acceptable = lessOrEqual(TCB.RCV_NXT, SEG_SEQ) && lessThan(SEG_SEQ, TCB.RCV_NXT + TCB.RCV_WND);
+            acceptable = seqLE(TCB.RCV_NXT, SEG_SEQ) && seqLT(SEG_SEQ, TCB.RCV_NXT + TCB.RCV_WND);
           }
         } else {
           if (TCB.RCV_WND === 0) {
             acceptable = false;
           } else {
-            acceptable = lessOrEqual(TCB.RCV_NXT, SEG_SEQ) && lessThan(SEG_SEQ, TCB.RCV_NXT + TCB.RCV_WND) ||
-              lessOrEqual(TCB.RCV_NXT, SEG_SEQ + SEG_LEN - 1) && lessThan(SEG_SEQ + SEG_LEN - 1, TCB.RCV_NXT + TCB.RCV_WND);
+            acceptable = seqLE(TCB.RCV_NXT, SEG_SEQ) && seqLT(SEG_SEQ, TCB.RCV_NXT + TCB.RCV_WND) ||
+              seqLE(TCB.RCV_NXT, SEG_SEQ + SEG_LEN - 1) && seqLT(SEG_SEQ + SEG_LEN - 1, TCB.RCV_NXT + TCB.RCV_WND);
           }
         }
         if (!acceptable) {
@@ -1949,7 +2060,7 @@ function SocketPlugin() {
         // fifth, check the SEG_ACK field
         if (!(SEG_CTL & TCP_ACK)) return; // ignore
         if (socket.tcpState === "SYN-RECEIVED") {
-          if (lessThan(TCB.SND_UNA, SEG_ACK) && lessOrEqual(SEG_ACK, TCB.SND_NXT)) {
+          if (seqLT(TCB.SND_UNA, SEG_ACK) && seqLE(SEG_ACK, TCB.SND_NXT)) {
             socket.tcpPrev = socket.tcpState; socket.tcpState = "ESTABLISHED";
             socket.status = this.Socket_Connected; // for Squeak
             socket._signalConnSemaphore();
@@ -1963,16 +2074,16 @@ function SocketPlugin() {
           // proceed in ESTABLISHED state
         }
         if (["ESTABLISHED", "FIN-WAIT-1", "FIN-WAIT-2", "CLOSE-WAIT", "CLOSING"].includes(socket.tcpState)) {
-          if (largerThan(SEG_ACK, TCB.SND_NXT)) {
+          if (seqGT(SEG_ACK, TCB.SND_NXT)) {
             this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
             return; // ignore
           }
-          if (lessThan(SND_UNA, SEG_ACK) && lessOrEqual(SEG_ACK, TCB.SND_NXT)) {
+          if (seqLT(TCB.SND_UNA, SEG_ACK) && seqLE(SEG_ACK, TCB.SND_NXT)) {
             TCB.SND_UNA = SEG_ACK;
             this.tcpRemoveAckedSegmentsFromRetransmitQueue(socket);
           }
-          if (lessThan(TCB.SND_UNA, SEG_ACK) && lessOrEqual(SEG_ACK, TCB.SND_NXT)) {
-            if (lessThan(TCB.SND_WL1, SEG_SEQ) || (TCB.SND_WL1 === SEG_SEQ && lessOrEqual(TCB.SND_WL2, SEG_ACK))) {
+          if (seqLT(TCB.SND_UNA, SEG_ACK) && seqLE(SEG_ACK, TCB.SND_NXT)) {
+            if (seqLT(TCB.SND_WL1, SEG_SEQ) || (TCB.SND_WL1 === SEG_SEQ && seqLE(TCB.SND_WL2, SEG_ACK))) {
               TCB.SND_WND = SEG_WND;
               TCB.SND_WL1 = SEG_SEQ;
               TCB.SND_WL2 = SEG_ACK;
@@ -2033,7 +2144,7 @@ function SocketPlugin() {
         // eighth, check the FIN bit
         if (SEG_CTL & TCP_FIN) {
           if (["CLOSED", "LISTEN", "SYN-SENT"].includes(socket.tcpState)) return;
-          TCB.RCV_NXT = (SEG_SEQ + 1) >>> 0;
+          TCB.RCV_NXT = seqNum(SEG_SEQ + 1);
           this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
           if (socket.tcpState === "SYN-RECEIVED" || socket.tcpState === "ESTABLISHED") {
             socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSE-WAIT";
@@ -2287,7 +2398,7 @@ function SocketPlugin() {
           //    if (dst === this host) this.receive(bytes)
           //    else this.publish("network", "send", bytes);
           // That's it.
-          DEBUG > 2 && this.tcpDump(bytes);
+          DEBUG > 2 && this.tcpDump(bytes, "send");
           const packet = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
             ? bytes.buffer
             : bytes.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength).buffer;
@@ -2313,7 +2424,7 @@ function SocketPlugin() {
 
         receive(packet) {
           const bytes = new Uint8Array(packet);
-          DEBUG > 2 && this.tcpDump(bytes);
+          DEBUG > 2 && this.tcpDump(bytes, "recv");
           if (DEBUG > 1) {
             const src = bytes.subarray(0, 4).join(".");
             console.log("Croquet network: receiving " + packet.byteLength + " bytes from " + src);
@@ -2346,7 +2457,7 @@ function SocketPlugin() {
           return count;
         }
 
-        tcpDump(bytes) {
+        tcpDump(bytes, dir) {
           // format similar to tcpdump
           const src = bytes.subarray(0, 4).join(".");
           const dst = bytes.subarray(4, 8).join(".");
@@ -2358,13 +2469,23 @@ function SocketPlugin() {
           if (type === "UDP" || type === "TCP") {
             const srcPort = bytes[9] << 8 | bytes[10];
             const dstPort = bytes[11] << 8 | bytes[12];
-            dump += " " + src + ":" + srcPort + " > " + dst + ":" + dstPort;
+            if (dir === "send") {
+              dump += " " + src + ":" + srcPort + " > " + dst + ":" + dstPort;
+            } else {
+              dump += " " + dst + ":" + dstPort + " < " + src + ":" + srcPort;
+            }
             if (type === "UDP") {
               payload = bytes.length - UDP_HEADER;
             } else {
+              // tcpDump() keeps track of the initial sequence number
+              // so it can display relative sequence numbers
+              // we cheat and reach into the socket's TCB
+              const socket = plugin.croquetTCPPorts[dir === "send" ? srcPort : dstPort];
+              const iss = socket && socket.TCB && (dir === "send" ? socket.TCB.ISS : socket.TCB.IRS) || 0;
+              const irs = socket && socket.TCB && (dir === "send" ? socket.TCB.IRS : socket.TCB.ISS) || 0;
               payload = bytes.length - TCP_HEADER;
-              const seq = (bytes[13] << 24 | bytes[14] << 16 | bytes[15] << 8 | bytes[16]) >>> 0;
-              const ack = (bytes[17] << 24 | bytes[18] << 16 | bytes[19] << 8 | bytes[20]) >>> 0;
+              const seq = seqNum(bytes[13] << 24 | bytes[14] << 16 | bytes[15] << 8 | bytes[16]);
+              const ack = seqNum(bytes[17] << 24 | bytes[18] << 16 | bytes[19] << 8 | bytes[20]);
               const flags = bytes[21];
               const wnd = bytes[22] << 8 | bytes[23];
               dump += " ["
@@ -2373,8 +2494,18 @@ function SocketPlugin() {
                 + (flags & TCP_RST ? "R" : "")
                 + (flags & TCP_ACK ? "." : "")
                 + "]";
-              dump += " seq " + seq + ",";
-              if (flags & TCP_ACK) dump += " ack " + ack + ",";
+              if (flags & TCP_SYN) {
+                dump += " seq " + seq + ",";
+              } else if (payload > 0 || flags & TCP_FIN) {
+                dump += " seq " + (seq - iss);
+                if (payload > 0) {
+                  dump += ":" + (seq - iss + payload - 1);
+                }
+                dump += ",";
+              }
+              if (flags & TCP_ACK) {
+                dump += " ack " + (ack - irs) + ",";
+              }
               dump += " win " + wnd + ",";
             }
           } else {
@@ -2397,12 +2528,15 @@ function SocketPlugin() {
 
           // seriously, Croquet, you don't have a way to get the actual message size?
           // gonna hook into your private API then...
-          const fn = CROQUETSTATS.addNetworkTraffic;
+          if (!CROQUETSTATS.orgAddNetworkTraffic) {
+            CROQUETSTATS.orgAddNetworkTraffic = CROQUETSTATS.addNetworkTraffic;
+          }
           CROQUETSTATS.addNetworkTraffic = (type, bytes) => {
-            fn.call(CROQUETSTATS, type, bytes);
-            delete CROQUETSTATS.addNetworkTraffic;
-            console.log("Croquet network: last croquet msg " + bytes + " bytes");
-            if (!CROQUETSTATS.addNetworkTraffic) CROQUETSTATS.addNetworkTraffic = fn;
+            CROQUETSTATS.orgAddNetworkTraffic(CROQUETSTATS, type, bytes);
+            if (type === "reflector_out") {
+              console.log("Croquet network: last croquet msg " + bytes + " bytes");
+              CROQUETSTATS.addNetworkTraffic = CROQUETSTATS.orgAddNetworkTraffic;
+            }
           }
         }
       }
