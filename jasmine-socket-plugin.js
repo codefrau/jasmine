@@ -236,7 +236,7 @@ function SocketPlugin() {
     },
 
     // A socket emulates socket behavior
-    _newSocket: function (domain, socketType, rcvBufSize, sendBufSize, connSemaIdx, readSemaIdx, writeSemaIdx) {
+    _newSocket: function (domain, socketType, recvBufSize, sendBufSize, connSemaIdx, readSemaIdx, writeSemaIdx) {
       var plugin = this;
       return {
         domain: domain,
@@ -254,8 +254,8 @@ function SocketPlugin() {
         isCroquet: false,
         localPort: null, // only for croquet sockets (maybe should generalize this to all sockets?)
         listening: false, // ready to receive a connection (TCP) or data (UDP)
-        rcvBufSize: rcvBufSize, // buffers are unused for http and ws requests
-        sndBufSize: sendBufSize, // but are used for TCP flow control in Croquet sockets
+        recvBufSize: recvBufSize, // buffers are unused for http and ws requests
+        sendBufSize: sendBufSize, // but are used for TCP flow control in Croquet sockets
 
         sendBuffer: null,
         sendTimeout: null,
@@ -1078,12 +1078,12 @@ function SocketPlugin() {
       return true;
     },
 
-    socketCreate: function (domain, socketType, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex) {
+    socketCreate: function (domain, socketType, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex) {
       if (domain.isNil) domain = this.Domain_IPv4;
       if (domain !== this.Domain_IPv4) return false;
       var name = '{SqueakJS Socket #' + (++this.handleCounter) + '}';
       var sqHandle = this.primHandler.makeStString(name);
-      var socket = this._newSocket(domain, socketType, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
+      var socket = this._newSocket(domain, socketType, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
       socket.name = "socket#" + this.handleCounter;
       sqHandle.socket = socket;
       return sqHandle;
@@ -1095,10 +1095,10 @@ function SocketPlugin() {
       if (argCount !== 5) return false;
       var domain = this.interpreterProxy.stackObjectValue(4);
       var socketType = this.interpreterProxy.stackIntegerValue(3);
-      var rcvBufSize = this.interpreterProxy.stackIntegerValue(2);
+      var recvBufSize = this.interpreterProxy.stackIntegerValue(2);
       var sendBufSize = this.interpreterProxy.stackIntegerValue(1);
       var semaIndex = this.interpreterProxy.stackIntegerValue(0);
-      var sqHandle = this.socketCreate(domain, socketType, rcvBufSize, sendBufSize, semaIndex, semaIndex, semaIndex);
+      var sqHandle = this.socketCreate(domain, socketType, recvBufSize, sendBufSize, semaIndex, semaIndex, semaIndex);
       DEBUG > 1 && console.log("primitiveSocketCreate => " + sqHandle);
       if (!sqHandle) return false;
       this.interpreterProxy.popthenPush(argCount + 1, sqHandle);
@@ -1108,12 +1108,12 @@ function SocketPlugin() {
       if (argCount !== 7) return false;
       var domain = this.interpreterProxy.stackObjectValue(6);
       var socketType = this.interpreterProxy.stackIntegerValue(5);
-      var rcvBufSize = this.interpreterProxy.stackIntegerValue(4);
+      var recvBufSize = this.interpreterProxy.stackIntegerValue(4);
       var sendBufSize = this.interpreterProxy.stackIntegerValue(3);
       var semaIndex = this.interpreterProxy.stackIntegerValue(2);
       var readSemaIndex = this.interpreterProxy.stackIntegerValue(1);
       var writeSemaIndex = this.interpreterProxy.stackIntegerValue(0);
-      var sqHandle = this.socketCreate(domain, socketType, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
+      var sqHandle = this.socketCreate(domain, socketType, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
       DEBUG > 1 && console.log("primitiveSocketCreate3Semaphores => " + sqHandle);
       if (!sqHandle) return false;
       this.interpreterProxy.popthenPush(argCount + 1, sqHandle);
@@ -1290,13 +1290,13 @@ function SocketPlugin() {
       return true;
     },
 
-    socketAccept: function (socket, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex) {
+    socketAccept: function (socket, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex) {
       var srcAndPort = socket.pendingConnections.shift();
       if (socket.pendingConnections.length === 0) {
         socket.status = this.Socket_WaitingForConnection;
       }
       if (!srcAndPort) return false;
-      var newSocket = this.socketCreate(socket.domain, socket.type, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
+      var newSocket = this.socketCreate(socket.domain, socket.type, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
       if (!newSocket) return false;
       var [src, port] = srcAndPort.split(":"); port = +port;
       this.croquetAccept(socket, newSocket.socket, src, port);
@@ -1307,12 +1307,12 @@ function SocketPlugin() {
       if (argCount !== 6) return false;
       var socket = this.interpreterProxy.stackObjectValue(5).socket;
       if (socket === undefined) return false;
-      var rcvBufSize = this.interpreterProxy.stackIntegerValue(4);
+      var recvBufSize = this.interpreterProxy.stackIntegerValue(4);
       var sendBufSize = this.interpreterProxy.stackIntegerValue(3);
       var semaIndex = this.interpreterProxy.stackIntegerValue(2);
       var readSemaIndex = this.interpreterProxy.stackIntegerValue(1);
       var writeSemaIndex = this.interpreterProxy.stackIntegerValue(0);
-      var newSocket = this.socketAccept(socket, rcvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
+      var newSocket = this.socketAccept(socket, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
       DEBUG > 1 && console.log("primitiveSocketAccept3Semaphores " + socket + " => " + newSocket.socket);
       if (!newSocket) return false;
       this.interpreterProxy.popthenPush(argCount + 1, newSocket);
@@ -1323,10 +1323,10 @@ function SocketPlugin() {
       if (argCount !== 4) return false;
       var socket = this.interpreterProxy.stackObjectValue(3).socket;
       if (socket === undefined) return false;
-      var rcvBufSize = this.interpreterProxy.stackIntegerValue(2);
+      var recvBufSize = this.interpreterProxy.stackIntegerValue(2);
       var sendBufSize = this.interpreterProxy.stackIntegerValue(1);
       var semaIndex = this.interpreterProxy.stackIntegerValue(0);
-      var newSocket = this.socketAccept(socket, rcvBufSize, sendBufSize, semaIndex, semaIndex, semaIndex);
+      var newSocket = this.socketAccept(socket, recvBufSize, sendBufSize, semaIndex, semaIndex, semaIndex);
       DEBUG > 1 && console.log("primitiveSocketAccept " + socket + " => " + newSocket);
       if (!newSocket) return false;
       this.interpreterProxy.popthenPush(argCount + 1, newSocket);
@@ -1587,12 +1587,11 @@ function SocketPlugin() {
         SEG_ACK:  0, // acknowledgment number
         SEG_LEN:  0, // segment length
         SEG_WND:  0, // segment window
-        retransmitQueue: [],
         sndQueue: [],
         rcvQueue: [],
       };
-      socket.TCB.SND_WND = socket.sndBufSize;
-      socket.TCB.RCV_WND = socket.rcvBufSize;
+      socket.TCB.SND_WND = socket.sendBufSize;
+      socket.TCB.RCV_WND = socket.recvBufSize;
       socket.response = socket.TCB.rcvQueue; // for Squeak
     },
 
@@ -1607,14 +1606,15 @@ function SocketPlugin() {
       this.croquetDestroy(socket);
     },
 
-    tcpUnusedSendBuffer: function (socket) {
-      // TODO: this is probably wrong
-      // and for sure inefficient, we should keep this in variables
+    tcpUnusedSendBuffer: function (socket, msg) {
       const TCB = socket.TCB;
-      const inRetransmitQueue = TCB.retransmitQueue.reduce((sum, segment) => sum + segment.data.length, 0);
-      const inSendQueue = TCB.sndQueue.reduce((sum, data) => sum + data.length, 0);
-      const unused = socket.sndBufSize - inRetransmitQueue - inSendQueue;
-      DEBUG > 2 && console.log("sndQ: " + inSendQueue + ", rxQ: " + inRetransmitQueue + ", unused: " + unused);
+      let used = seqNum(TCB.SND_NXT - TCB.SND_UNA);
+      let unused = socket.sendBufSize - used;
+      let unacked = used;
+      if (DEBUG > 2 && used > 0) {
+        unacked += " (" + seqNum(TCB.SND_UNA - TCB.ISS) + ":" + seqNum(TCB.SND_NXT - TCB.ISS) + ")";
+      }
+      DEBUG > 2 && console.log("unacked: " + unacked + ", free: " + unused + " " + (msg || ""));
       return unused;
     },
 
@@ -1624,23 +1624,12 @@ function SocketPlugin() {
       }
       // the previous send is "done" (meaning the app can send more data)
       // if there is still room in the send buffer
-      return this.tcpUnusedSendBuffer(socket) > 0;
-    },
-
-    tcpSendQueuedData: function (socket) {
-      const TCB = socket.TCB;
-      let data = TCB.sndQueue[0];
-      if (!data) return 0;
-      const max = Math.min(this.tcpUnusedSendBuffer(socket), CROQUET_MMS);
-      if (data.length > max) {
-        data = TCB.sndQueue[0].subarray(0, max);
-        TCB.sndQueue[0] = TCB.sndQueue[0].subarray(max);
-      } else {
-        TCB.sndQueue.shift();
+      const done =  this.tcpUnusedSendBuffer(socket, "tcpSendDone?") > 0;
+      if (!done) {
+        this.vm.breakNow();
+        DEBUG > 2 && console.log("Croquet network: breaking out of VM loop to receive acks");
       }
-      const sent = this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK, data);
-      socket._signalWriteSemaphore(); // for Squeak
-      return sent;
+      return done;
     },
 
     tcpSendSegment: function (socket, seq, ack, flags, data) {
@@ -1679,25 +1668,27 @@ function SocketPlugin() {
       }
       this.withCroquetNetworkDo(network => network.send(ipPacket));
       if (segment.data.length > 0 || (flags & TCP_SYN) || (flags & TCP_FIN)) {
-        TCB.SND_UNA = TCB.SND_NXT;
-        TCB.retransmitQueue.push(segment);
+        TCB.sndQueue.push(segment);
+        DEBUG > 2 && segment.data.length && this.tcpUnusedSendBuffer(socket, "sent " + segment.data.length + " bytes"); // just for logging
       }
-      return segment.data.length;
     },
 
     tcpRemoveAckedSegmentsFromRetransmitQueue: function (socket) {
       const TCB = socket.TCB;
       const ack = TCB.SND_UNA;
       const acked = [];
-      for (let i = 0; i < TCB.retransmitQueue.length; i++) {
-        const segment = TCB.retransmitQueue[i];
+      for (let i = 0; i < TCB.sndQueue.length; i++) {
+        const segment = TCB.sndQueue[i];
         if (segment.seq + segment.data.length <= ack) {
           acked.push(segment);
         }
       }
       if (acked.length > 0) {
-        TCB.retransmitQueue = TCB.retransmitQueue.filter(segment => !acked.includes(segment));
-        socket._signalWriteSemaphore(); // for Squeak
+        TCB.sndQueue = TCB.sndQueue.filter(segment => !acked.includes(segment));
+        const free = this.tcpUnusedSendBuffer(socket, "removed acked segs");
+        if (free > 0) {
+          socket._signalWriteSemaphore(); // for Squeak
+        }
       }
     },
 
@@ -1705,7 +1696,7 @@ function SocketPlugin() {
       // if RCV.BUFF - RCV.USER - RCV.WND  >= min(0.5 * RCV.BUFF, Eff.snd.MSS )
       // then RCV.WND = RCV.BUFF - RCV.USER
       const TCB = socket.TCB;
-      const rcvBuff = socket.rcvBufSize;
+      const rcvBuff = socket.recvBufSize;
       const rcvUser = TCB.rcvQueue.reduce((sum, data) => sum + data.length, 0);
       DEBUG > 2 && console.log("Croquet network: received " + rcvUser + " bytes, window is " + TCB.RCV_WND + " of " + rcvBuff);
       const free = rcvBuff - rcvUser - TCB.RCV_WND;
@@ -1778,38 +1769,33 @@ function SocketPlugin() {
           DEBUG > 0 && console.warn("Croquet network: socket is closed " + socket);
           return -1; // error
         case "LISTEN":
-          if (!socket.hostAddress) {
+          // Active OPEN (same as in tcpOPEN)
+          if (!socket.hostAddress || data.length > 0) {
             console.warn("Croquet network: socket is not connected " + socket);
             return -1; // error
           }
-          // Active OPEN (same as in tcpOPEN)
           TCB.ISS = this.tcpInitialSeq();
           this.tcpSendSegment(socket, TCB.ISS, 0, TCP_SYN);
           TCB.SND_UNA = TCB.ISS;
           TCB.SND_NXT = seqNum(TCB.ISS + 1);
           socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT";
           socket.status = this.Socket_WaitingForConnection; // for Squeak
-          // fall through
+          return 0; // success
         case "SYN-SENT":
         case "SYN-RECEIVED":
+          if (data.length > 0) {
+            DEBUG > 0 && console.warn("Croquet network: socket is not connected " + socket);
+            return -1; // error
+          }
         case "ESTABLISHED":
         case "CLOSE-WAIT":
-          // queue data for later transmission if there is room in the send buffer
-          if (data.length > 0) {
-            const unused = this.tcpUnusedSendBuffer(socket);
-            if (data.length > unused) {
-              if (unused === 0) {
-                DEBUG > 0 && console.warn("Croquet network: send buffer overflow " + socket);
-                return -1; // error
-              }
-              data = data.subarray(0, unused);
-            }
-            TCB.sndQueue.push(data);
+          if (data.length === 0) return 0; // success
+          const unused = this.tcpUnusedSendBuffer(socket, "can send?");
+          if (data.length > unused) {
+            if (unused === 0) return 0; // success
+            data = data.subarray(0, unused);
           }
-          if (socket.tcpState === "ESTABLISHED" || socket.tcpState === "CLOSE-WAIT") {
-              // send data now
-              return this.tcpSendQueuedData(socket);
-          }
+          this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK, data);
           return data.length; // success
         case "FIN-WAIT-1":
         case "FIN-WAIT-2":
@@ -1915,6 +1901,8 @@ function SocketPlugin() {
       const SEG_WND = ipPacket[22] << 8 | ipPacket[23];
       const SEG_LEN = ipPacket.length - TCP_HEADER;
       const TCB = socket.TCB;
+      DEBUG > 2 && console.log("Croquet network: " + socket + " received " + SEG_LEN + " bytes in " + socket.tcpState + " state");
+      if (SEG_LEN > 0 && SEG_ACK - TCB.IRS === 12001) debugger
       switch (socket.tcpState || "CLOSED") {
         // ------------------------------------------------------------
         case "CLOSED":
@@ -2030,6 +2018,8 @@ function SocketPlugin() {
         }
         if (!acceptable) {
           if (SEG_CTL & TCP_RST) return; // ignore
+          DEBUG > 2 && console.warn("Croquet network: rejecting segment " + seqNum(SEG_SEQ - TCB.IRS) + ":" + seqNum(SEG_SEQ + SEG_LEN - TCB.IRS)
+            + ", window is " + seqNum(TCB.RCV_NXT - TCB.IRS) + ":" + seqNum(TCB.RCV_NXT + TCB.RCV_WND - TCB.IRS));
           this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
           return;
         }
@@ -2075,6 +2065,8 @@ function SocketPlugin() {
         }
         if (["ESTABLISHED", "FIN-WAIT-1", "FIN-WAIT-2", "CLOSE-WAIT", "CLOSING"].includes(socket.tcpState)) {
           if (seqGT(SEG_ACK, TCB.SND_NXT)) {
+            DEBUG > 2 && console.warn("Croquet network: rejecting segment " + seqNum(SEG_SEQ - TCB.IRS) + ":" + seqNum(SEG_SEQ + SEG_LEN - TCB.IRS)
+              + ", SND_NXT is " + seqNum(TCB.SND_NXT - TCB.ISS) + ", ACK is " + seqNum(SEG_ACK - TCB.ISS));
             this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
             return; // ignore
           }
@@ -2099,7 +2091,7 @@ function SocketPlugin() {
           if (socket.tcpState === "FIN-WAIT-2") {
             debugger
             // if the retransmission queue is empty, the user's CLOSE can be acknowledged ("ok") but do not delete the TCB
-            if (this.retransmitQueueIsEmpty(socket)) {
+            if (socket.sndQueue.length === 0) {
               socket.status = this.Socket_Unconnected; // for Squeak
               socket._signalConnSemaphore();
             }
@@ -2506,7 +2498,11 @@ function SocketPlugin() {
               if (flags & TCP_ACK) {
                 dump += " ack " + (ack - irs) + ",";
               }
-              dump += " win " + wnd + ",";
+              dump += " win " + wnd;
+              if (wnd > 0) {
+                dump += " (" + (ack - irs) + ":" + (ack - irs + wnd - 1) + ")";
+              }
+              dump += ",";
             }
           } else {
             dump += " " + src + " > " + dst;
