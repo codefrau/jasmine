@@ -18,7 +18,7 @@
  *   [x] initial handshake
  *   [x] send/receive data
  *   [x] accept w/ backlog
- *   [ ] close connection
+ *   [x] close connection
  *   [ ] time outs
  *   [ ] retransmission
  * [ ] chunked reads
@@ -55,7 +55,7 @@
 function SocketPlugin() {
   "use strict";
 
-  var DEBUG = 0; // 0 = off, 1 = some, 2 = more, 3 = lots
+  let DEBUG = 2; // 0 = off, 1 = some, 2 = more, 3 = lots
 
   const CROQUET_URL = "https://cdn.jsdelivr.net/npm/@croquet/croquet@1.1.0-41";
 
@@ -145,6 +145,7 @@ function SocketPlugin() {
     _signalSemaphore: function (semaIndex) {
       if (semaIndex <= 0) return;
       this.primHandler.signalSemaphoreWithIndex(semaIndex);
+      this.vm.forceInterruptCheck();
     },
 
     _signalLookupSemaphore: function () { this._signalSemaphore(this.lookupSemaIdx); },
@@ -731,20 +732,24 @@ function SocketPlugin() {
         },
 
         close: function () {
-          if (this.status == plugin.Socket_Connected ||
+          if (this.isCroquet) {
+            plugin.croquetClose(this);
+          } else if (this.status == plugin.Socket_Connected ||
             this.status == plugin.Socket_OtherEndClosed ||
             this.status == plugin.Socket_WaitingForConnection) {
             if (this.webSocket) {
               this.webSocket.close();
               this.webSocket = null;
             }
-            if (this.isCroquet) {
-              plugin.croquetClose(this);
-            } else {
-              this.status = plugin.Socket_Unconnected;
-              this._signalConnSemaphore();
-            }
+            this.status = plugin.Socket_Unconnected;
+            this._signalConnSemaphore();
           }
+        },
+
+        abort: function () {
+          if (this.isCroquet) {
+            plugin.croquetAbort(this);
+          } else this.close();
         },
 
         destroy: function () {
@@ -827,12 +832,13 @@ function SocketPlugin() {
         [Symbol.toPrimitive]: function () {
           var name = this.name || "socket";
           var details = "";
-          if (this.isCroquet) details += " Croquet";
           if (this.type === plugin.TCP_Socket_Type) details += " tcp";
           else if (this.type === plugin.UDP_Socket_Type) details += " udp";
           if (this.localPort) details += ":" + this.localPort;
           if (this.port) details += " remote: " + (this.host || this.hostAddress.join(".")) + ":" + this.port;
-          details += " (" + this.statusString() + ")";
+          details += " (" + this.statusString();
+          if (this.isCroquet && this.type === plugin.TCP_Socket_Type) details += "/" + this.tcpState;
+          details += ")";
           return name + "[" + details.trim() + "]";
         },
 
@@ -851,13 +857,13 @@ function SocketPlugin() {
     },
 
     primitiveHasSocketAccess: function (argCount) {
-      DEBUG > 1 && console.log("primitiveHasSocketAccess");
+      DEBUG > 2 && console.log("primitiveHasSocketAccess");
       this.interpreterProxy.popthenPush(argCount + 1, this.interpreterProxy.trueObject());
       return true;
     },
 
     primitiveInitializeNetwork: function (argCount) {
-      DEBUG > 1 && console.log("primitiveInitializeNetwork");
+      DEBUG > 2 && console.log("primitiveInitializeNetwork");
       if (argCount !== 1) return false;
       this.lookupSemaIdx = this.interpreterProxy.stackIntegerValue(0);
       this.status = this.Resolver_Ready;
@@ -874,7 +880,7 @@ function SocketPlugin() {
         var address = this._getAddressFromLookupCache(this.lastLookup, true);
         if (address) result = this.primHandler.makeStByteArray(address);
       }
-      DEBUG > 1 && console.log("primitiveResolverNameLookupResult => " + result);
+      DEBUG > 2 && console.log("primitiveResolverNameLookupResult => " + result);
       this.interpreterProxy.popthenPush(argCount + 1, result);
       return true;
     },
@@ -885,7 +891,7 @@ function SocketPlugin() {
       // Start new lookup, ignoring if one is in progress
       var lookup = this.lastLookup = this.interpreterProxy.stackValue(0).bytesAsString();
 
-      DEBUG > 1 && console.log("primitiveResolverStartNameLookup " + lookup);
+      DEBUG > 2 && console.log("primitiveResolverStartNameLookup " + lookup);
 
       // Perform lookup in local cache
       var result = this._getAddressFromLookupCache(lookup, false);
@@ -967,7 +973,7 @@ function SocketPlugin() {
     },
 
     primitiveResolverAddressLookupResult: function (argCount) {
-      DEBUG > 1 && console.log("primitiveResolverAddressLookupResult");
+      DEBUG > 2 && console.log("primitiveResolverAddressLookupResult");
       if (argCount !== 0) return false;
 
       // Validate that lastLookup is in fact an address (and not a name)
@@ -984,7 +990,7 @@ function SocketPlugin() {
     },
 
     primitiveResolverStartAddressLookup: function (argCount) {
-      DEBUG > 1 && console.log("primitiveResolverStartAddressLookup");
+      DEBUG > 2 && console.log("primitiveResolverStartAddressLookup");
       if (argCount !== 1) return false;
 
       // Start new lookup, ignoring if one is in progress
@@ -1010,13 +1016,13 @@ function SocketPlugin() {
 
     primitiveResolverStatus: function (argCount) {
       if (argCount !== 0) return false;
-      DEBUG > 1 && console.log("primitiveResolverStatus => " + this.resolverStatusString());
+      DEBUG > 2 && console.log("primitiveResolverStatus => " + this.resolverStatusString());
       this.interpreterProxy.popthenPush(argCount + 1, this.status);
       return true;
     },
 
     primitiveResolverAbortLookup: function (argCount) {
-      DEBUG > 1 && console.log("primitiveResolverAbortLookup");
+      DEBUG > 2 && console.log("primitiveResolverAbortLookup");
       if (argCount !== 0) return false;
 
       // Unable to abort send request (although future browsers might support AbortController),
@@ -1030,7 +1036,7 @@ function SocketPlugin() {
     },
 
     primitiveSocketRemoteAddress: function (argCount) {
-      DEBUG > 1 && console.log("primitiveSocketRemoteAddress");
+      DEBUG > 2 && console.log("primitiveSocketRemoteAddress");
       if (argCount !== 1) return false;
       var socket = this.interpreterProxy.stackObjectValue(0).socket;
       if (socket === undefined) return false;
@@ -1042,7 +1048,7 @@ function SocketPlugin() {
     },
 
     primitiveSocketRemotePort: function (argCount) {
-      DEBUG > 1 && console.log("primitiveSocketRemotePort");
+      DEBUG > 2 && console.log("primitiveSocketRemotePort");
       if (argCount !== 1) return false;
       var socket = this.interpreterProxy.stackObjectValue(0).socket;
       if (socket === undefined) return false;
@@ -1067,9 +1073,9 @@ function SocketPlugin() {
       if (socket === undefined) return false;
       var hostAddress = this.interpreterProxy.stackBytes(1);
       var port = this.interpreterProxy.stackIntegerValue(0);
-      DEBUG > 1 && console.log("primitiveSocketConnectToPort " + socket + " " + hostAddress.join(".") + ":" + port + " ...");
+      DEBUG > 2 && console.log("primitiveSocketConnectToPort " + socket + " " + hostAddress.join(".") + ":" + port + " ...");
       socket.connect(hostAddress, port);
-      DEBUG > 1 && console.log("primitiveSocketConnectToPort " + socket);
+      DEBUG > 2 && console.log("primitiveSocketConnectToPort " + socket);
       this.interpreterProxy.popthenPush(argCount + 1,
         this.interpreterProxy.nilObject());
       return true;
@@ -1079,8 +1085,18 @@ function SocketPlugin() {
       if (argCount !== 1) return false;
       var socket = this.interpreterProxy.stackObjectValue(0).socket;
       if (socket === undefined) return false;
-      DEBUG > 1 && console.log("primitiveSocketCloseConnection " + socket);
+      DEBUG > 2 && console.log("primitiveSocketCloseConnection " + socket);
       socket.close();
+      this.interpreterProxy.popthenPush(argCount + 1, this.interpreterProxy.nilObject());
+      return true;
+    },
+
+    primitiveSocketAbortConnection: function (argCount) {
+      if (argCount !== 1) return false;
+      var socket = this.interpreterProxy.stackObjectValue(0).socket;
+      if (socket === undefined) return false;
+      DEBUG > 2 && console.log("primitiveSocketAbortConnection " + socket);
+      socket.abort();
       this.interpreterProxy.popthenPush(argCount + 1, this.interpreterProxy.nilObject());
       return true;
     },
@@ -1106,7 +1122,7 @@ function SocketPlugin() {
       var sendBufSize = this.interpreterProxy.stackIntegerValue(1);
       var semaIndex = this.interpreterProxy.stackIntegerValue(0);
       var sqHandle = this.socketCreate(domain, socketType, recvBufSize, sendBufSize, semaIndex, semaIndex, semaIndex);
-      DEBUG > 1 && console.log("primitiveSocketCreate => " + sqHandle);
+      DEBUG > 2 && console.log("primitiveSocketCreate => " + sqHandle);
       if (!sqHandle) return false;
       this.interpreterProxy.popthenPush(argCount + 1, sqHandle);
     },
@@ -1121,7 +1137,7 @@ function SocketPlugin() {
       var readSemaIndex = this.interpreterProxy.stackIntegerValue(1);
       var writeSemaIndex = this.interpreterProxy.stackIntegerValue(0);
       var sqHandle = this.socketCreate(domain, socketType, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
-      DEBUG > 1 && console.log("primitiveSocketCreate3Semaphores => " + sqHandle);
+      DEBUG > 2 && console.log("primitiveSocketCreate3Semaphores => " + sqHandle);
       if (!sqHandle) return false;
       this.interpreterProxy.popthenPush(argCount + 1, sqHandle);
       return true;
@@ -1131,7 +1147,7 @@ function SocketPlugin() {
       if (argCount !== 1) return false;
       var socket = this.interpreterProxy.stackObjectValue(0).socket;
       if (socket === undefined) return false;
-      DEBUG > 1 && console.log("primitiveSocketDestroy " + socket);
+      DEBUG > 2 && console.log("primitiveSocketDestroy " + socket);
       socket.destroy();
       this.interpreterProxy.popthenPush(argCount + 1, socket.status);
       return true;
@@ -1145,7 +1161,7 @@ function SocketPlugin() {
       var socket = this.interpreterProxy.stackObjectValue(0).socket;
       if (socket === undefined) return false;
       var dataAvailable = socket.dataAvailable();
-      (DEBUG > 2 || (DEBUG > 1 && dataAvailable)) && console.log("primitiveSocketReceiveDataAvailable " + socket + " => " + dataAvailable);
+      (DEBUG > 3 || (DEBUG > 2 && dataAvailable)) && console.log("primitiveSocketReceiveDataAvailable " + socket + " => " + dataAvailable);
       if (socket.isCroquet) {
         if (dataAvailable) {
           this.noDataAvailableCount = 0;
@@ -1174,11 +1190,11 @@ function SocketPlugin() {
       if ((start + count) > target.bytes.length) return false;
       var bytes = socket.recv(count);
       if (!bytes) {
-        DEBUG > 1 && console.log("primitiveSocketReceiveDataBufCount " + socket + " =>  failed");
+        DEBUG > 2 && console.log("primitiveSocketReceiveDataBufCount " + socket + " =>  failed");
         return false;
       }
       target.bytes.set(bytes, start);
-      DEBUG > 1 && console.log("primitiveSocketReceiveDataBufCount " + socket + " => " + bytes.length + " bytes");
+      DEBUG > 2 && console.log("primitiveSocketReceiveDataBufCount " + socket + " => " + bytes.length + " bytes");
       this.interpreterProxy.popthenPush(argCount + 1, bytes.length);
       return true;
     },
@@ -1193,7 +1209,7 @@ function SocketPlugin() {
       var count = this.interpreterProxy.stackIntegerValue(0);
       var end = start + count;
       if (end > data.length) return false;
-      DEBUG > 1 && console.log("primitiveSocketSendDataBufCount " + socket + " (" + count + " bytes)");
+      DEBUG > 2 && console.log("primitiveSocketSendDataBufCount " + socket + " (" + count + " bytes)");
       var sent = socket.send(data, start, end);
       if (sent < 0) return false;
       this.interpreterProxy.popthenPush(argCount + 1, sent);
@@ -1208,7 +1224,7 @@ function SocketPlugin() {
       if (socket.isCroquet) done = socket.type === this.TCP_Socket_Type
         ? this.tcpSendDone(socket)
         : this.udpSendDone(socket);
-      DEBUG > 1 && console.log("primitiveSocketSendDone " + socket + " => " + done);
+      DEBUG > 2 && console.log("primitiveSocketSendDone " + socket + " => " + done);
       this.interpreterProxy.pop(argCount + 1);
       this.interpreterProxy.pushBool(done);
       return true;
@@ -1229,9 +1245,9 @@ function SocketPlugin() {
       var end = start + count;
       if (end > data.length) return false;
 
-      DEBUG > 1 && console.log("primitiveSocketSendUDPDataBufCount " + socket + " to " + host.join(".") + ":" + port + " (" + count + " bytes)");
+      DEBUG > 2 && console.log("primitiveSocketSendUDPDataBufCount " + socket + " to " + host.join(".") + ":" + port + " (" + count + " bytes)");
 
-      if (!socket.localPort) {
+      if (!socket.port) {
         this.croquetConnect(socket, host, port);
       }
 
@@ -1255,11 +1271,11 @@ function SocketPlugin() {
       var responseBefore = socket.response.length;
       var bytes = socket.recv(count);
       if (!bytes) {
-        DEBUG > 1 && console.log("primitiveSocketReceiveDataBufCount " + socket + " =>  failed");
+        DEBUG > 2 && console.log("primitiveSocketReceiveDataBufCount " + socket + " =>  failed");
         return false;
       }
       target.bytes.set(bytes, start);
-      DEBUG > 1 && console.log("primitiveSocketReceiveUDPDataBufCount " + socket + " => " + bytes.length + " bytes");
+      DEBUG > 2 && console.log("primitiveSocketReceiveUDPDataBufCount " + socket + " => " + bytes.length + " bytes");
       var results = this.interpreterProxy.instantiateClassindexableSize(this.interpreterProxy.classArray(), 4);
       var addressOop = this.interpreterProxy.instantiateClassindexableSize(this.interpreterProxy.classByteArray(), 4);
       addressOop.bytes.set(socket.hostAddress);
@@ -1282,17 +1298,17 @@ function SocketPlugin() {
       if (argCount > 2) {
         backlog = this.interpreterProxy.stackIntegerValue(argCount - 3);
       }
-      DEBUG > 1 && console.log("primitiveSocketListenWithOrWithoutBacklog " + socket, port, backlog, "...");
+      DEBUG > 2 && console.log("primitiveSocketListenWithOrWithoutBacklog " + socket, port, backlog, "...");
       if (socket.status !== this.Socket_Unconnected && socket.type !== this.UDP_Socket_Type) {
         console.warn("Croquet network: socket is already connected");
         return false;
       }
       var success = this.croquetListen(socket, port, backlog);
       if (!success) {
-        DEBUG > 1 && console.log("primitiveSocketListenWithOrWithoutBacklog " + socket + " => failed");
+        DEBUG > 2 && console.log("primitiveSocketListenWithOrWithoutBacklog " + socket + " => failed");
         return false;
       }
-      DEBUG > 1 && console.log("primitiveSocketListenWithOrWithoutBacklog " + socket + " => success");
+      DEBUG > 2 && console.log("primitiveSocketListenWithOrWithoutBacklog " + socket + " => success");
       this.interpreterProxy.pop(argCount);
       return true;
     },
@@ -1307,7 +1323,7 @@ function SocketPlugin() {
       var readSemaIndex = this.interpreterProxy.stackIntegerValue(1);
       var writeSemaIndex = this.interpreterProxy.stackIntegerValue(0);
       var newSocket = this.croquetAccept(socket, recvBufSize, sendBufSize, semaIndex, readSemaIndex, writeSemaIndex);
-      DEBUG > 1 && console.log("primitiveSocketAccept3Semaphores " + socket + " => " + newSocket.socket);
+      DEBUG > 2 && console.log("primitiveSocketAccept3Semaphores " + socket + " => " + newSocket.socket);
       if (!newSocket) return false;
       this.interpreterProxy.popthenPush(argCount + 1, newSocket);
       return true;
@@ -1321,7 +1337,7 @@ function SocketPlugin() {
       var sendBufSize = this.interpreterProxy.stackIntegerValue(1);
       var semaIndex = this.interpreterProxy.stackIntegerValue(0);
       var newSocket = this.croquetAccept(socket, recvBufSize, sendBufSize, semaIndex, semaIndex, semaIndex);
-      DEBUG > 1 && console.log("primitiveSocketAccept " + socket + " => " + newSocket);
+      DEBUG > 2 && console.log("primitiveSocketAccept " + socket + " => " + newSocket);
       if (!newSocket) return false;
       this.interpreterProxy.popthenPush(argCount + 1, newSocket);
       return true;
@@ -1333,7 +1349,7 @@ function SocketPlugin() {
       var socket = socket.socket;
       if (socket === undefined) return false;
       var localPort = socket.localPort || 0;
-      DEBUG > 1 && console.log("primitiveSocketLocalPort " + socket + " => " + localPort);
+      DEBUG > 2 && console.log("primitiveSocketLocalPort " + socket + " => " + localPort);
       this.interpreterProxy.popthenPush(argCount + 1, localPort);
     },
 
@@ -1349,7 +1365,7 @@ function SocketPlugin() {
       switch (options) {
         case "SO_BROADCAST":
           socket.broadcast = value;
-          DEBUG > 1 && console.log("primitiveSocketSetOptions " + socket + " SO_BROADCAST " + value);
+          DEBUG > 2 && console.log("primitiveSocketSetOptions " + socket + " SO_BROADCAST " + value);
           break;
         default: DEBUG > 0 && console.warn("primitiveSocketSetOptions: unknown option " + options);
       }
@@ -1360,7 +1376,7 @@ function SocketPlugin() {
     },
 
     primitiveResolverLocalAddress: function (argCount) {
-      DEBUG > 1 && console.log("primitiveResolverLocalAddress ...");
+      DEBUG > 2 && console.log("primitiveResolverLocalAddress ...");
       if (argCount !== 0) return false;
       var localAddressOop = this.interpreterProxy.instantiateClassindexableSize(this.interpreterProxy.classByteArray(), 4);
 
@@ -1372,7 +1388,7 @@ function SocketPlugin() {
         for (var i = 0; i < 4; i++) {
           localAddressOop.bytes[i] = this.croquetAddress[i];
         }
-        DEBUG > 1 && console.log("primitiveResolverLocalAddress => " + localAddressOop.bytes.join("."));
+        DEBUG > 2 && console.log("primitiveResolverLocalAddress => " + localAddressOop.bytes.join("."));
       }.bind(this));
 
       this.interpreterProxy.popthenPush(argCount + 1, localAddressOop);
@@ -1410,13 +1426,13 @@ function SocketPlugin() {
       ports[port] = socket;
       socket.localPort = port;
 
-      DEBUG > 0 && console.log("Croquet network: registered " + socket);
+      DEBUG > 1 && console.log("Croquet network: registered " + socket);
       return port;
     },
 
     croquetListen: function (socket, port, backlog) {
       this.withCroquetNetworkDo(network => {
-        DEBUG > 0 && console.log("Croquet network: " + socket + " listen on " + port);
+        DEBUG > 1 && console.log("Croquet network: " + socket + " listen on " + port);
         this.croquetRegisterSocket(socket, port);
         if (socket.type === this.UDP_Socket_Type) {
           // UDP: we're immediately ready to receive or send data
@@ -1453,7 +1469,7 @@ function SocketPlugin() {
     croquetConnect: function (socket, dstAddr, port) {
       this.withCroquetNetworkDo(network => {
         const dst = dstAddr.join(".");
-        DEBUG > 0 && console.log("Croquet network: " + socket + " connecting to " + dst + ":" + port + " ...");
+        DEBUG > 1 && console.log("Croquet network: " + socket + " connecting to " + dst + ":" + port + " ...");
         this.croquetRegisterSocket(socket);
         socket.hostAddress = dstAddr;
         socket.host = dst;
@@ -1467,7 +1483,7 @@ function SocketPlugin() {
           // tcp state will be SYN-SENT
           // Squeak status will be this.Socket_WaitingForConnection
         }
-        DEBUG > 0 && console.log("Croquet network: " + socket);
+        DEBUG > 1 && console.log("Croquet network: " + socket);
       });
       return true;
     },
@@ -1475,7 +1491,7 @@ function SocketPlugin() {
     udpSend: function (socket, data) {
       var dataLength = data ? data.length : 0;
       this.withCroquetNetworkDo(network => {
-        DEBUG > 0 && console.log("Croquet network: " + socket + " send " + dataLength + " bytes");
+        DEBUG > 1 && console.log("Croquet network: " + socket + " send " + dataLength + " bytes");
         const ipPacket = new Uint8Array(UDP_HEADER + dataLength);
         const src = this.croquetAddress;
         const dst = socket.hostAddress;
@@ -1511,6 +1527,7 @@ function SocketPlugin() {
     },
 
     croquetReceive(ipPacket) {
+      this.lastReceivedPacket = ipPacket; // for send in case we have no socket
       const type = ipPacket[8];
       const ports = type === this.UDP_Socket_Type ? this.croquetUDPPorts : this.croquetTCPPorts;
       const dstPort = ipPacket[11] << 8 | ipPacket[12];
@@ -1522,19 +1539,27 @@ function SocketPlugin() {
       // handle TCP
       if (socket.type === this.TCP_Socket_Type) {
         if (socket.tcpBacklog > 0) {
-          // we may already have a socket for this connection
+          // let the socket for this connection handle the packet
           const src = ipPacket.slice(0, 4);
           const srcPort = ipPacket[9] << 8 | ipPacket[10];
           const srcAndPort = src.join(".") + ":" + srcPort;
           const connectedSocket = socket.connections[srcAndPort];
           if (connectedSocket) socket = connectedSocket;
+          else {
+            // the listening socket has no connection yet – we only let SYN packets
+            // through to create a new connection
+            if (!(ipPacket[21] & TCP_SYN)) {
+              DEBUG > 2 && console.log(socket + " no SYN, ignoring");
+              return;
+            }
+          }
         }
         const debug = this.tcpSEGMENT_ARRIVED(socket, ipPacket);
-        DEBUG > 2 && console.log(socket + " " + socket.tcpState + " SEG " + debug);
+        DEBUG > 2 && console.log(socket + " SEG " + debug);
         return;
       }
       // handle UDP
-      DEBUG > 0 && console.log("Croquet network: receiving " + ipPacket.length + " bytes for " + socket);
+      DEBUG > 1 && console.log("Croquet network: receiving " + ipPacket.length + " bytes for " + socket);
       if (socket.status === this.Socket_Connected) {
         if (!socket.hostAddress) {
           const src = ipPacket.slice(0, 4);
@@ -1555,7 +1580,7 @@ function SocketPlugin() {
     },
 
     croquetClose: function (socket) {
-        DEBUG > 0 && console.log("Croquet network: " + socket + " closing");
+        DEBUG > 2 && console.log("Croquet network: " + socket + " closing");
         if (socket.type === this.UDP_Socket_Type) {
           if (socket.status === this.Socket_Connected) {
             socket.hostAddress = null;
@@ -1575,21 +1600,52 @@ function SocketPlugin() {
       return true;
     },
 
+    croquetAbort: function (socket) {
+      DEBUG > 2 && console.log("Croquet network: " + socket + " aborting");
+      if (socket.type === this.UDP_Socket_Type) {
+        if (socket.status === this.Socket_Connected) {
+          socket.hostAddress = null;
+          socket.host = null;
+          socket.port = 0;
+        } else {
+          debugger
+        }
+        if (socket.listening) {
+          socket.listening = false;
+        }
+        socket.status = this.Socket_Unconnected;
+        socket._signalConnSemaphore();
+      } else { // TCP
+        this.tcpABORT(socket);
+      }
+    },
+
     croquetDestroy: function (socket) {
       if (!socket.isCroquet) return false;
-      if (socket.status !== this.Socket_Unconnected) {
-        this.croquetClose(socket);
-        socket.status = this.Socket_Unconnected;
-      }
-      if (socket.listeningSocket) {
-        delete socket.listeningSocket.connections[socket.host + ":" + socket.port];
-      } else {
-        var ports = socket.type === this.UDP_Socket_Type ? this.croquetUDPPorts : this.croquetTCPPorts;
-        delete ports[socket.localPort];
-        DEBUG > 0 && console.log("Croquet network: " + socket + " destroyed (now " + Object.keys(ports).length + " ports)");
+      if (socket.type === this.UDP_Socket_Type) {
+        if (socket.status !== this.Socket_Unconnected) {
+          this.croquetClose(socket);
+        }
+        delete this.croquetUDPPorts[socket.localPort];
+        DEBUG > 1 && console.log(socket + " unregistered (now " + Object.keys(this.croquetUDPPorts).length + " ports)");
         socket.localPort = 0;
+        socket.isCroquet = false
+      } else {
+        if (["LISTEN", "SYN-SENT", "TIME-WAIT", "LAST-ACK", "CLOSED"].includes(socket.tcpState)) {
+          if (socket.listeningSocket) {
+            delete socket.listeningSocket.connections[socket.host + ":" + socket.port];
+            DEBUG > 1 && console.log(socket + " deleted (now " + Object.keys(socket.listeningSocket.connections).length + " connections on :" + socket.localPort + ")");
+          } else {
+            delete this.croquetTCPPorts[socket.localPort];
+            DEBUG > 1 && console.log(socket + " unregistered (now " + Object.keys(this.croquetTCPPorts).length + " ports used)");
+          }
+          socket.isCroquet = false;
+        } else if (["SYN-RECEIVED", "ESTABLISHED", "FIN-WAIT-1", "FIN-WAIT-2", "CLOSE-WAIT"].includes(socket.tcpState)) {
+          this.tcpCLOSE(socket); // will call croquetDestroy again
+        } else {
+          debugger
+        }
       }
-      socket.isCroquet = false;
       // TODO: leave Croquet session if no more sockets
       return true;
     },
@@ -1623,13 +1679,16 @@ function SocketPlugin() {
     },
 
     tcpDeleteTCB: function (socket) {
-      socket.tcpState = null;
+      const TCB = socket.TCB;
       socket.TCB = null;
+      socket.tcpPrev = socket.tcpState;
+      socket.tcpState = "CLOSED";
       // todo: flush retransmit queue, delete timeouts
-      if (socket.status !== this.Socket_Unconnected) {
+      if (socket.status > this.Socket_Unconnected) {
         socket.status = this.Socket_Unconnected; // for Squeak
         socket._signalConnSemaphore();
       }
+      if (TCB.timeWaitTimer) clearTimeout(TCB.timeWaitTimer);
       this.croquetDestroy(socket);
     },
 
@@ -1709,6 +1768,9 @@ function SocketPlugin() {
       if (segment.data.length > 0) {
         ipPacket.set(data, TCP_HEADER);
         TCB.SND_NXT = seqNum(TCB.SND_NXT + segment.data.length);
+      }
+      if (flags & TCP_FIN) {
+        TCB.SND_NXT = seqNum(TCB.SND_NXT + 1);
       }
       this.withCroquetNetworkDo(network => network.send(ipPacket));
       if (segment.data.length > 0 || (flags & TCP_SYN) || (flags & TCP_FIN)) {
@@ -1808,14 +1870,14 @@ function SocketPlugin() {
     tcpOPEN: function (socket, active) {
       if (!socket.TCB) this.tcpCreateTCB(socket);
       const TCB = socket.TCB;
-      DEBUG > 1 && console.log("Processing OPEN (" + socket.tcpState + ") " + socket);
+      DEBUG > 2 && console.log("Processing OPEN (" + socket.tcpState + ") " + socket);
       switch (socket.tcpState) {
         case "CLOSED":
         case "LISTEN":
           if (!active) {
             // Passive OPEN
             if (socket.tcpState !== "LISTEN") {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "LISTEN"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "LISTEN"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
               socket.status = this.Socket_WaitingForConnection; // for Squeak
               if (socket.tcpBacklog > 0) {
                 socket.pendingConnections = []; // for accept
@@ -1828,7 +1890,7 @@ function SocketPlugin() {
             this.tcpSendSegment(socket, TCB.ISS, 0, TCP_SYN);
             TCB.SND_UNA = TCB.ISS;
             TCB.SND_NXT = seqNum(TCB.ISS + 1);
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             socket.status = this.Socket_WaitingForConnection; // for Squeak
           }
           break;
@@ -1836,7 +1898,7 @@ function SocketPlugin() {
           DEBUG > 0 && console.warn("Croquet network error: connection already exists " + socket);
           debugger
       }
-      DEBUG > 1 && console.log("Processed OPEN (" + socket.tcpState + ") " + socket);
+      DEBUG > 2 && console.log("Processed OPEN (" + socket.tcpState + ") " + socket);
     },
 
     tcpSEND: function (socket, data) {
@@ -1856,7 +1918,7 @@ function SocketPlugin() {
           this.tcpSendSegment(socket, TCB.ISS, 0, TCP_SYN);
           TCB.SND_UNA = TCB.ISS;
           TCB.SND_NXT = seqNum(TCB.ISS + 1);
-          socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-SENT"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
           socket.status = this.Socket_WaitingForConnection; // for Squeak
           return 0; // success
         case "SYN-SENT":
@@ -1922,28 +1984,23 @@ function SocketPlugin() {
           DEBUG > 0 && console.warn("Croquet network: socket is closed " + socket);
           return -1; // error
         case "LISTEN":
-          socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
           this.tcpDeleteTCB(socket);
           return 0; // success
         case "SYN-SENT":
-          socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
           this.tcpDeleteTCB(socket);
           return 0; // success
         case "SYN-RECEIVED":
-            if (TCB.sndQueue.length === 0) {
-            this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN | TCP_ACK);
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-1"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
-          } else {
-            this.tcpQueueSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN | TCP_ACK);
-          }
-          return 0; // success
         case "ESTABLISHED":
           this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN | TCP_ACK);
-          socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-1"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-1"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
+          DEBUG > 2 && console.log(socket + " sent FIN|ACK " + (TCB.SND_NXT - TCB.ISS));
           return 0; // success
         case "CLOSE-WAIT":
           this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_FIN | TCP_ACK);
-          socket.tcpPrev = socket.tcpState; socket.tcpState = "LAST-ACK"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+          socket.tcpPrev = socket.tcpState; socket.tcpState = "LAST-ACK"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
+          DEBUG > 2 && console.log(socket + " sent FIN|ACK " + (TCB.SND_NXT - TCB.ISS));
           return 0; // success
         case "FIN-WAIT-1":
         case "FIN-WAIT-2":
@@ -1956,11 +2013,23 @@ function SocketPlugin() {
     },
 
     tcpABORT: function (socket) {
-      debugger
-    },
-
-    tcpSTATUS: function (socket) {
-      debugger
+      const TCB = socket.TCB;
+      switch (socket.tcpState || "CLOSED") {
+        case "CLOSED":
+          DEBUG > 0 && console.warn("Croquet network: socket is closed " + socket);
+          return -1; // error
+        case "SYN-RECEIVED":
+        case "ESTABLISHED":
+        case "FIN-WAIT-1":
+        case "FIN-WAIT-2":
+        case "CLOSE-WAIT":
+          this.tcpSendSegment(socket, TCB.SND_NXT, 0, TCP_RST);
+          // fall through
+        default:
+          DEBUG > 2 && console.log(socket + " => CLOSED (aborted)");
+          this.tcpDeleteTCB(socket);
+          return 0; // success
+      }
     },
 
     tcpSEGMENT_ARRIVED: function (socket, ipPacket) {
@@ -1971,7 +2040,7 @@ function SocketPlugin() {
       const SEG_WND = ipPacket[22] << 8 | ipPacket[23];
       const SEG_LEN = ipPacket.length - TCP_HEADER;
       let TCB = socket.TCB;
-      DEBUG > 2 && console.log(socket + " received " + SEG_LEN + " bytes in " + socket.tcpState + " state");
+      DEBUG > 2 && console.log(socket + " receiving segment (" + SEG_LEN + " bytes)");
       switch (socket.tcpState || "CLOSED") {
         // ------------------------------------------------------------
         case "CLOSED":
@@ -2009,6 +2078,7 @@ function SocketPlugin() {
               newSocket.status = this.Socket_WaitingForConnection; // for Squeak
               socket = newSocket;
               TCB = socket.TCB;
+              DEBUG > 1 && console.log(socket + " created for incoming connection");
             }
             if (!socket.hostAddress) {
               socket.hostAddress = ipPacket.slice(0, 4);
@@ -2021,13 +2091,13 @@ function SocketPlugin() {
             this.tcpSendSegment(socket, TCB.ISS, TCB.RCV_NXT, TCP_SYN|TCP_ACK);
             TCB.SND_UNA = TCB.ISS;
             TCB.SND_NXT = seqNum(TCB.ISS + 1);
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-RECEIVED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-RECEIVED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             // TODO: "Note that any other
             // incoming control or data (combined with SYN) will be processed
             // in the SYN-RECEIVED state, but processing of SYN and SEG_ACK should
             // not be repeated."
             if (SEG_LEN > 0) {
-              console.warn("Croquet network: received " + SEG_LEN + " bytes in SYN-RECEIVED state");
+              DEBUG > 0 && console.warn("Croquet network: received " + SEG_LEN + " bytes in SYN-RECEIVED state");
               debugger
             }
             return "sent syn-ack";
@@ -2047,10 +2117,10 @@ function SocketPlugin() {
           // second check the RST bit
           if (SEG_CTL & TCP_RST) {
             if (SEG_CTL & TCP_ACK) {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
               socket.status = this.Socket_Unconnected; // for Squeak
               socket._signalConnSemaphore();
-              DEBUG > 0 && console.log("Croquet network: reset " + socket);
+              DEBUG > 2 && console.log("Croquet network: reset " + socket);
             }
             return "processed rst";
           }
@@ -2065,16 +2135,16 @@ function SocketPlugin() {
               this.tcpUpdateSendWindow(socket, SEG_WND, SEG_SEQ, SEG_ACK); // Not in spec? But needed I think
             }
             if (TCB.SND_UNA > TCB.ISS) {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "ESTABLISHED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "ESTABLISHED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
               socket.status = this.Socket_Connected; // for Squeak
               socket._signalConnSemaphore();
-              DEBUG > 0 && console.log("Croquet network: " + socket);
+              DEBUG > 2 && console.log("Croquet network: " + socket);
               this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
               // TODO: if data was received in the SYN-RECEIVED
               // state, process it now
               return "sent ack, established";
             }
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-RECEIVED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "SYN-RECEIVED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             this.tcpSendSegment(socket, TCB.ISS, TCB.RCV_NXT, TCP_SYN|TCP_ACK);
             this.tcpUpdateSendWindow(socket, SEG_WND, SEG_SEQ, SEG_ACK);
             if (SEG_LEN > 0) {
@@ -2106,7 +2176,7 @@ function SocketPlugin() {
           }
         }
         if (!acceptable) {
-          if (SEG_CTL & TCP_RST) return "ignored (unacceptable segment)";
+          if (SEG_CTL & TCP_RST) return "ignored RST (unacceptable segment)";
           DEBUG > 2 && console.warn("Croquet network: rejecting segment " + seqNum(SEG_SEQ - TCB.IRS) + ":" + seqNum(SEG_SEQ + SEG_LEN - TCB.IRS)
             + ", window is " + seqNum(TCB.RCV_NXT - TCB.IRS) + ":" + seqNum(TCB.RCV_NXT + TCB.RCV_WND - TCB.IRS));
           this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
@@ -2115,7 +2185,7 @@ function SocketPlugin() {
         // second, check the RST bit
         if (SEG_CTL & TCP_RST) {
           if (socket.tcpState === "SYN-RECEIVED" && socket.tcpPrev === "LISTEN") {
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "LISTEN"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "LISTEN"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             socket.status = this.Socket_WaitingForConnection; // for Squeak
             socket._signalConnSemaphore();
           } else {
@@ -2127,7 +2197,7 @@ function SocketPlugin() {
         // fourth, check the SYN bit
         if (SEG_CTL & TCP_SYN) {
           if (socket.tcpState === "SYN-RECEIVED" && socket.tcpPrev === "LISTEN") {
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "LISTEN"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "LISTEN"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             socket.status = this.Socket_WaitingForConnection; // for Squeak
             socket._signalConnSemaphore();
             return "processed syn";
@@ -2140,15 +2210,22 @@ function SocketPlugin() {
         if (!(SEG_CTL & TCP_ACK)) return "ignored (no ack)";
         if (socket.tcpState === "SYN-RECEIVED") {
           if (seqLT(TCB.SND_UNA, SEG_ACK) && seqLE(SEG_ACK, TCB.SND_NXT)) {
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "ESTABLISHED"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "ESTABLISHED"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             if (socket.listeningSocket) {
               socket.listeningSocket.pendingConnections.push(socket.sqSocket); // for accept
               socket.listeningSocket.status = this.Socket_Connected; // for Squeak
               socket.listeningSocket._signalConnSemaphore();
+              Promise.resolve().then(() => {
+                // TODO: this is a hack to make sure the accept is processed before the next segment arrives
+                var timeout = Date.now() + 100;
+                while (Date.now() < timeout &&socket.listeningSocket.pendingConnections.length > 0) {
+                    this.vm.interpret();
+                }
+              });
             }
             socket.status = this.Socket_Connected; // for Squeak
-            socket._signalConnSemaphore();
-            DEBUG > 0 && console.log("Croquet network: " + socket);
+            if (!socket.listeningSocket) socket._signalConnSemaphore();
+            DEBUG > 2 && console.log("Croquet network: " + socket);
             this.tcpUpdateSendWindow(socket, SEG_WND, SEG_SEQ, SEG_ACK);
           } else {
             this.tcpSendSegment(socket, SEG_ACK, 0, TCP_RST);
@@ -2182,43 +2259,43 @@ function SocketPlugin() {
             if (TCB.SND_UNA === SEG_ACK && TCB.SND_WND !== SEG_WND) console.warn("Croquet network: ack is equal to SND_UNA, window size would have changed from " + TCB.SND_WND + " to " + SEG_WND);
           }
           if (socket.tcpState === "FIN-WAIT-1") {
-            debugger
             // if the FIN segment is now acknowledged then enter FIN-WAIT-2
             if (TCB.SND_UNA === TCB.SND_NXT) {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-2"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "FIN-WAIT-2"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             }
           }
-          if (socket.tcpState === "FIN-WAIT-2") {
-            debugger
+          else if (socket.tcpState === "FIN-WAIT-2") {
             // if the retransmission queue is empty, the user's CLOSE can be acknowledged ("ok") but do not delete the TCB
-            if (socket.sndQueue.length === 0) {
+            if (TCB.sndQueue.length === 0) {
               socket.status = this.Socket_Unconnected; // for Squeak
               socket._signalConnSemaphore();
             }
           }
-          // if (socket.tcpState === "CLOSE-WAIT") do nothing
-          if (socket.tcpState === "CLOSING") {
-            debugger
+          else if (socket.tcpState === "CLOSING") {
             // if the ACK acknowledges our FIN then enter the TIME-WAIT state
             // and start the time-wait timer, otherwise ignore the segment
             if (TCB.SND_UNA === TCB.SND_NXT) {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "TIME-WAIT"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "TIME-WAIT"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
+              this.tcpTimeWait(socket);
+            } else {
+              return "ignored ack";
             }
           }
         } // end of ESTABLISHED, FIN-WAIT-1, FIN-WAIT-2, CLOSE-WAIT, CLOSING
-        if (socket.tcpState === "LAST-ACK") {
-          debugger
+        else if (socket.tcpState === "LAST-ACK") {
           // if the ACK acknowledges our FIN then delete the TCB and return
-          if (TCB.SND_UNA === TCB.SND_NXT) {
+          if (SEG_ACK === TCB.SND_NXT) {
             this.tcpDeleteTCB(socket);
-            return "processed ack of our fin";
+            return "processed last ack";
           }
         }
-        if (socket.tcpState === "TIME-WAIT") {
-          debugger
-          // restart the 2MSL time-wait timeout
-          this.startTCPTimer(socket, 2 * TCP_MSL);
-          return "started 2MSL timer";
+        else if (socket.tcpState === "TIME-WAIT") {
+          // The only thing that can arrive in this state is a retransmission of the remote FIN
+          // Acknowledge it, and restart the 2 MSL timeout
+          if ((SEG_CTL & TCP_FIN) && TCB.RCV_NXT === SEG_SEQ) {
+            this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
+          }
+          this.tcpTimeWait(socket);
         }
         // sixth, check the URG bit
         // seventh, process the segment text
@@ -2239,22 +2316,22 @@ function SocketPlugin() {
           TCB.RCV_NXT = seqNum(SEG_SEQ + 1);
           this.tcpSendSegment(socket, TCB.SND_NXT, TCB.RCV_NXT, TCP_ACK);
           if (socket.tcpState === "SYN-RECEIVED" || socket.tcpState === "ESTABLISHED") {
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSE-WAIT"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSE-WAIT"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             socket.status = this.Socket_OtherEndClosed; // for Squeak
             socket._signalConnSemaphore();
-          }
-          if (socket.tcpState === "FIN-WAIT-1") {
+          } else if (socket.tcpState === "FIN-WAIT-1") {
             if (TCB.SND_UNA === TCB.SND_NXT) {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "TIME-WAIT"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "TIME-WAIT"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             } else {
-              socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSING"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
+              socket.tcpPrev = socket.tcpState; socket.tcpState = "CLOSING"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
             }
-          }
-          if (socket.tcpState === "FIN-WAIT-2") {
-            socket.tcpPrev = socket.tcpState; socket.tcpState = "TIME-WAIT"; DEBUG > 2 && console.log(socket + " => " + socket.tcpState);
-          }
-          if (socket.tcpState === "TIME-WAIT") {
-            this.startTCPTimer(socket, 2 * TCP_MSL);
+          } else if (socket.tcpState === "FIN-WAIT-2") {
+            socket.tcpPrev = socket.tcpState; socket.tcpState = "TIME-WAIT"; DEBUG > 2 && console.log(socket.tcpPrev + " => " + socket);
+            this.tcpTimeWait(socket);
+            return "sent ack, started 2MSL timer";
+          } else if (socket.tcpState === "TIME-WAIT") {
+            this.tcpTimeWait(socket);
+            return "sent ack, restarted 2MSL timer";
           }
         }
       }
@@ -2264,7 +2341,13 @@ function SocketPlugin() {
     tcpTimeWait: function (socket) {
       socket.status = this.Socket_Unconnected; // for Squeak
       socket._signalConnSemaphore();
-      setTimeout(() => this.tcpProcessEvent(socket, "timeout"), 2 * TCP_MSL);
+      const TCB = socket.TCB;
+      if (TCB.timeWaitTimer) clearTimeout(TCB.timeWaitTimer);
+      TCB.timeWaitTimer = setTimeout(() => {
+        TCB.timeWaitTimer = null;
+        DEBUG > 2 && console.log(socket + " time wait done");
+        this.tcpDeleteTCB(socket);
+      }, 2 * TCP_MSL);
     },
 
     withCroquetNetworkDo: function (func) {
@@ -2384,7 +2467,6 @@ function SocketPlugin() {
           if (host) {
             // host rejoined
             host.offline = 0;
-            DEBUG > 1 && console.log("@" + this.now() + " host online again: " + name + " => " + host.ip);
           } else {
             // assign new IP address
             const ip = this.allocateIP();
@@ -2395,9 +2477,7 @@ function SocketPlugin() {
             }
             this.hostNames.set(name, host);
             this.ipAddresses.set(ip, host);
-            DEBUG > 1 && console.log("@" + this.now() + " host online: " + name + " => " + ip);
           }
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(network, host-online, [" + name + ", " + host.ip + "])");
           this.publish("network", "host-online", [ name, host.ip ]);
           this.cleanUpHosts();
         }
@@ -2405,8 +2485,6 @@ function SocketPlugin() {
         hostExited(name) {
           const host = this.hostNames.get(name);
           host.offline = this.now();
-          DEBUG > 1 && console.log("@" + this.now() + " host offline: " + name + " (" + host.ip + ")");
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(network, host-offline, [" + name + ", " + host.ip + "])");
           this.publish("network", "host-offline", [ name, host.ip ]);
         }
 
@@ -2414,7 +2492,6 @@ function SocketPlugin() {
           const bytes = new Uint8Array(packet);
           const src = bytes.subarray(0, 4).join(".");
           const dst = bytes.subarray(4, 8).join(".");
-          DEBUG > 2 && console.log("@" + this.now() + " Model.publish(" + dst + ", recv, " + packet.byteLength + " bytes])");
           this.publish(dst, "recv", packet);
         }
 
@@ -2433,7 +2510,6 @@ function SocketPlugin() {
               if (offlineHost) {
                 // reuse the IP address of the oldest offline host
                 ip = offlineHost.ip;
-                DEBUG > 1 && console.log("@" + this.now() + " " + offlineHost.name + " (" + ip + ") has been offline for too long, reusing IP address");
                 this.hostNames.delete(offlineHost.name);
                 this.ipAddresses.delete(ip);
               } else throw new Error("Too many participants"); // unlikely
@@ -2460,7 +2536,6 @@ function SocketPlugin() {
             if (host.offline && now - host.offline > CROQUET_RELEASE_HOSTNAME) {
               this.hostNames.delete(host.name);
               this.ipAddresses.delete(host.ip);
-              DEBUG > 1 && console.log("@" + this.now() + " " + host.name + " (" + host.ip + ") has been offline for too long, removing");
             }
           }
         }
@@ -2491,7 +2566,7 @@ function SocketPlugin() {
           //    if (dst === this host) this.receive(bytes)
           //    else this.publish("network", "send", bytes);
           // That's it.
-          DEBUG > 1 && this.tcpDump(bytes, "send");
+          DEBUG > 2 && this.tcpDump(bytes, "send");
           const packet = bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
             ? bytes.buffer
             : bytes.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength).buffer;
@@ -2517,7 +2592,7 @@ function SocketPlugin() {
 
         receive(packet) {
           const bytes = new Uint8Array(packet);
-          DEBUG > 1 && this.tcpDump(bytes, "recv");
+          DEBUG > 2 && this.tcpDump(bytes, "recv");
           if (DEBUG > 1) {
             const src = bytes.subarray(0, 4).join(".");
             console.log("Croquet network: receiving " + packet.byteLength + " bytes from " + src);
@@ -2592,7 +2667,7 @@ function SocketPlugin() {
                 + "]";
               if (flags & TCP_SYN) {
                 dump += " seq " + seq + ",";
-              } else if (payload > 0 || flags & TCP_FIN) {
+              } else {
                 dump += " seq " + (seq - iss);
                 if (payload > 0) {
                   dump += ":" + (seq - iss + payload - 1);
@@ -2676,7 +2751,6 @@ function SocketPlugin() {
         password: CROQUET_PASSWORD,
         location: true,
         tps: 0, // since there are no future messages we don't need ticks
-        debug: DEBUG > 2 && ["session", "subscribe"],
       });
 
       var ip = session.view.ip();
