@@ -119,7 +119,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2024-01-09",               // Maybe replace at build time?
+        vmDate: "2024-01-16",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -2773,7 +2773,7 @@
     Object.subclass('Squeak.Interpreter',
     'initialization', {
         initialize: function(image, display) {
-            console.log('squeak: initializing interpreter ' + Squeak.vmVersion);
+            console.log('squeak: initializing interpreter ' + Squeak.vmVersion + ' (' + Squeak.vmDate + ')');
             this.Squeak = Squeak;   // store locally to avoid dynamic lookup in Lively
             this.image = image;
             this.image.vm = this;
@@ -9462,10 +9462,6 @@
                     (new Uint8Array(buffer)).set(file.contents.subarray(0, file.size));
                 }
                 Squeak.filePut(file.name, buffer);
-                // if (/SqueakDebug.log/.test(file.name)) {
-                //     var chars = Squeak.bytesAsString(new Uint8Array(buffer));
-                //     console.warn(chars.replace(/\r/g, '\n'));
-                // }
                 file.modified = false;
             }
         },
@@ -11379,7 +11375,7 @@
                 this.audioContext.createBuffer(stereoFlag ? 2 : 1, bufFrames, samplesPerSec),
                 this.audioContext.createBuffer(stereoFlag ? 2 : 1, bufFrames, samplesPerSec),
             ];
-            console.log("sound: started");
+            // console.log("sound: started");
             return this.popNIfOK(argCount);
         },
         snd_playNextBuffer: function() {
@@ -11413,7 +11409,7 @@
         },
         snd_primitiveSoundAvailableSpace: function(argCount) {
             if (!this.audioContext) {
-                console.log("sound: no audio context");
+                console.warn("sound: no audio context");
                 return false;
             }
             var available = 0;
@@ -11425,7 +11421,7 @@
         },
         snd_primitiveSoundPlaySamples: function(argCount) {
             if (!this.audioContext || this.audioBuffersUnused.length === 0) {
-                console.log("sound: play but no free buffers");
+                console.warn("sound: play but no free buffers");
                 return false;
             }
             var count = this.stackInteger(2),
@@ -11448,7 +11444,7 @@
         },
         snd_primitiveSoundPlaySilence: function(argCount) {
             if (!this.audioContext || this.audioBuffersUnused.length === 0) {
-                console.log("sound: play but no free buffers");
+                console.warn("sound: play but no free buffers");
                 return false;
             }
             var buffer = this.audioBuffersUnused.shift(),
@@ -11470,9 +11466,8 @@
                 this.audioBuffersUnused = null;
                 this.audioNextTimeSlot = 0;
                 this.audioSema = 0;
-                console.log("sound: stopped");
+                // console.log("sound: stopped");
             }
-            Squeak.stopAudioOut();
             return this.popNIfOK(argCount);
         },
         snd_primitiveSoundStartRecording: function(argCount) {
@@ -11487,7 +11482,7 @@
                 self = this;
             Squeak.startAudioIn(
                 function onSuccess(audioContext, source) {
-                    console.log("sound: recording started");
+                    // console.log("sound: recording started")
                     self.audioInContext = audioContext;
                     self.audioInSource = source;
                     self.audioInSema = semaIndex;
@@ -11530,7 +11525,7 @@
         snd_primitiveSoundGetRecordingSampleRate: function(argCount) {
            if (!this.audioInContext) return false;
            var actualRate = this.audioInContext.sampleRate / this.audioInOverSample | 0;
-           console.log("sound: actual recording rate " + actualRate + "x" + this.audioInOverSample);
+        //    console.log("sound: actual recording rate " + actualRate + "x" + this.audioInOverSample);
            return this.popNandPushIfOK(argCount + 1, actualRate);
         },
         snd_primitiveSoundRecordSamples: function(argCount) {
@@ -56563,8 +56558,17 @@
                     }
                     if (loaded.length == files.length) {
                         if (image) {
-                            SqueakJS.appName = imageName.replace(/.*\//,'').replace(/\.image$/,'');
-                            SqueakJS.runImage(image, imageName, display, options);
+                            if (display.vm) {
+                                display.quitFlag = true;
+                                options.onQuit = function(vm, display, options) {
+                                    options.onQuit = null;
+                                    SqueakJS.appName = imageName.replace(/.*\//,'').replace(/\.image$/,'');
+                                    SqueakJS.runImage(image, imageName, display, options);
+                                };
+                            } else {
+                                SqueakJS.appName = imageName.replace(/.*\//,'').replace(/\.image$/,'');
+                                SqueakJS.runImage(image, imageName, display, options);
+                            }
                         } else {
                             recordDragDropEvent(Squeak.EventDragDrop, evt, canvas, display);
                         }
