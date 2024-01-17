@@ -22,12 +22,20 @@
 // [X] implement clip planes
 // [ ] implement fog
 // [ ] implement tex coord gen
-// [ ] fix glBitmap for size other than 640x480
+// [ ] fix glBitmap for size other than 640x480 (also, make pixel perfect)
 // [ ] optimize list compilation glBegin/glEnd
 // [ ] implement light attenuation
 // [ ] implement spot lights
+// [ ] implement color material
 // [ ] emulate glLineWidth (WebGL usually only supports 1px lines)
 //     e.g. using https://wwwtyro.net/2019/11/18/instanced-lines.html
+// [ ] full OpenGL 1.0 support
+// [ ] full OpenGL 1.1 support
+// [ ] full OpenGL 1.2 support
+// [ ] full OpenGL 1.3 support
+// [ ] full OpenGL 1.4 support
+// [ ] full OpenGL 1.5 support
+// [ ] some extensions?
 
 // OpenGL constants (many missing in WebGL)
 var GL;
@@ -124,7 +132,7 @@ function OpenGL() {
         },
 
         initGL: function() {
-            DEBUG > 1 && console.log("OpenGL: got context from B3DAcceleratorPlugin", webgl);
+            DEBUG > 0 && console.log("OpenGL: initGL");
             // if webgl-lint is loaded, configure it
             const ext = webgl.getExtension('GMAN_debug_helper');
             if (ext) ext.setConfiguration({
@@ -448,7 +456,7 @@ function OpenGL() {
             if (gl.listMode && this.addToList("glCallList", [list])) return;
             DEBUG > 1 && console.log("glCallList", list, "START");
             this.executeList(list);
-            DEBUG > 1 && console.log("glCallList", list.id, "DONE");
+            DEBUG > 1 && console.log("glCallList", list, "DONE");
         },
 
         glCallLists: function(n, type, lists) {
@@ -513,7 +521,7 @@ function OpenGL() {
         },
 
         glColor3fv: function(v) {
-            if (gl.listMode && this.addToList("glColor3fv", [v])) return;
+            if (gl.listMode && this.addToList("glColor3fv", [v.slice()])) return;
             DEBUG > 1 && console.log("glColor3fv", Array.from(v));
             gl.color.set(v);
             gl.color[3] = 1;
@@ -541,7 +549,7 @@ function OpenGL() {
         },
 
         glColor4fv: function(v) {
-            if (gl.listMode && this.addToList("glColor4fv", [v])) return;
+            if (gl.listMode && this.addToList("glColor4fv", [v.slice()])) return;
             DEBUG > 1 && console.log("glColor4fv", Array.from(v));
             gl.color.set(v);
             gl.primitiveAttrs |= HAS_COLOR;
@@ -1250,24 +1258,24 @@ function OpenGL() {
             webgl.useProgram(shader.program);
             this.setShaderUniforms(shader);
             var loc = shader.locations;
-            DEBUG > 1 && console.log("aPosition: @" + offset + "/" + stride);
+            DEBUG > 2 && console.log("aPosition: @" + offset + "/" + stride);
             webgl.vertexAttribPointer(loc['aPosition'], 3, webgl.FLOAT, false, stride, offset);
             webgl.enableVertexAttribArray(loc['aPosition']);
             offset += 12;
             if (loc['aNormal'] >= 0) {
-                DEBUG > 1 && console.log("aNormal: @" + offset + "/" + stride);
+                DEBUG > 2 && console.log("aNormal: @" + offset + "/" + stride);
                 webgl.vertexAttribPointer(loc['aNormal'], 3, webgl.FLOAT, false, stride, offset);
                 webgl.enableVertexAttribArray(loc['aNormal']);
             }
             if (geometryFlags & HAS_NORMAL) offset += 12;
             if (loc['aColor'] >= 0) {
-                DEBUG > 1 && console.log("aColor: @" + offset + "/" + stride);
+                DEBUG > 2 && console.log("aColor: @" + offset + "/" + stride);
                 webgl.vertexAttribPointer(loc['aColor'], 4, webgl.FLOAT, false, stride, offset);
                 webgl.enableVertexAttribArray(loc['aColor']);
             }
             if (geometryFlags & HAS_COLOR) offset += 16;
             if (loc['aTexCoord'] >= 0) {
-                DEBUG > 1 && console.log("aTexCoord: @" + offset + "/" + stride);
+                DEBUG > 2 && console.log("aTexCoord: @" + offset + "/" + stride);
                 webgl.vertexAttribPointer(loc['aTexCoord'], 2, webgl.FLOAT, false, stride, offset);
                 webgl.enableVertexAttribArray(loc['aTexCoord']);
             }
@@ -1275,10 +1283,10 @@ function OpenGL() {
 
             // draw
             if (indexBuffer) {
-                DEBUG > 1 && console.log("Draw indexed vertices", GL_Symbol(mode), Array.from(indices), vertices.map(function(v) { return ""+v; }));
+                DEBUG > 1 && console.log("glEnd: draw indexed vertices", GL_Symbol(mode, 'POINTS'), Array.from(indices), vertices.map(function(v) { return ""+v; }));
                 webgl.drawElements(mode, indices.length, vertices.length > 256 ? webgl.UNSIGNED_SHORT : webgl.UNSIGNED_BYTE, 0);
             } else {
-                DEBUG > 1 && console.log("Draw vertices", GL_Symbol(mode), 0, vertices.map(function(v) { return ""+v; }));
+                DEBUG > 1 && console.log("glEnd: draw vertices", GL_Symbol(mode, 'POINTS'), 0, vertices.map(function(v) { return ""+v; }));
                 webgl.drawArrays(mode, 0, vertices.length);
             }
             webgl.useProgram(null);
@@ -1479,7 +1487,7 @@ function OpenGL() {
                     } else {
                         transformPoint(gl.matrices[GL.MODELVIEW][0], param, gl.lights[i].position);
                     }
-                    DEBUG > 1 && console.log("glLightfv", i, "GL_POSITION", param, "=>", Array.from(gl.lights[i].position));
+                    DEBUG > 1 && console.log("glLightfv", i, "GL_POSITION", Array.from(param), "=>", Array.from(gl.lights[i].position));
                     break;
                 default:
                     if (DEBUG) console.log("UNIMPLEMENTED glLightfv", i, GL_Symbol(pname), Array.from(param));
@@ -1594,7 +1602,7 @@ function OpenGL() {
         },
 
         glNormal3fv: function(v) {
-            if (gl.listMode && this.addToList("glNormal3fv", [v])) return;
+            if (gl.listMode && this.addToList("glNormal3fv", [v.slice()])) return;
             DEBUG > 1 && console.log("glNormal3fv", Array.from(v));
             gl.normal.set(v);
             gl.primitiveAttrs |= HAS_NORMAL;
@@ -1949,7 +1957,7 @@ function OpenGL() {
         },
 
         glTexCoord2fv: function(v) {
-            if (gl.listMode && this.addToList("glTexCoord2fv", [v])) return;
+            if (gl.listMode && this.addToList("glTexCoord2fv", [v.slice()])) return;
             DEBUG > 1 && console.log("glTexCoord2fv", Array.from(v));
             gl.texCoord.set(v);
             gl.primitiveAttrs |= HAS_TEXCOORD;
@@ -2034,7 +2042,7 @@ function OpenGL() {
         },
 
         glVertex3fv: function(v) {
-            if (gl.listMode && this.addToList("glVertex3fv", [v])) return;
+            if (gl.listMode && this.addToList("glVertex3fv", [v.slice()])) return;
             DEBUG > 1 && console.log("glVertex3fv", Array.from(v));
             this.pushVertex(v);
         },
