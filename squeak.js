@@ -119,7 +119,7 @@
     "version", {
         // system attributes
         vmVersion: "SqueakJS 1.1.2",
-        vmDate: "2024-01-16",               // Maybe replace at build time?
+        vmDate: "2024-01-28",               // Maybe replace at build time?
         vmBuild: "unknown",                 // or replace at runtime by last-modified?
         vmPath: "unknown",                  // Replace at runtime
         vmFile: "vm.js",
@@ -2829,6 +2829,7 @@
             this.breakOutTick = 0;
             this.breakOnMethod = null; // method to break on
             this.breakOnNewMethod = false;
+            this.breakOnMessageNotUnderstood = false;
             this.breakOnContextChanged = false;
             this.breakOnContextReturned = null; // context to break on
             this.messages = {};
@@ -3706,6 +3707,10 @@
             if (selector === dnuSel) // Cannot find #doesNotUnderstand: -- unrecoverable error.
                 throw Error("Recursive not understood error encountered");
             var dnuMsg = this.createActualMessage(selector, argCount, startingClass); //The argument to doesNotUnderstand:
+            if (this.breakOnMessageNotUnderstood) {
+                var receiver = this.stackValue(argCount);
+                this.breakNow("Message not understood: " + receiver + " " + startingClass.className() + ">>" + selector.bytesAsString());
+            }
             this.popNandPush(argCount, dnuMsg);
             return this.findSelectorInClass(dnuSel, 1, startingClass);
         },
@@ -8903,7 +8908,7 @@
             return this.popNandPushIfOK(argCount+1, this.makePointWithXandY(w, h));
         },
         primitiveScreenScaleFactor: function(argCount) {
-            var scale = this.display.initialScale || 1.0,
+            var scale = this.display.scale || 1.0,
                 scaleFactor = 1.0 / scale;
             return this.popNandPushIfOK(argCount+1, this.makeFloat(scaleFactor));
         },
@@ -11179,20 +11184,65 @@
             return this.popNIfOK(argCount);
         },
         jpeg2_primJPEGWriteImageonByteArrayformqualityprogressiveJPEGerrorMgr: function(argCount) {
-            this.vm.warnOnce("JPEGReadWritePlugin2: writing not implemented yet");
-            return false;
+            if (argCount < 6) return false;
+            var destination = this.stackNonInteger(4).bytes,
+                form = this.stackNonInteger(3).pointers,
+                quality = this.stackInteger(2);
+                // rest ignored
+            if (!this.success || !destination || !form) return false;
+            var formWidth = form[Squeak.Form_width],
+                formHeight = form[Squeak.Form_height],
+                formDepth = form[Squeak.Form_depth],
+                formBits = form[Squeak.Form_bits].words;
+            if (formDepth !== 32) {
+                this.vm.warnOnce("JPEG2WriteImage: only 32 bit depth supported");
+                return false;
+            }
+            var bytesCount = this.jpeg2_writeFormToBytes(formBits, formWidth, formHeight, quality, destination);
+            return this.popNandPushIfOK(argCount + 1, bytesCount);
+        },
+        jpeg2_writeFormToBytes: function(formBits, width, height, quality, destination) {
+            var canvas = document.createElement("canvas"),
+                context = canvas.getContext("2d");
+            canvas.width = width;
+            canvas.height = height;
+            var imageData = context.createImageData(width, height),
+                pixels = imageData.data;
+            for (var i = 0; i < formBits.length; i++) {
+                var pix = formBits[i];
+                pixels[i*4 + 0] = (pix >> 16) & 255;
+                pixels[i*4 + 1] = (pix >> 8) & 255;
+                pixels[i*4 + 2] = pix & 255;
+                pixels[i*4 + 3] = 255;
+            }
+            context.putImageData(imageData, 0, 0);
+            var jpeg = canvas.toDataURL("image/jpeg", quality / 100);
+            return this.jpeg2_dataURLToBytes(jpeg, destination);
+        },
+        jpeg2_dataURLToBytes: function(dataURL, destination) {
+            var base64 = dataURL.split(',')[1];
+            if (!base64) return 0;
+            var needed = base64.length * 3 / 4;
+            if (needed - 3 > destination.length) return 0;
+            var bytes = atob(base64);
+            if (bytes.length > destination.length) return 0;
+            for (var i = 0; i < bytes.length; i++)
+                destination[i] = bytes.charCodeAt(i);
+            return bytes.length;
         },
         jpeg2_readImageFromBytes: function(bytes, thenDo, errorDo) {
             var blob = new Blob([bytes], {type: "image/jpeg"}),
                 image = new Image();
             image.onload = function() {
                 thenDo(image);
+                URL.revokeObjectURL(image.src);
             };
             image.onerror = function() {
                 console.warn("could not render JPEG");
                 errorDo();
+                URL.revokeObjectURL(image.src);
             };
-            image.src = (window.URL || window.webkitURL).createObjectURL(blob);
+            image.src = URL.createObjectURL(blob);
         },
         jpeg2_getPixelsFromImage: function(image) {
             var canvas = document.createElement("canvas"),
@@ -56075,6 +56125,7 @@
             fullscreen: false,
             width: 0,   // if 0, VM uses canvas.width
             height: 0,  // if 0, VM uses canvas.height
+            scale: 1,   // VM will use window.devicePixelRatio if highdpi is enabled, also changes when touch-zooming
             highdpi: options.highdpi,
             mouseX: 0,
             mouseY: 0,
@@ -56088,6 +56139,7 @@
             cursorOffsetY: 0,
             droppedFiles: [],
             signalInputEvent: null, // function set by VM
+            changedCallback: null,  // invoked when display size/scale changes
             // additional functions added below
         };
         setupSwapButtons(options);
@@ -56239,22 +56291,23 @@
         function dd(ax, ay, bx, by) {var x = ax - bx, y = ay - by; return Math.sqrt(x*x + y*y);}
         function dist(a, b) {return dd(a.pageX, a.pageY, b.pageX, b.pageY);}
         function dent(n, l, t, u) { return n < l ? n + t - l : n > u ? n + t - u : t; }
-        function adjustDisplay(l, t, w, h) {
+        function adjustCanvas(l, t, w, h) {
             var cursorCanvas = display.cursorCanvas,
-                scale = w / canvas.width,
-                ratio = display.highdpi ? window.devicePixelRatio : 1;
+                cssScale = w / canvas.width,
+                ratio = display.highdpi ? window.devicePixelRatio : 1,
+                pixelScale = cssScale * ratio;
             canvas.style.left = (l|0) + "px";
             canvas.style.top = (t|0) + "px";
             canvas.style.width = (w|0) + "px";
             canvas.style.height = (h|0) + "px";
             if (cursorCanvas) {
-                cursorCanvas.style.left = (l + display.cursorOffsetX + display.mouseX * scale|0) + "px";
-                cursorCanvas.style.top = (t + display.cursorOffsetY + display.mouseY * scale|0) + "px";
-                cursorCanvas.style.width = (cursorCanvas.width * ratio * scale|0) + "px";
-                cursorCanvas.style.height = (cursorCanvas.height * ratio * scale|0) + "px";
+                cursorCanvas.style.left = (l + display.cursorOffsetX + display.mouseX * cssScale|0) + "px";
+                cursorCanvas.style.top = (t + display.cursorOffsetY + display.mouseY * cssScale|0) + "px";
+                cursorCanvas.style.width = (cursorCanvas.width * pixelScale|0) + "px";
+                cursorCanvas.style.height = (cursorCanvas.height * pixelScale|0) + "px";
             }
+            // if pixelation is not forced, turn it on for integer scales
             if (!options.pixelated) {
-                var pixelScale = window.devicePixelRatio * scale;
                 if (pixelScale % 1 === 0 || pixelScale > 5) {
                     canvas.classList.add("pixelated");
                     cursorCanvas && cursorCanvas.classList.add("pixelated");
@@ -56263,7 +56316,17 @@
                     cursorCanvas && display.cursorCanvas.classList.remove("pixelated");
                 }
             }
-            return scale;
+            display.css = {
+                left: l,
+                top: t,
+                width: w,
+                height: h,
+                scale: cssScale,
+                pixelScale: pixelScale,
+                ratio: ratio,
+            };
+            if (display.changedCallback) display.changedCallback();
+            return cssScale;
         }
         // zooming/panning with two fingers
         var maxZoom = 5;
@@ -56300,7 +56363,7 @@
             // allow to rubber-band by 20px for feedback
             l = Math.max(Math.min(l, touch.orig.left + 20), touch.orig.right - w - 20);
             t = Math.max(Math.min(t, touch.orig.top + 20), touch.orig.bottom - h - 20);
-            adjustDisplay(l, t, w, h);
+            adjustCanvas(l, t, w, h);
         }
         function zoomEnd(evt) {
             var l = canvas.offsetLeft,
@@ -56311,8 +56374,8 @@
             h = touch.orig.height * w / touch.orig.width;
             l = Math.max(Math.min(l, touch.orig.left), touch.orig.right - w);
             t = Math.max(Math.min(t, touch.orig.top), touch.orig.bottom - h);
-            var scale = adjustDisplay(l, t, w, h);
-            if ((scale - display.initialScale) < 0.0001) {
+            var scale = adjustCanvas(l, t, w, h);
+            if ((scale - display.scale) < 0.0001) {
                 touch.orig = null;
                 window.onresize();
             }
@@ -56611,7 +56674,7 @@
                 if (display.highdpi) scale *= window.devicePixelRatio;
                 display.width = Math.floor(w * scale);
                 display.height = Math.floor(h * scale);
-                display.initialScale = w / display.width;
+                display.scale = w / display.width;
             } else { // fixed resolution and aspect ratio
                 display.width = options.fixedWidth;
                 display.height = options.fixedHeight;
@@ -56622,13 +56685,8 @@
                 } else {
                     paddingY = h - Math.floor(w / wantRatio);
                 }
-                display.initialScale = (w - paddingX) / display.width;
+                display.scale = (w - paddingX) / display.width;
             }
-            // set size and position
-            canvas.style.left = (x + Math.floor(paddingX / 2)) + "px";
-            canvas.style.top = (y + Math.floor(paddingY / 2)) + "px";
-            canvas.style.width = (w - paddingX) + "px";
-            canvas.style.height = (h - paddingY) + "px";
             // set resolution
             if (canvas.width != display.width || canvas.height != display.height) {
                 var preserveScreen = options.fixedWidth || !display.resizeTodo, // preserve unless changing fullscreen
@@ -56637,25 +56695,13 @@
                 canvas.height = display.height;
                 if (imgData) display.context.putImageData(imgData, 0, 0);
             }
-            // set cursor scale
-            var cursorCanvas = display.cursorCanvas,
-                scale = canvas.offsetWidth / canvas.width;
-            if (display.highdpi) scale *= window.devicePixelRatio;
-            if (cursorCanvas && options.fixedWidth) {
-                cursorCanvas.style.width = (cursorCanvas.width * scale) + "px";
-                cursorCanvas.style.height = (cursorCanvas.height * scale) + "px";
-            }
-            // set pixelation
-            if (!options.pixelated) {
-                var pixelScale = window.devicePixelRatio * scale;
-                if (pixelScale % 1 === 0 || pixelScale > 5) {
-                    canvas.classList.add("pixelated");
-                    cursorCanvas && cursorCanvas.classList.add("pixelated");
-                } else {
-                    canvas.classList.remove("pixelated");
-                    cursorCanvas && display.cursorCanvas.classList.remove("pixelated");
-                }
-            }
+            // set canvas and cursor canvas size, position, pixelation
+            adjustCanvas(
+                x + Math.floor(paddingX / 2),
+                y + Math.floor(paddingY / 2),
+                w - paddingX,
+                h - paddingY
+            );
         };
         window.onresize();
         return display;
@@ -56784,7 +56830,8 @@
                 var dir = path[0] == "/" ? path : options.root + path,
                     baseUrl = new URL(options.url, document.baseURI).href.split(/[?#]/)[0],
                     url = Squeak.splitUrl(options.templates[path], baseUrl).full;
-                if (url.endsWith("/.")) url = url.slice(0,-2);
+                    if (url.endsWith("/")) url = url.slice(0,-1);
+                    if (url.endsWith("/.")) url = url.slice(0,-2);
                 Squeak.fetchTemplateDir(dir, url);
             }
         }
@@ -56925,7 +56972,11 @@
         // we need to fetch all files first, then run the image
         processOptions(options);
         if (!imageUrl && options.image) imageUrl = options.image;
-        var baseUrl = options.url || (imageUrl && imageUrl.replace(/[^\/]*$/, "")) || "";
+        var baseUrl = options.url || "";
+        if (!baseUrl && imageUrl && imageUrl.replace(/[^\/]*$/, "")) {
+            baseUrl = imageUrl.replace(/[^\/]*$/, "");
+            imageUrl = imageUrl.replace(/^.*\//, "");
+        }
         options.url = baseUrl;
         if (baseUrl[0] === "/" && baseUrl[1] !== "/" && baseUrl.length > 1 && options.root === "/") {
             options.root = baseUrl;

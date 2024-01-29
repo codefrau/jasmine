@@ -4,6 +4,7 @@ function B3DAcceleratorPlugin() {
     var DEBUG = 0; // 0 = off, 1 = some, 2 = lots
     var DEBUG_WAIT = false; // wait after each frame
 
+    var renderers = []; // list of all renderers
     var rendererId = 0;  // unique id for each renderer
     var currentRenderer = null; // set by makeCurrent()
     var OpenGL = null; // set by setOpenGL()
@@ -22,9 +23,9 @@ function B3DAcceleratorPlugin() {
     var B3D_SOFTWARE_RENDERER = 0x0001;
     var B3D_HARDWARE_RENDERER = 0x0002;
     var B3D_STENCIL_BUFFER    = 0x0004;
-    var B3D_ANTIALIASING      = 0x0008;
-    var B3D_STEREO            = 0x0010;
-    var B3D_SYNCVBL           = 0x0020;
+    var B3D_ANTIALIASING      = 0x0008; // ignored
+    var B3D_STEREO            = 0x0010; // ignored
+    var B3D_SYNCVBL           = 0x0020; // ignored
 
     return {
         getModuleName: function() { return 'B3DAcceleratorPlugin (jasmine)'; },
@@ -35,6 +36,13 @@ function B3DAcceleratorPlugin() {
             this.interpreterProxy = anInterpreter;
             this.vm = this.interpreterProxy.vm;
             this.primHandler = this.vm.primHandler;
+            this.prevDCCallback = this.primHandler.display.changedCallback;
+            this.primHandler.display.changedCallback = () => {
+                if (this.prevDCCallback) this.prevDCCallback();
+                for (const renderer of renderers) {
+                    this.adjustCanvas(renderer);
+                }
+            };
             return true;
         },
 
@@ -153,6 +161,7 @@ function B3DAcceleratorPlugin() {
             // create renderer
             rendererId++;
             var renderer = this.primHandler.makeStString("WebGL#" + rendererId);
+            renderers.push(renderer);
             renderer.rendererId = rendererId;
             renderer.canvas = canvas;
             renderer.webgl = webgl;
@@ -169,6 +178,7 @@ function B3DAcceleratorPlugin() {
             if (argCount !== 1) return false;
             if (!this.currentFromStack(0)) return false;
             DEBUG > 0 && console.log("B3DAccel: primitiveDestroyRenderer", currentRenderer.rendererId);
+            renderers = renderers.filter(r => r !== currentRenderer);
             if (OpenGL) OpenGL.destroyGL(currentRenderer);
             if (currentRenderer.warning) {
                 currentRenderer.warning.remove();
@@ -418,8 +428,8 @@ function B3DAcceleratorPlugin() {
             OpenGL.glPushMatrix();
             OpenGL.glLoadIdentity();
 
-            var width = currentRenderer.webgl.drawingBufferWidth;
-            var height = currentRenderer.webgl.drawingBufferHeight;
+            var width = currentRenderer.viewport.w;
+            var height = currentRenderer.viewport.h;
             OpenGL.glViewport(0, 0, width, height);
             OpenGL.glScaled(2.0/width, -2.0/height, 1.0);
             OpenGL.glTranslated(width*-0.5, height*-0.5, 0.0);
@@ -443,8 +453,8 @@ function B3DAcceleratorPlugin() {
             }
 
             // subtract top and left position of canvas
-            x -= currentRenderer.canvas.offsetLeft;
-            y -= currentRenderer.canvas.offsetTop;
+            x -= currentRenderer.viewport.x;
+            y -= currentRenderer.viewport.y;
             OpenGL.glBindTexture(GL.TEXTURE_2D, texture);
             OpenGL.glBegin(GL.QUADS);
                 OpenGL.glTexCoord2d(0.0, 0.0);
@@ -476,22 +486,31 @@ function B3DAcceleratorPlugin() {
             return true;
         },
 
-        b3dxSetViewport: function(renderer, x, y, w, h) {
+        adjustCanvas: function(renderer) {
             var canvas = renderer.canvas;
-            var scale = this.primHandler.display.initialScale || 1;
+            var sq = this.primHandler.display.css;
+            var x = renderer.viewport.x;
+            var y = renderer.viewport.y;
+            var w = renderer.viewport.w;
+            var h = renderer.viewport.h;
             canvas.width = w;
             canvas.height = h;
-            canvas.style.left = (x * scale) + "px";
-            canvas.style.top = (y * scale) + "px";
-            canvas.style.width = (w * scale) + "px";
-            canvas.style.height = (h * scale) + "px";
+            canvas.style.left = (sq.left + x * sq.scale) + "px";
+            canvas.style.top = (sq.top + y * sq.scale) + "px";
+            canvas.style.width = (w * sq.scale) + "px";
+            canvas.style.height = (h * sq.scale) + "px";
             var warning = renderer.warning;
             if (warning) {
-                warning.style.left =(x * scale) + "px";
-                warning.style.top = (y * scale) + "px";
-                warning.style.width = (w * scale) + "px";
-                warning.style.height = (h * scale) + "px";
+                warning.style.left = (sq.left + x * sq.scale) + "px";
+                warning.style.top = (sq.top + y * sq.scale) + "px";
+                warning.style.width = (w * sq.scale) + "px";
+                warning.style.height = (h * sq.scale) + "px";
             }
+        },
+
+        b3dxSetViewport: function(renderer, x, y, w, h) {
+            renderer.viewport = {x: x, y: y, w: w, h: h};
+            this.adjustCanvas(renderer);
         },
 
         b3dxDisableLights: function(renderer) {
