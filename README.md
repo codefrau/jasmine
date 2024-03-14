@@ -125,4 +125,4 @@ The latter is not a "regular" plugin providing Smalltalk primitives, but provide
 
 If we get these complete, they should be upstreamed to SqueakJS. For the moment I only implemented the parts that are needed to get Croquet working.
 
-One big thing I have not gotten to completely work yet is collaboration – the original Croquet was fully collaborative. I started implementing a SocketPlugin that emulates a full TCP/IP stack and network using [modern Croquet](https://croquet.io) as transport. The existing SqueakJS SocketPlugin only allows http/https connections. The tests appear to work, but not the Croquet multiuser mode. Help would be very much appreciated.
+One big thing I have not gotten to completely work yet is collaboration – the original Croquet was fully collaborative. I started implementing a SocketPlugin that emulates a full TCP/IP stack on top of  [modern Croquet](https://croquet.io) as transport, meaning it emulates an IP network. The existing SqueakJS SocketPlugin only allows http/https connections. The tests appear to work, but not the Croquet multiuser mode. Help would be very much appreciated.
