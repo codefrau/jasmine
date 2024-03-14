@@ -24,7 +24,7 @@ By default, only the "SampleTeapot" morph is running, which only has a mirror in
 
 Close that morph: You are in Squeak Smalltalk, everything onscreen is a Morph, and every morph has a "halo" you can bring up using the middle mouse button on a three-button mouse, or cmd-click (Mac) / alt-click (PCs). The top-left pink halo handle with an X will close. The other handles have mouse-over balloon help.
 
-Drag out the full "Teapot" from the green objects tool. It will start downloading a lot of content. Please wait patiently until everything is loaded (the reading glasses cursor will disappear). At some point there will be a sound, when a blue status line will appear at the bottom of the 3D teapot morph. It's only truly finished when that statusline disappears again.
+Drag out the full "Teapot" from the green objects tool. It will start downloading a lot of content. Please wait patiently until everything is loaded (the reading glasses cursor will disappear). At some point there will be a sound, then a blue status line will appear at the bottom of the 3D teapot morph. It's only truly finished when that statusline disappears again.
 
 Save the image – that is a Smalltalk term for storing a snapshot of your whole current environment. By doing this, we won't have to wait as long the next time. Click on the gray background, which will pop up a "World" menu. I'd suggest using "Save as..." and give it a name different than "BridgeDemo.image" so you can easily go back to that one. When you reload your browser page, it will by default load the BridgeDeo image again. But you can load the image you saved by appending `?image=myimage.image` to the URL (assuming you named your image `myimage`).
 
@@ -42,7 +42,7 @@ Use the right mouse button (or two-finger click on MacBooks) to move. This works
 
 **Camera button (top-right):** takes a snapshot to return to this position later
 
-**Telephone button (right-center):** starts a call (not workign yet)
+**Telephone button (right-center):** starts a call (not working yet)
 
 ### Dock
 
@@ -121,8 +121,8 @@ It's running on [SqueakJS](https://squeak.js.org), a Smalltalk virtual machine w
 
 It uses plugins for various tasks, and I (Vanessa) had to write a few new ones to support Croquet Jasmine. In particular, these are the [Balloon3D Accelerator Plugin](jasmine-b3daccel-plugin.js), [Balloon3D Engine Plugin](jasmine-b3dengine-plugin.js),
 [MPEG3Plugin](jasmine-mpeg3-plugin.js), and [OpenGL](jasmine-opengl.js).
-The latter is not a full plugin but provides an emulation of OpenGL functions for WebGL.
+The latter is not a "regular" plugin providing Smalltalk primitives, but provides the equivalent of an OpenGL library with functions that are called via FFI. For efficiency, it emulates the OpenGL 1.x state but uses WebGL for the actual rendering.
 
-If we get these complete, they should be upstreamed to SqueakJS. But at the moment I'm just trying to implement the parts that are needed to get Croquet working.
+If we get these complete, they should be upstreamed to SqueakJS. For the moment I only implemented the parts that are needed to get Croquet working.
 
-One big thing I have not started working on yet is collaboration – the original was fully collaborative. My plan is to write a special SocketPlugin that emulates a LAN using [modern Croquet](https://croquet.io) as transport. The existing SqueakJS SocketPlugin only allows http/https connections.
+One big thing I have not gotten to completely work yet is collaboration – the original Croquet was fully collaborative. I started implementing a SocketPlugin that emulates a full TCP/IP stack and network using [modern Croquet](https://croquet.io) as transport. The existing SqueakJS SocketPlugin only allows http/https connections. The tests appear to work, but not the Croquet multiuser mode. Help would be very much appreciated.
