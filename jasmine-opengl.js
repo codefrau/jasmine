@@ -577,7 +577,8 @@ function OpenGL() {
             // multiply by inverse of modelview matrix
             var m = new Float32Array(16);
             invertMatrix(gl.matrices[GL.MODELVIEW][0], m);
-            transformPoint(m, equation, clipPlane.equation);
+            transposeMatrix(m);
+            multVec4(m, equation, clipPlane.equation);
         },
 
         glDeleteLists: function(list, range) {
@@ -635,6 +636,8 @@ function OpenGL() {
                 case GL.CLIP_PLANE3:
                 case GL.CLIP_PLANE4:
                 case GL.CLIP_PLANE5:
+                case GL.CLIP_PLANE6:
+                case GL.CLIP_PLANE7:
                     DEBUG > 1 && console.log("glDisable GL_CLIP_PLANE" + (cap - GL.CLIP_PLANE0));
                     gl.clipPlanes[cap - GL.CLIP_PLANE0].enabled = false;
                     break;
@@ -855,6 +858,8 @@ function OpenGL() {
                 case GL.CLIP_PLANE3:
                 case GL.CLIP_PLANE4:
                 case GL.CLIP_PLANE5:
+                case GL.CLIP_PLANE6:
+                case GL.CLIP_PLANE7:
                     DEBUG > 1 && console.log("glEnable GL_CLIP_PLANE" + (cap - GL.CLIP_PLANE0));
                     gl.clipPlanes[cap - GL.CLIP_PLANE0].enabled = true;
                     break;
@@ -2423,6 +2428,17 @@ function transformPoint(matrix, src, dst) {
     dst[3] = src[3];
 }
 
+function multVec4(matrix, src, dst) {
+    var x = src[0];
+    var y = src[1];
+    var z = src[2];
+    var w = src[3];
+    dst[0] = matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12] * w;
+    dst[1] = matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13] * w;
+    dst[2] = matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14] * w;
+    dst[3] = matrix[3] * x + matrix[7] * y + matrix[11] * z + matrix[15] * w;
+}
+
 function multMatrix(m1, m2) {
     var m00 = m1[0] * m2[0] + m1[4] * m2[1] + m1[8] * m2[2] + m1[12] * m2[3];
     var m01 = m1[1] * m2[0] + m1[5] * m2[1] + m1[9] * m2[2] + m1[13] * m2[3];
@@ -2500,22 +2516,59 @@ function scaleMatrix(m, x, y, z) {
     m[8] *= z; m[9] *= z; m[10] *= z; m[11] *= z;
 }
 
+function transposeMatrix(m) {
+    var m01 = m[1], m02 = m[2], m03 = m[3],
+        m12 = m[6], m13 = m[7],
+        m23 = m[11];
+    m[1] = m[4]; m[2] = m[8]; m[3] = m[12];
+    m[4] = m01; m[6] = m[9]; m[7] = m[13];
+    m[8] = m02; m[9] = m12; m[11] = m[14];
+    m[12] = m03; m[13] = m13; m[14] = m23;
+}
+
 function invertMatrix(src, dst) {
+    if (!dst) dst = src;
+
     var m00 = src[0], m01 = src[1], m02 = src[2], m03 = src[3],
         m10 = src[4], m11 = src[5], m12 = src[6], m13 = src[7],
         m20 = src[8], m21 = src[9], m22 = src[10], m23 = src[11],
         m30 = src[12], m31 = src[13], m32 = src[14], m33 = src[15];
-    var t00 = m22 * m33 - m32 * m23,
-        t01 = m32 * m13 - m12 * m33,
-        t02 = m12 * m23 - m22 * m13;
-    var det = m00 * t00 + m10 * t01 + m20 * t02;
-    if (det !== 0) {
-        var s = 1 / det;
-        dst[0] = t00 * s; dst[1] = (m31 * m23 - m21 * m33) * s; dst[2] = (m21 * m13 - m31 * m13) * s; dst[3] = (m31 * m22 - m21 * m32) * s;
-        dst[4] = t01 * s; dst[5] = (m11 * m33 - m31 * m13) * s; dst[6] = (m31 * m03 - m01 * m33) * s; dst[7] = (m01 * m23 - m21 * m03) * s;
-        dst[8] = t02 * s; dst[9] = (m21 * m13 - m11 * m23) * s; dst[10] = (m11 * m32 - m31 * m12) * s; dst[11] = (m31 * m12 - m11 * m32) * s;
-        dst[12] = (m21 * m32 - m31 * m22) * s; dst[13] = (m31 * m02 - m01 * m32) * s; dst[14] = (m01 * m22 - m21 * m02) * s; dst[15] = (m11 * m22 - m21 * m12) * s;
-    }
+
+    var t00 = m00 * m11 - m01 * m10,
+        t01 = m00 * m12 - m02 * m10,
+        t02 = m00 * m13 - m03 * m10,
+        t03 = m01 * m12 - m02 * m11,
+        t04 = m01 * m13 - m03 * m11,
+        t05 = m02 * m13 - m03 * m12,
+        t06 = m20 * m31 - m21 * m30,
+        t07 = m20 * m32 - m22 * m30,
+        t08 = m20 * m33 - m23 * m30,
+        t09 = m21 * m32 - m22 * m31,
+        t10 = m21 * m33 - m23 * m31,
+        t11 = m22 * m33 - m23 * m32;
+
+    var det = t00 * t11 - t01 * t10 + t02 * t09 + t03 * t08 - t04 * t07 + t05 * t06;
+
+    if (det === 0) return;
+
+    var invDet = 1 / det;
+
+    dst[0] = (m11 * t11 - m12 * t10 + m13 * t09) * invDet;
+    dst[1] = (-m01 * t11 + m02 * t10 - m03 * t09) * invDet;
+    dst[2] = (m31 * t05 - m32 * t04 + m33 * t03) * invDet;
+    dst[3] = (-m21 * t05 + m22 * t04 - m23 * t03) * invDet;
+    dst[4] = (-m10 * t11 + m12 * t08 - m13 * t07) * invDet;
+    dst[5] = (m00 * t11 - m02 * t08 + m03 * t07) * invDet;
+    dst[6] = (-m30 * t05 + m32 * t02 - m33 * t01) * invDet;
+    dst[7] = (m20 * t05 - m22 * t02 + m23 * t01) * invDet;
+    dst[8] = (m10 * t10 - m11 * t08 + m13 * t06) * invDet;
+    dst[9] = (-m00 * t10 + m01 * t08 - m03 * t06) * invDet;
+    dst[10] = (m30 * t04 - m31 * t02 + m33 * t00) * invDet;
+    dst[11] = (-m20 * t04 + m21 * t02 - m23 * t00) * invDet;
+    dst[12] = (-m10 * t09 + m11 * t07 - m12 * t06) * invDet;
+    dst[13] = (m00 * t09 - m01 * t07 + m02 * t06) * invDet;
+    dst[14] = (-m30 * t03 + m31 * t01 - m32 * t00) * invDet;
+    dst[15] = (m20 * t03 - m21 * t01 + m22 * t00) * invDet;
 }
 
 function asNormalMatrix(m) {
@@ -2810,6 +2863,10 @@ function initGLConstants() {
         CLIP_PLANE1:                 0x3001,
         CLIP_PLANE2:                 0x3002,
         CLIP_PLANE3:                 0x3003,
+        CLIP_PLANE4:                 0x3004,
+        CLIP_PLANE5:                 0x3005,
+        CLIP_PLANE6:                 0x3006,
+        CLIP_PLANE7:                 0x3007,
         LIGHT0:                      0x4000,
         LIGHT1:                      0x4001,
         LIGHT2:                      0x4002,
