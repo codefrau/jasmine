@@ -41,8 +41,9 @@
             const params = new URLSearchParams(window.location.search);
             const image = params.get("image") || "BridgeDemo.image";
             const changes = image.replace(".image", ".changes");
+            const appName = (params.get("image") || "Croquet Jasmine").replace(".image", "");
             SqueakJS.runSqueak(image, sqCanvas, {
-                appName: "Croquet Jasmine",
+                appName,
                 fullscreen: true,
                 swapButtons: true,
                 spinner: sqSpinner,

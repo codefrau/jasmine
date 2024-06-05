@@ -60,6 +60,12 @@ Move your mouse pointer towards the lower edge of the 3D window. Various items w
 
 **Alice:** a library of 3D models from Randy Pausch's Alice project at CMU. Click one to import, then move backwards to see it. If there is an error, close the pink error window and try a different one.
 
+### Popup Menu
+
+Click somewhere that's not an object (ground, sky) and a popup window will be opened in the middle of the screen. It has various options (dependening on which kind of TeapotMorph is running).
+
+In the lower left is the Bridge Demo that Alan was showing in his Turing award lecture. Press "w" (for "wind") and edit the variable on top to `true`, press Cmd-S to save. The wind will now affect the bridge. Other simulation scripts are "m" and "s" (masses and springs). Press "f" to release the bridge and turn it into a flag (with dramatic sound).
+
 ### TWindows
 
 These hold additional spaces, in 3D or 2D. The blue window frame highlights in green when moving the mouse pointer over it. The window frame is active:
@@ -91,7 +97,7 @@ Click the rover to mount/unmount, or use the f/b keys so change the forwards/bac
 ### 3 body simulation (Earth, Moon, 3rd)
 
 (Photo: [David Reed](https://en.wikipedia.org/wiki/David_P._Reed))
-Press 1/2/3 to make the third body move at different speeds, and observe its blue trajectory path. Press space to reset.
+Press 1/2/3/-/+ to make the third body move at different speeds, and observe its blue trajectory path. Press space to reset.
 
 ### Underwater
 

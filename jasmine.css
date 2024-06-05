@@ -1,6 +1,9 @@
 canvas {
     position: fixed;
     cursor: default;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
 }
 
 canvas.pixelated {

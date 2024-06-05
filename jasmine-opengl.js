@@ -1531,6 +1531,19 @@ function OpenGL() {
             DEBUG > 1 && console.log("glLoadMatrixf", GL_Symbol(gl.matrixMode), Array.from(m));
         },
 
+        glMaterialf: function(face, pname, param) {
+            if (gl.listMode && this.addToList("glMaterialf", [face, pname, param])) return;
+            switch (pname) {
+                case GL.SHININESS:
+                    DEBUG > 1 && console.log("glMaterialf GL_SHININESS", param);
+                    gl.material.shininess = param;
+                    break;
+                default:
+                    if (DEBUG) console.log("UNIMPLEMENTED glMaterialf", GL_Symbol(pname), param);
+                    else this.vm.warnOnce("OpenGL: UNIMPLEMENTED glMaterialf " + GL_Symbol(pname));
+            }
+        },
+
         glMaterialfv: function(face, pname, param) {
             if (gl.listMode && this.addToList("glMaterialfv", [face, pname, param])) return;
             switch (pname) {
@@ -2099,7 +2112,12 @@ function OpenGL() {
             primitive.vertices.push(vertex);
         },
 
-        // shader source code
+        // Shader source code
+
+        // Note: we could take a look at Emscripten's glemu to add some more features
+        // https://github.com/emscripten-core/emscripten/blob/cb99414efed02dc61d04315d3e3cf5ad3180e56f/src/library_glemu.js#L2170
+        // The structure is a bit different but applicable
+
         vertexShaderSource: function(shaderFlags) {
             var src = [];
             src.push("uniform mat4 uModelView;");
@@ -2557,8 +2575,6 @@ function initGLConstants() {
         NOTEQUAL:                    0x0205,
         GEQUAL:                      0x0206,
         ALWAYS:                      0x0207,
-        ZERO:                        0,
-        ONE:                         1,
         SRC_COLOR:                   0x0300,
         ONE_MINUS_SRC_COLOR:         0x0301,
         SRC_ALPHA:                   0x0302,
@@ -2821,8 +2837,8 @@ function initGLConstants() {
         DEPTH_BUFFER_BIT:           0x00100,
         ACCUM_BUFFER_BIT:           0x00200,
         STENCIL_BUFFER_BIT:         0x00400,
-        GL_VIEWPORT_BIT:            0x00800,
-        GL_TRANSFORM_BIT:           0x01000,
+        VIEWPORT_BIT:               0x00800,
+        TRANSFORM_BIT:              0x01000,
         ENABLE_BIT:                 0x02000,
         COLOR_BUFFER_BIT:           0x04000,
         HINT_BIT:                   0x08000,
@@ -2831,6 +2847,8 @@ function initGLConstants() {
         TEXTURE_BIT:                0x40000,
         SCISSOR_BIT:                0x80000,
         ALL_ATTRIB_BITS:            0xFFFFF,
+        ZERO:                             0,
+        ONE:                              1,
     };
     GL_Symbols = {};
     for (var name in GL) {
