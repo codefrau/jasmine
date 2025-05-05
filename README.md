@@ -5,18 +5,20 @@
 Live version: [codefrau.github.io/jasmine](https://codefrau.github.io/jasmine/)
 
 This is a version of Croquet Jasmine running on the [SqueakJS](https://squeak.js.org) virtual machine.
-Here is an [early demo of the system](https://www.youtube.com/watch?v=cXGLOiZUZ2U) from 2003.
-Alan Kay used it for his [Turing Award lecture in 2004](https://tinlizzie.org/IA/index.php/Alan_Kay_Turing_Award_Lecture_(2004)) (jump to 1 hour in for the Croquet part, but the whole thing is worth a watch).
+Here is an [early demo of the system](https://www.youtube.com/watch?v=cXGLOiZUZ2U) from 2003 at the O'Reilly E-tech conference,
+and a similar talk at the [Computer History Museum](https://youtu.be/pUoBSC3uoeo?si=AuQdmMyxxBIaHv94&t=4871).
+Alan Kay also used it for his [Turing Award lecture in 2004](https://tinlizzie.org/IA/index.php/Alan_Kay_Turing_Award_Lecture_(2004)) (jump to 1 hour in for the Croquet part, but the whole thing is worth a watch).
 While working on that demo, David Smith posted some blog entries
 ([1](https://www.croquet.zone/2004/10/turing-lecture-add-gravity.html),
 [2](https://www.croquet.zone/2004/10/turing-lecture-change-spring-constant.html),
 [3](https://www.croquet.zone/2004/10/turing-lecture-add-wind.html),
 [4](https://www.croquet.zone/2004/10/turing-lecture-release.html),
-[5](https://www.croquet.zone/2004/10/turing-lecture-oh-canada.html)), with screenshots uploaded to his [Flickr album](https://www.flickr.com/photos/87951975@N00/with/4343400).
+[5](https://www.croquet.zone/2004/10/turing-lecture-oh-canada.html)),
+with screenshots uploaded to his [Flickr album](https://www.flickr.com/photos/87951975@N00/with/4343400).
 
-This is work-in-progress. Contributions are very welcome.
+The resurrection of this software is work-in-progress. Contributions are very welcome.
 
-— Vanessa Freudenberg, December 2023
+— Vanessa Freudenberg, May 2025
 
 ## How to launch the Demos
 
@@ -125,10 +127,10 @@ This is a full [Squeak](https://squeak.org) Smalltalk environment. All the tools
 
 It's running on [SqueakJS](https://squeak.js.org), a Smalltalk virtual machine written in JavaScript. The original virtual machine was a 32 bit executable that on many modern achines does not work anymore.
 
-It uses plugins for various tasks, and I (Vanessa) had to write a few new ones to support Croquet Jasmine. In particular, these are the [Balloon3D Accelerator Plugin](jasmine-b3daccel-plugin.js), [Balloon3D Engine Plugin](jasmine-b3dengine-plugin.js),
-[MPEG3Plugin](jasmine-mpeg3-plugin.js), and [OpenGL](jasmine-opengl.js).
-The latter is not a "regular" plugin providing Smalltalk primitives, but provides the equivalent of an OpenGL library with functions that are called via FFI. For efficiency, it emulates the OpenGL 1.x state but uses WebGL for the actual rendering.
+It uses plugins for various tasks, and I (Vanessa) had to write a few new ones to support Croquet Jasmine. In particular, these are the [Balloon3D Accelerator Plugin](https://github.com/codefrau/SqueakJS/blob/main/plugins/B3DAcceleratorPlugin.js), [Balloon3D Engine Plugin](jasmine-b3dengine-plugin.js),
+[MPEG3Plugin](jasmine-mpeg3-plugin.js), and most importantly [OpenGL](https://github.com/codefrau/SqueakJS/blob/main/ffi/opengl.js).
+The latter is not a "regular" plugin providing Smalltalk primitives, but provides the equivalent of an OpenGL 1.x library with functions that are called via FFI. For efficiency, it emulates the OpenGL 1.x state but uses WebGL for the actual rendering.
 
-If we get these complete, they should be upstreamed to SqueakJS. For the moment I only implemented the parts that are needed to get Croquet working.
+If we get these complete, they should be upstreamed to SqueakJS (Update May 2025: OpenGL and Balloon3D Accelerator are in SqueakJS now, even though still not "complete"). I only implemented the parts that are needed to get Croquet working.
 
 One big thing I have not gotten to completely work yet is collaboration – the original Croquet was fully collaborative. I started implementing a SocketPlugin that emulates a full TCP/IP stack on top of  [modern Croquet](https://croquet.io) as transport, meaning it emulates an IP network. The existing SqueakJS SocketPlugin only allows http/https connections. The tests appear to work, but not the Croquet multiuser mode. Help would be very much appreciated.
